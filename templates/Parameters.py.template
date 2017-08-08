@@ -6,8 +6,15 @@
 #
 # *********************************************************
 import rospy
+$imports
 
 param_description = $paramDescription
+subscriber_description = $subscriberDescription
+publisher_description = $publisherDescription
+
+if subscriber_description:
+    # only import if necessary
+    import message_filters
 
 defaults = {}
 
@@ -25,7 +32,7 @@ class ${ClassName}Parameters(dict):
 
     def from_param_server(self):
         """
-        Reads and initializes parameters with values from parameter server.
+        Reads and initializes parameters, subscribers and publishers with values from parameter server.
         Called automatically at initialization.
         """
         for k, v in self.iteritems():
@@ -35,6 +42,22 @@ class ${ClassName}Parameters(dict):
                 continue
 
             self[k] = self.get_param(k, config)
+        for subscriber in subscriber_description:
+            name = subscriber['name']
+            # rescue the callbacks if existing
+            if name in self:
+                callbacks = self[name].callbacks
+            else:
+                callbacks = {}
+            self[name] = message_filters.Subscriber(self[subscriber['topic_param']], self.get_type(subscriber),
+                                                    queue_size=self[subscriber['queue_size_param']],
+                                                    tcp_nodelay=subscriber['no_delay'])
+            self[name].callbacks = callbacks
+        for publisher in publisher_description:
+            name = publisher['name']
+            self[name] = rospy.Publisher(self[publisher['topic_param']], self.get_type(publisher),
+                                              queue_size=self[publisher['queue_size_param']])
+
 
     def from_config(self, config):
         """
@@ -42,6 +65,27 @@ class ${ClassName}Parameters(dict):
         Should be called in the callback of dynamic_reconfigure.
         :param config: config object from dynamic reconfigure
         """
+        for subscriber in subscriber_description:
+            if not subscriber['configurable']:
+                continue
+            name = subscriber['name']
+            topic_param = subscriber['topic_param']
+            queue_param = subscriber['queue_size_param']
+            if config[topic_param] != self[topic_param] or config[queue_param] != self[queue_param]:
+                callbacks = self[name].callbacks
+                self[name] = message_filters.Subscriber(self[subscriber['topic_param']], self.get_type(subscriber),
+                                                        queue_size=self[subscriber['queue_size_param']],
+                                                        tcp_nodelay=subscriber['no_delay'])
+                self[name].callbacks = callbacks
+        for publisher in publisher_description:
+            if not subscriber['configurable']:
+                continue
+            name = subscriber['name']
+            topic_param = subscriber['topic_param']
+            queue_param = subscriber['queue_size_param']
+            if config[topic_param] != self[topic_param] or config[queue_param] != self[queue_param]:
+                self[name] = rospy.Publisher(self[publisher['topic_param']], self.get_type(publisher),
+                                             queue_size=self[publisher['queue_size_param']])
         for k, v in config.iteritems():
             # handle reserved name groups
             if k == "groups":
@@ -132,3 +176,6 @@ class ${ClassName}Parameters(dict):
                 val = config['max']
         return val
 
+    @staticmethod
+    def get_type(config):
+        return eval(config['import'] + '.' + config['type'].split('::')[-1])

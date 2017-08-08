@@ -11,8 +11,15 @@
 #include <stdlib.h>
 #include <string>
 #include <limits>
+#include <memory>
 #include <ros/param.h>
 #include <ros/node_handle.h>
+#ifdef MESSAGE_FILTERS_FOUND
+#include <message_filters/subscriber.h>
+$includes
+#else
+$includeError
+#endif
 #ifdef DYNAMIC_RECONFIGURE_FOUND
 #include <${pkgname}/${ClassName}Config.h>
 #else
@@ -24,7 +31,7 @@ namespace ${pkgname} {
 
 #ifndef UTIL_FUNCTIONS_${pkgname}
 #define UTIL_FUNCTIONS_${pkgname}
-inline std::string getNodeName(const ros::NodeHandle& privateNodeHandle){
+inline std::string getNodeName(const ros::NodeHandle& privateNodeHandle) {
     std::string name_space = privateNodeHandle.getNamespace();
     std::stringstream tempString(name_space);
     std::string name;
@@ -71,14 +78,21 @@ using is_map = std::is_same<T, std::map<typename T::key_type,
 struct ${ClassName}Parameters {
 
   using Config = ${ClassName}Config;
+#ifdef MESSAGE_FILTERS_FOUND
+  template<typename T>
+  using SubscriberPtr = std::shared_ptr<message_filters::Subscriber<T>>;
+#endif
 
   ${ClassName}Parameters(const ros::NodeHandle& private_node_handle)
   : privateNamespace{private_node_handle.getNamespace() + "/"},
     nodeName{getNodeName(private_node_handle)},
-    globalNamespace{"/"} {}
+    globalNamespace{"/"},
+    privateNodeHandle{private_node_handle}$initSubscribers {}
 
   void fromParamServer(){
 $fromParamServer
+
+$subscribeAdvertiseFromParamServer
 
 $test_limits
   ROS_DEBUG_STREAM(*this);
@@ -86,6 +100,7 @@ $test_limits
 
   void fromConfig(const Config& config, const uint32_t level = 0){
 #ifdef DYNAMIC_RECONFIGURE_FOUND
+$subscribeAdvertiseFromConfig
 $fromConfig
 #else
   ROS_FATAL_STREAM("dynamic_reconfigure was not found during compilation. So fromConfig() is not available. Please recompile with dynamic_reconfigure.");
@@ -178,12 +193,15 @@ $non_default_params    );
     for (auto& v : val) testMax(key, v.second, min);
   }
 
-  $parameters
+$parameters
+$subscribers
+$publishers
 
   private:
     const std::string globalNamespace;
     const std::string privateNamespace;
     const std::string nodeName;
+    ros::NodeHandle privateNodeHandle;
 };
 
 } // namespace ${pkgname}

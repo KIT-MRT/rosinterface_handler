@@ -31,7 +31,8 @@ from string import Template
 import sys
 import os
 import re
-
+import message_filters
+message_filters.Subscriber
 
 def eprint(*args, **kwargs):
     print("************************************************", file=sys.stderr, **kwargs)
@@ -50,6 +51,8 @@ class ParameterGenerator(object):
         """Constructor for ParamGenerator"""
         self.enums = []
         self.parameters = []
+        self.subscribers = []
+        self.publishers = []
         self.childs = []
         self.parent = parent
         if group:
@@ -103,6 +106,103 @@ class ParameterGenerator(object):
             self.add(name=name + "_" + e, paramtype="int", description="Constant for enum {}".format(name),
                      default=entry_strings.index(e), constant=True)
         self.enums.append({'name': name, 'description': description, 'values': entry_strings})
+
+    def add_subscriber(self, name, message_type, description, default_topic="", default_queue_size=5, no_delay=False,
+                       header = None, module = None, configurable=False, global_scope=False, constant=False):
+        """
+        Adds a subscriber to your parameter struct and a parameter for its topic and queue size. Don't forget to add a
+        dependency to message_filter and the package for the message used to your package.xml!
+        :param name: Base name of the subscriber. Will be name of the subscriber in the parameter struct. the topic
+        parameter is then <name>_topic and the queue size <name>_queue_size.
+        :param message_type: Type of message including its namespace (e.g. std_msgs::Header)
+        :param description: Chose an informative documentation string for this subscriber.
+        :param default_topic: (optional) Default topic to subscribe to.
+        :param default_queue_size: (optional) Default queue size of the subscriber.
+        :param no_delay: (optional) Set the tcp_no_delay parameter for subscribing. Recommended for larger topics.
+        :param header: (optional) Header name to include. Will be deduced for message type if None.
+        :param module: (optional) Module to import from (e.g. std_msgs.msg). Will be automatically deduced if None.
+        :param configurable: (optional) Should the topic name and message queue size be dynamically configurable?
+        :param global_scope: (optional) If true, parameter for topic and queue size is searched in global ('/')
+        namespace instead of private ('~') ns
+        :param constant: (optional) If this is true, the parameters will not be fetched from param server,
+        but the default value is kept.
+        :return: None
+        """
+        # add subscriber topic and queue size as param
+        topic_param = name + '_topic'
+        queue_size_param = name + '_queue_size'
+        self.add(name=topic_param, paramtype='std::string', description='Topic for ' + description,
+                 default=default_topic, configurable=configurable, global_scope=global_scope, constant=constant)
+        self.add(name=queue_size_param, paramtype='int', description='Queue size for ' + description, min=0,
+                 default=default_queue_size, configurable=configurable, global_scope=global_scope, constant=constant)
+
+        # normalize the topic type (we want it to contain ::)
+        normalized_message_type = message_type.replace("/", "::").replace(".", "::")
+
+        if not module:
+            module = ".".join(normalized_message_type.split('::')[0:-1]) + '.msg'
+
+        # add a subscriber object
+        newparam = {
+            'name': name,
+            'type': normalized_message_type,
+            'header': header,
+            'import': module,
+            'topic_param': topic_param,
+            'queue_size_param': queue_size_param,
+            'no_delay': no_delay,
+            'configurable': configurable,
+            'description': description
+        }
+        self.subscribers.append(newparam)
+
+    def add_publisher(self, name, message_type, description, default_topic="", default_queue_size=5, header = None,
+                      module=None, configurable=False, global_scope=False, constant=False):
+        """
+        Adds a publisher to your parameter struct and a parameter for its topic and queue size. Don't forget to add a
+        dependency to message_filter and the package for the message used to your package.xml!
+        :param name: Base name of the publisher. Will be name of the publisher in the parameter struct. the topic
+        parameter is then <name>_topic and the queue size <name>_queue_size.
+        :param message_type: Type of message including its namespace (e.g. std_msgs::Header)
+        :param description: Chose an informative documentation string for this publisher.
+        :param default_topic: (optional) Default topic to publish to.
+        :param default_queue_size: (optional) Default queue size of the publisher.
+        :param header: (optional) Header name to include. Will be deduced for message type if None.
+        :param module: (optional) Module to import from (e.g. std_msgs.msg). Will be automatically deduced if None.
+        :param configurable: (optional) Should the topic name and message queue size be dynamically configurable?
+        :param global_scope: (optional) If true, parameter for topic and queue size is searched in global ('/')
+        namespace instead of private ('~') ns
+        :param constant: (optional) If this is true, the parameters will not be fetched from param server,
+        but the default value is kept.
+        :return: None
+        """
+        # add publisher topic and queue size as param
+        topic_param = name + '_topic'
+        queue_size_param = name + '_queue_size'
+        self.add(name=topic_param, paramtype='std::string', description='Topic for ' + description,
+                 default=default_topic, configurable=configurable, global_scope=global_scope, constant=constant)
+        self.add(name=queue_size_param, paramtype='int', description='Queue size for ' + description, min=0,
+                 default=default_queue_size, configurable=configurable, global_scope=global_scope, constant=constant)
+
+        # normalize the topic type (we want it to contain ::)
+        normalized_message_type = message_type.replace("/", "::").replace(".", "::")
+
+        if not module:
+            module = ".".join(normalized_message_type.split('::')[0:-1]) + '.msg'
+
+        # add a publisher object
+        newparam = {
+            'name': name,
+            'type': normalized_message_type,
+            'header': header,
+            'import': module,
+            'topic_param': topic_param,
+            'queue_size_param': queue_size_param,
+            'configurable': configurable,
+            'description': description
+        }
+        self.publishers.append(newparam)
+
 
     def add(self, name, paramtype, description, level=0, edit_method='""', default=None, min=None, max=None,
             configurable=False, global_scope=False, constant=False):
@@ -346,7 +446,6 @@ class ParameterGenerator(object):
             template = f.read()
 
         param_entries = self._generate_param_entries()
-        print(param_entries)
 
         param_entries = "\n".join(param_entries)
         template = Template(template).substitute(pkgname=self.pkgname, nodename=self.nodename,
@@ -381,6 +480,99 @@ class ParameterGenerator(object):
         non_default_params = []
         from_config = []
         test_limits = []
+        includes = []
+        sub_adv_from_server = []
+        sub_adv_from_config = []
+        subscriber_entries = []
+        subscribers_init = []
+        publisher_entries = []
+
+        subscribers = self._get_subscribers()
+        publishers = self._get_publishers()
+        if subscribers or publishers:
+            include_error = "#error message_filters was not found during compilation. " \
+                            "Please recompile with message_filters."
+        else:
+            include_error = ""
+
+        for subscriber in subscribers:
+            name = subscriber['name']
+            type = subscriber['type']
+            header = subscriber['header']
+            description = subscriber['description']
+
+            # add include entry
+            if header:
+                include = "#include <{}>".format(header)
+            else:
+                type_slash = type.replace("::", "/")
+                include = "#include <{}.h>".format(type_slash)
+            if not include in includes:
+                includes.append(include)
+
+            # add subscriber entry
+            subscriber_entries.append(Template('  SubscriberPtr<${type}> ${name}; /*!< $description '
+                                               '*/').substitute(type=type, name=name, description=description))
+
+            # add initialisation
+            subscribers_init.append(Template(',\n    $name{std::make_shared<message_filters::Subscriber<$type>>()}')
+                                   .substitute(name=name, type=type))
+
+            # add subscribe for parameter server
+            topic_param = subscriber['topic_param']
+            queue_size_param = subscriber['queue_size_param']
+            if subscriber['no_delay']:
+                no_delay = ", ros::TransportHints().tcpNoDelay()"
+            else:
+                no_delay = ""
+            sub_adv_from_server.append(Template('    $name->subscribe(privateNodeHandle, $topic, $queue$noDelay);')
+                                         .substitute(name=name, topic=topic_param,queue=queue_size_param,
+                                                     noDelay=no_delay))
+            if subscriber['configurable']:
+                sub_adv_from_config.append(Template('    if($topic != config.$topic || $queue != config.$queue) {\n'
+                                                      '      $name->subscribe(privateNodeHandle, config.$topic, '
+                                                      'config.$queue$noDelay);\n'
+                                                      '    }').substitute(name=name,topic=topic_param,
+                                                                          queue=queue_size_param, noDelay=no_delay))
+
+        for publisher in publishers:
+            name = publisher['name']
+            type = publisher['type']
+            header = publisher['header']
+            description = publisher['description']
+
+            # add include entry
+            if header:
+                include = "#include <{}>".format(header)
+            else:
+                type_slash = type.replace("::", "/")
+                include = "#include <{}.h>".format(type_slash)
+            if not include in includes:
+                includes.append(include)
+
+            # add subscriber entry
+            publisher_entries.append(Template('  ros::Publisher ${name}; /*!< $description*/').substitute(
+                name=name, description=description))
+
+            # add subscribe for parameter server
+            topic_param = publisher['topic_param']
+            queue_size_param = publisher['queue_size_param']
+            sub_adv_from_server.append(Template('    $name = privateNodeHandle.advertise<$type>($topic, $queue);')
+                                         .substitute(name=name, type=type, topic=topic_param, queue=queue_size_param,
+                                                     noDelay=no_delay))
+            if publisher['configurable']:
+                sub_adv_from_config.append(Template('    if($topic != config.$topic || $queue != config.$queue) {\n'
+                                                      '      $name = privateNodeHandle.advertise<$type>(config.$topic, '
+                                                      'config.$queue);\n'
+                                                      '    }').substitute(name=name, type=type, topic=topic_param,
+                                                                          queue=queue_size_param))
+        includes = "\n".join(includes)
+        subscriber_entries = "\n".join(subscriber_entries)
+        publisher_entries = "n".join(publisher_entries)
+        sub_adv_from_server = "\n".join(sub_adv_from_server)
+        sub_adv_from_config = "\n".join(sub_adv_from_config)
+        subscribers_init = "".join(subscribers_init)
+
 
         params = self._get_parameters()
 
@@ -449,7 +641,11 @@ class ParameterGenerator(object):
                                                 parameters=param_entries, fromConfig=from_config,
                                                 fromParamServer=from_server, string_representation=string_representation,
                                                 non_default_params=non_default_params, nodename=self.nodename,
-                                                test_limits=test_limits)
+                                                test_limits=test_limits, includes=includes, includeError=include_error,
+                                                subscribeAdvertiseFromParamServer=sub_adv_from_server,
+                                                subscribeAdvertiseFromConfig=sub_adv_from_config,
+                                                subscribers=subscriber_entries, publishers=publisher_entries,
+                                                initSubscribers=subscribers_init)
 
         header_file = os.path.join(self.cpp_gen_dir, self.classname + "Parameters.h")
         try:
@@ -469,14 +665,26 @@ class ParameterGenerator(object):
         """
         params = self._get_parameters()
         paramDescription = str(params)
+        subscriberDescription = str(self._get_subscribers())
+        publisherDescription = str(self._get_publishers())
+
+        #generate import statements
+        imports = set()
+        for subscriber in self._get_subscribers():
+            imports.add("import {}".format(subscriber['import']))
+        for publisher in self._get_publishers():
+            imports.add("import {}".format(publisher['import']))
+        imports = "\n".join(imports)
         
         # Read in template file
         templatefile = os.path.join(self.dynconfpath, "templates", "Parameters.py.template")
         with open(templatefile, 'r') as f:
             template = f.read()
 
-        content = Template(template).substitute(pkgname=self.pkgname, ClassName=self.classname,
-                                                paramDescription=paramDescription)
+        content = Template(template).substitute(pkgname=self.pkgname, ClassName=self.classname, imports=imports,
+                                                paramDescription=paramDescription,
+                                                subscriberDescription=subscriberDescription,
+                                                publisherDescription=publisherDescription)
 
         py_file = os.path.join(self.py_gen_dir, "param", self.classname + "Parameters.py")
         try:
@@ -497,6 +705,28 @@ class ParameterGenerator(object):
         for child in self.childs:
             params.extend(child._get_parameters())
         return params
+
+    def _get_subscribers(self):
+        """
+        Subscriber of this and all childs
+        :return: list of all subscribers
+        """
+        subscribers = []
+        subscribers.extend(self.subscribers)
+        for child in self.childs:
+            subscribers.extend(child._get_subscribers())
+        return subscribers
+
+    def _get_publishers(self):
+        """
+        Subscriber of this and all childs
+        :return: list of all publishers
+        """
+        publishers = []
+        publishers.extend(self.publishers)
+        for child in self.childs:
+            publishers.extend(child._get_publishers())
+        return publishers
 
     def _generate_param_entries(self):
         """
