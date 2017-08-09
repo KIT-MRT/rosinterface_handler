@@ -47,6 +47,7 @@ class ${ClassName}Parameters(dict):
             # rescue the callbacks if existing
             if name in self:
                 callbacks = self[name].callbacks
+                self[name].callbacks = {}
             else:
                 callbacks = {}
             self[name] = message_filters.Subscriber(self[subscriber['topic_param']], self.get_type(subscriber),
@@ -73,19 +74,19 @@ class ${ClassName}Parameters(dict):
             queue_param = subscriber['queue_size_param']
             if config[topic_param] != self[topic_param] or config[queue_param] != self[queue_param]:
                 callbacks = self[name].callbacks
-                self[name] = message_filters.Subscriber(self[subscriber['topic_param']], self.get_type(subscriber),
-                                                        queue_size=self[subscriber['queue_size_param']],
+                self[name].callbacks = {}
+                self[name] = message_filters.Subscriber(config[topic_param], self.get_type(subscriber),
+                                                        queue_size=config[queue_param],
                                                         tcp_nodelay=subscriber['no_delay'])
                 self[name].callbacks = callbacks
         for publisher in publisher_description:
-            if not subscriber['configurable']:
+            if not publisher['configurable']:
                 continue
-            name = subscriber['name']
-            topic_param = subscriber['topic_param']
-            queue_param = subscriber['queue_size_param']
+            name = publisher['name']
+            topic_param = publisher['topic_param']
+            queue_param = publisher['queue_size_param']
             if config[topic_param] != self[topic_param] or config[queue_param] != self[queue_param]:
-                self[name] = rospy.Publisher(self[publisher['topic_param']], self.get_type(publisher),
-                                             queue_size=self[publisher['queue_size_param']])
+                self[name] = rospy.Publisher(config[topic_param], self.get_type(publisher), queue_size=config[queue_param])
         for k, v in config.iteritems():
             # handle reserved name groups
             if k == "groups":
