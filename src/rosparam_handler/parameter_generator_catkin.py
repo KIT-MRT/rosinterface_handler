@@ -108,17 +108,20 @@ class ParameterGenerator(object):
         self.enums.append({'name': name, 'description': description, 'values': entry_strings})
 
     def add_subscriber(self, name, message_type, description, default_topic="", default_queue_size=5, no_delay=False,
-                       header = None, module = None, configurable=False, global_scope=False, constant=False):
+                       topic_param=None, queue_size_param=None, header=None, module=None, configurable=False,
+                       global_scope=False, constant=False):
         """
         Adds a subscriber to your parameter struct and a parameter for its topic and queue size. Don't forget to add a
         dependency to message_filter and the package for the message used to your package.xml!
-        :param name: Base name of the subscriber. Will be name of the subscriber in the parameter struct. the topic
-        parameter is then <name>_topic and the queue size <name>_queue_size.
+        :param name: Base name of the subscriber. Will be name of the subscriber in the parameter struct. The topic
+        parameter is then <name>_topic and the queue size <name>_queue_size (unless overriden).
         :param message_type: Type of message including its namespace (e.g. std_msgs::Header)
         :param description: Chose an informative documentation string for this subscriber.
         :param default_topic: (optional) Default topic to subscribe to.
         :param default_queue_size: (optional) Default queue size of the subscriber.
         :param no_delay: (optional) Set the tcp_no_delay parameter for subscribing. Recommended for larger topics.
+        :param topic_param: (optional) Name of the param configuring the topic. Will be "<name>_topic" if None.
+        :param queue_size_param: (optional) Name of param configuring the queue size. Defaults to "<name>_queue_size".
         :param header: (optional) Header name to include. Will be deduced for message type if None.
         :param module: (optional) Module to import from (e.g. std_msgs.msg). Will be automatically deduced if None.
         :param configurable: (optional) Should the topic name and message queue size be dynamically configurable?
@@ -129,8 +132,10 @@ class ParameterGenerator(object):
         :return: None
         """
         # add subscriber topic and queue size as param
-        topic_param = name + '_topic'
-        queue_size_param = name + '_queue_size'
+        if not topic_param:
+            topic_param = name + '_topic'
+        if not queue_size_param:
+            queue_size_param = name + '_queue_size'
         self.add(name=topic_param, paramtype='std::string', description='Topic for ' + description,
                  default=default_topic, configurable=configurable, global_scope=global_scope, constant=constant)
         self.add(name=queue_size_param, paramtype='int', description='Queue size for ' + description, min=0,
@@ -156,17 +161,20 @@ class ParameterGenerator(object):
         }
         self.subscribers.append(newparam)
 
-    def add_publisher(self, name, message_type, description, default_topic="", default_queue_size=5, header = None,
-                      module=None, configurable=False, global_scope=False, constant=False):
+    def add_publisher(self, name, message_type, description, default_topic="", default_queue_size=5, topic_param=None,
+                      queue_size_param=None, header=None, module=None, configurable=False, global_scope=False,
+                      constant=False):
         """
         Adds a publisher to your parameter struct and a parameter for its topic and queue size. Don't forget to add a
         dependency to message_filter and the package for the message used to your package.xml!
-        :param name: Base name of the publisher. Will be name of the publisher in the parameter struct. the topic
-        parameter is then <name>_topic and the queue size <name>_queue_size.
+        :param name: Base name of the publisher. Will be name of the publisher in the parameter struct. The topic
+        parameter is then <name>_topic and the queue size <name>_queue_size (unless overriden).
         :param message_type: Type of message including its namespace (e.g. std_msgs::Header)
         :param description: Chose an informative documentation string for this publisher.
         :param default_topic: (optional) Default topic to publish to.
         :param default_queue_size: (optional) Default queue size of the publisher.
+        :param topic_param: (optional) Name of the param configuring the topic. Will be "<name>_topic" if None.
+        :param queue_size_param: (optional) Name of param configuring the queue size. Defaults to "<name>_queue_size".
         :param header: (optional) Header name to include. Will be deduced for message type if None.
         :param module: (optional) Module to import from (e.g. std_msgs.msg). Will be automatically deduced if None.
         :param configurable: (optional) Should the topic name and message queue size be dynamically configurable?
@@ -177,8 +185,10 @@ class ParameterGenerator(object):
         :return: None
         """
         # add publisher topic and queue size as param
-        topic_param = name + '_topic'
-        queue_size_param = name + '_queue_size'
+        if not topic_param:
+            topic_param = name + '_topic'
+        if not queue_size_param:
+            queue_size_param = name + '_queue_size'
         self.add(name=topic_param, paramtype='std::string', description='Topic for ' + description,
                  default=default_topic, configurable=configurable, global_scope=global_scope, constant=constant)
         self.add(name=queue_size_param, paramtype='int', description='Queue size for ' + description, min=0,
@@ -568,7 +578,7 @@ class ParameterGenerator(object):
                                                                           queue=queue_size_param))
         includes = "\n".join(includes)
         subscriber_entries = "\n".join(subscriber_entries)
-        publisher_entries = "n".join(publisher_entries)
+        publisher_entries = "\n".join(publisher_entries)
         sub_adv_from_server = "\n".join(sub_adv_from_server)
         sub_adv_from_config = "\n".join(sub_adv_from_config)
         subscribers_init = "".join(subscribers_init)
