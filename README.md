@@ -1,7 +1,7 @@
 # rosparam_handler
 ## Package Summary
 A unified parameter handler for nodes with automatic code generation.
-Save time on defining your parameters. No more redundant code. Easy error checking. Make them dynamic with a single flag.
+Save time on defining your parameters, publishers and subscribers. No more redundant code. Easy error checking. Make them dynamic with a single flag.
 
 - Maintainer status: maintained
 - Maintainer: Claudio Bandera <cbandera@posteo.de>
@@ -11,13 +11,14 @@ Save time on defining your parameters. No more redundant code. Easy error checki
 - Source: git https://github.com/cbandera/rosparam_handler.git (branch: master)
 
 
-## Unified Parameter Handling for ROS
+## Unified Parameter and Topic Handling for ROS
 When working with ROS and Parameters, there are a couple of tools to help you with handing Parameters to your nodes and to modify them, e.g. [Parameter Server](http://wiki.ros.org/Parameter%20Server) and [dynamic_reconfigure](http://wiki.ros.org/dynamic_reconfigure/).
 
-But with the multitude of options on where to specify your parameters, we often face the problem that we get a redundancy in our code and config files.
+But with the multitude of options on where to specify your parameters and how to configure your publishers and subscribers, we often face the problem that we get a redundancy in our code and config files.
 
 The `rosparam_handler` let's you:
 - specify all of your parameters in a single file
+- automatically create publishers and subscribers
 - use a generated struct to hold your parameters
 - use member method for grabbing the parameters from the parameter server
 - use member method for updating them from dynamic_reconfigure.

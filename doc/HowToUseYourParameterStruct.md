@@ -54,6 +54,40 @@ This will update all values that were specified as configurable. At the same tim
 
 You can find a running version of this example code in the [rosparam_handler_tutorial](https://github.com/cbandera/rosparam_handler_tutorial)-Repository
 
+## Publisher and subscriber
+Publishers and subscribers are already initialized and ready to use. If they are defined to be configruable, the `fromParamServer()` function takes care of updating the topic.
+In order to actually use the subscriber, you need to register your message callback(s) once on startup. Keep in mind that subscribers are actually shared pointers:
+```cpp
+params_.my_subscriber->registerCallback(&myCallback);
+```
+
+No work is required for publishers. Just use them:
+```cpp
+std_msgs::Header my_msg;
+params_.my_publisher.publish(my_msg);
+```
+
+### Synchronized subscribers
+Because the subscribers are actually `message_filters::Subscriber`, you can directly use them to create a synchronized subscriber:
+```cpp
+message_filters::TimeSynchronizer<sensor_msgs::Image, sensor_msgs::Image> sync(*params_.my_subscriber1, *params_.my_subscriber2, 10);
+sync.registerCallback(boost::bind(&callback, _1, _2));
+```
+
+
+### Diagnosed publishers
+Diagnosed publishers are supported too as they can be initialized with the publisher from the params struct.
+In the case of configurable publishers, this needs to be done in the reconfigure callback to ensure the diagnosed publisher is always publishing to the right topic. Don't worry, the overhead is very small.
+```cpp
+void reconfigureRequest(TutorialConfig& config, uint32_t level) {
+    params_.fromConfig(config);
+    diagnosed_publisher = diagnostic_updater::DiagnosedPublisher<std_msgs::Header>(params_->my_publisher, updater_,frequency_param, timestamp_param);
+    // now use the diagnosed_publisher
+    std_msgs::Header my_msg;
+    diagnosed_publisher.publish(my_msg);
+}
+```
+
 ## Python
 All your parameters are fully available in python nodes as well. Just import the parameter file:
 ```python

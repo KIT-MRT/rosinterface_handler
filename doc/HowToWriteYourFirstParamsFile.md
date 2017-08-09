@@ -36,6 +36,7 @@ gen.add("map_param", paramtype="std::map<std::string,std::string>", description=
 gen.add("weight", paramtype="double",description="Weight can not be negative", min=0.0)
 gen.add("age", paramtype="int",description="Normal age of a human is inbetween 0 and 100", min=0, max=100)
 gen.add("default_param", paramtype="std::string",description="Parameter with default value", default="Hello World")
+
 # Default vector/map
 gen.add("vector_bool", paramtype="std::vector<bool>", description="A vector of boolean with default value.", default=[False, True, True, False, True])
 gen.add("map_string_float", paramtype="std::map<std::string,float>", description="A map of <std::string,float> with default value.", default={"a":0.1, "b":1.2, "c":2.3, "d":3.4, "e":4.5}, min=0, max=5)
@@ -60,11 +61,18 @@ entry_strings=["Small", "Medium", "Large", "ExtraLarge"], default="Medium"))
 my_group = gen.add_group("my_group")
 my_group.add("subparam", paramtype="std::string", description="This parameter is part of a group", configurable=True)
 
+# Create subscribers/publishers
+gen.add_subscriber("my_subscriber", message_type="std_msgs::Header", description="subscriber", configurable=True)
+gen.add_publisher("my_publisher", message_type="std_msgs::Header", description="publisher", default_topic="publisher_topic")
+
 #Syntax : Package, Node, Config Name(The final name will be MyDummyConfig)
 exit(gen.generate("rosparam_tutorials", "example_node", "Tutorial"))
 ```
 
+## Line by line
 Now lets break the code down line by line.
+
+### Initialization
 ```python
 #!/usr/bin/env python
 from rosparam_handler.parameter_generator_catkin import *
@@ -72,6 +80,7 @@ gen = ParameterGenerator()
 ```
 This first lines are pretty simple, they just initialize ros, import and instantiate the parameter generator.
 
+### Adding parameters
 Now that we have a generator we can start to define parameters. The add function adds a parameter to the list of parameters. It takes a the following mandatory arguments:
 
 - **name**: a string which specifies the name under which this parameter should be stored
@@ -124,6 +133,7 @@ gen.add("global_parameter", paramtype="std::string", description="This parameter
 
 With the global_scope flag, parameters can be defined to live in the global namespace. Normally you should always keep your parameters in the private namespace of a node. Only exception is when several nodes need to get the exact same value for a parameter. (E.g. a common map file)
 
+### Adding enums
 ```python
 # Add an enum:
 gen.add_enum("my_enum", description="My first self written enum",
@@ -132,13 +142,44 @@ entry_strings=["Small", "Medium", "Large", "ExtraLarge"], default="Medium"))
 
 By using the add_enum function, an enum for the dynamic_reconfigure window can be easily defined. The entry_strings will also be static parameters of the resulting parameter struct.
 
+### Creating groups
 ```python
 # Add a subgroup
 my_group = gen.add_group("my_group")
 my_group.add("subparam", paramtype="std::string", description="This parameter is part of a group", configurable=True)
 ```
 
-Finally, by using the add_group function, you can sort parameters into groups in the dynamic_reconfigure window. This obviously only makes sense for configurable parameters.
+With the add_group function, you can sort parameters into groups in the dynamic_reconfigure window. This obviously only makes sense for configurable parameters.
+
+### Adding publishers/subscribers
+```python
+# Create subscribers/publishers
+gen.add_subscriber("my_subscriber", message_type="std_msgs::Header", description="subscriber", configurable=True)
+gen.add_publisher("my_publisher", message_type="std_msgs::Header", description="publisher", default_topic="publisher_topic")
+```
+
+Using these commands, the rosparam handler can even do the subscribing and advertising for you. The rosparam handler makes sure the node is always connected to the right topic. A parameter for the topic and the queue size will be automatically generated for you.
+The signature for both commands are very similar. They take the following mandatory elements:
+- **name**: Base name of the subscriber/publisher. Will be name of the object in the parameter struct. The topic parameter is then *name*_topic and the queue size *name*_queue_size (unless overriden).
+- **message_type**: Type of message including its namespace (e.g. std_msgs::Header). This will also be used to generate the name of the header/module to include (unless overriden).
+- **description**: Chose an informative documentation string for this subscriber/publisher.
+
+The following parameters are optional. Many of them will be automatically deduced from the mandatory parameters:
+- **default_topic**: Default topic to subscribe to. If empty the
+- **default_queue_size**: Default queue size of the subscriber/publisher.
+- **no_delay** _(only for add_subscriber)_: Set the tcp_no_delay parameter for subscribing. Recommended for larger messages.
+- **topic_param**: Name of the param configuring the topic. Will be "*name*_topic" if None.
+- **queue_size_param**: Name of param configuring the queue size. Defaults to "*name*_queue_size".
+- **header**: Header name to include. Will be deduced for message type if None.
+- **module**: Module to import from (e.g. std_msgs.msg). Will be automatically deduced if None.
+- **configurable**: Should the subscribed topic and message queue size be dynamically configurable?
+- **global_scope**: If true, parameter for topic and queue size is searched in global ('/')
+        namespace instead of private ('~') ns
+- **constant**: If this is true, the parameters will not be fetched from param server,
+        but the default value is kept.
+
+
+### The final step
 
 ```python
 exit(gen.generate("rosparam_tutorials", "example_node", "Tutorial"))
