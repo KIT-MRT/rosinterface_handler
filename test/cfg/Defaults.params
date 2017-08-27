@@ -23,5 +23,8 @@ gen.add("map_param_w_default", paramtype="std::map<std::string,std::string>", de
 
 gen.add_enum("enum_param_w_default", description="enum", entry_strings=["Small", "Medium", "Large", "ExtraLarge"], default="Medium")
 
+gen.add_subscriber("subscriber_w_default", description="subscriber", default_topic="in_topic", message_type="std_msgs::Header")
+gen.add_publisher("publisher_w_default", description="publisher", default_topic="out_topic", message_type="std_msgs::Header")
+
 #Syntax : Package, Node, Config Name(The final name will be MyDummyConfig)
 exit(gen.generate("rosparam_handler", "rosparam_handler_test", "Defaults"))

@@ -20,3 +20,5 @@ vector_bool_param_wo_default: [false, true]
 vector_string_param_wo_default: ["Hello","World"]
 map_param_wo_default: {"Hello": "World"}
 enum_param_wo_default: 1
+subscriber_wo_default_topic: "in_topic"
+publisher_wo_default_topic: "out_topic"

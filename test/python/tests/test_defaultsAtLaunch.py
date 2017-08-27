@@ -16,3 +16,11 @@ class TestDefaultsAtLaunch(unittest.TestCase):
 
         self.assertEqual(params.map_param_wo_default, {"Hello": "World"})
         self.assertEqual(params.enum_param_wo_default, 1)
+
+    def test_defaults_at_launch_subscriber(self):
+        params = DefaultsAtLaunchParameters()
+        self.assertEqual(params.subscriber_wo_default.sub.name, "/test/in_topic")
+
+    def test_defaults_at_launch_publisher(self):
+        params = DefaultsAtLaunchParameters()
+        self.assertEqual(params.publisher_wo_default.name, "/test/out_topic")

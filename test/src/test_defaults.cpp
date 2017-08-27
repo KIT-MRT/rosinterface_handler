@@ -5,7 +5,7 @@
 typedef rosparam_handler::DefaultsParameters ParamType;
 typedef rosparam_handler::DefaultsConfig ConfigType;
 
-TEST(RosparamHandler, Defaults) {
+TEST(RosparamHandler, DefaultParams) {
     ParamType testParams(ros::NodeHandle("~"));
     ASSERT_NO_THROW(testParams.fromParamServer());
 
@@ -19,8 +19,23 @@ TEST(RosparamHandler, Defaults) {
     ASSERT_EQ(std::vector<bool>({false, true}), testParams.vector_bool_param_w_default);
     ASSERT_EQ(std::vector<std::string>({"Hello", "World"}), testParams.vector_string_param_w_default);
 
-	std::map<std::string,std::string> tmp{{"Hello","World"}};
+    std::map<std::string,std::string> tmp{{"Hello","World"}};
     ASSERT_EQ(tmp, testParams.map_param_w_default);
 
     ASSERT_EQ(1, testParams.enum_param_w_default);
+}
+
+TEST(RosparamHandler, DefaultSubscriber) {
+    ParamType testParams(ros::NodeHandle("~"));
+    ASSERT_NO_THROW(testParams.fromParamServer());
+
+    ASSERT_TRUE(!!testParams.subscriber_w_default);
+    ASSERT_EQ(testParams.subscriber_w_default->getTopic(), "/test/rosparam_handler_test/in_topic");
+}
+
+TEST(RosparamHandler, DefaultPublisher) {
+    ParamType testParams(ros::NodeHandle("~"));
+    ASSERT_NO_THROW(testParams.fromParamServer());
+
+    ASSERT_EQ(testParams.publisher_w_default.getTopic(), "/test/rosparam_handler_test/out_topic");
 }

@@ -7,7 +7,7 @@ catkin_python_setup()
 
 if (CATKIN_ENABLE_TESTING)
 	# set compiler flags
-    find_package(catkin REQUIRED COMPONENTS dynamic_reconfigure rostest roscpp)
+    find_package(catkin REQUIRED COMPONENTS dynamic_reconfigure rostest roscpp message_filters std_msgs)
     set(ROSPARAM_HANDLER_CMAKE_DIR ${CMAKE_CURRENT_LIST_DIR}/cmake)
     include(cmake/rosparam_handler-macros.cmake)
 	file(GLOB PROJECT_TEST_FILES_PARAMS RELATIVE "${CMAKE_CURRENT_LIST_DIR}" "test/cfg/*.params")
