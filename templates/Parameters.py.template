@@ -117,10 +117,16 @@ class ${ClassName}Parameters(dict):
                 raise ValueError()
 
         full_name = "/" + param_name if config['global_scope'] else "~" + param_name
-        val = rospy.get_param(full_name, config['default'])
-        if val is None:
-            raise KeyError("Parameter {} is neither set on the parameter server nor "
-                           "has it a default value".format(param_description))
+        try:
+            val = rospy.get_param(full_name)
+        except KeyError:
+            if config['default'] is None:
+                raise KeyError("Parameter {} is neither set on the parameter server nor "
+                               "has it a default value".format(param_description))
+            rospy.loginfo("Parameter {} is not yet set. Setting default value".format(param_name))
+            rospy.set_param(full_name, config['default'])
+            val = config['default']
+
         # test whether type is correct
         try:
             if config['is_vector']:
@@ -144,18 +150,18 @@ class ${ClassName}Parameters(dict):
         if config['min'] is not None:
             if config['is_vector']:
                 if min(val) < config['min']:
-                    rospy.logerr(
+                    rospy.logwarn(
                         "Some values in {} for {} are smaller than minimal allowed value. "
                         "Correcting them to min={}".format(val, param_name, config['min']))
                     val = [ v if v > config['min'] else config['min'] for v in val ]
             elif config['is_map']:
                 if min(val.values()) < config['min']:
-                    rospy.logerr(
+                    rospy.logwarn(
                         "Some values in {} for {} are smaller than minimal allowed value. "
                         "Correcting them to min={}".format(val, param_name, config['min']))
                     val = { k: (v if v > config['min'] else config['min']) for k, v in val.items() }
             elif val < config['min']:
-                rospy.logerr(
+                rospy.logwarn(
                     "Value of {} for {} is smaller than minimal allowed value. "
                     "Correcting value to min={}".format(val, param_name, config['min']))
                 val = config['min']
@@ -163,18 +169,18 @@ class ${ClassName}Parameters(dict):
         if config['max'] is not None:
             if config['is_vector']:
                 if max(val) > config['max']:
-                    rospy.logerr(
+                    rospy.logwarn(
                         "Some values in {} for {} are greater than maximal allowed value. "
                         "Correcting them to max={}".format(val, param_name, config['max']))
                     val = [ v if v < config['max'] else config['max'] for v in val ]
             elif config['is_map']:
                 if max(val.values()) > config['max']:
-                    rospy.logerr(
+                    rospy.logwarn(
                         "Some values in {} for {} are greater than maximal allowed value. "
                         "Correcting them to max={}".format(val, param_name, config['max']))
                     val = { k: (v if v < config['max'] else config['max']) for k, v in val.items() }
             elif val > config['max']:
-                rospy.logerr(
+                rospy.logwarn(
                     "Value of {} for {} is greater than maximal allowed value. "
                     "Correcting value to max={}".format(val, param_name, config['max']))
                 val = config['max']
