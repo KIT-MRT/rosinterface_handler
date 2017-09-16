@@ -54,6 +54,21 @@ This will update all values that were specified as configurable. At the same tim
 
 You can find a running version of this example code in the [rosparam_handler_tutorial](https://github.com/cbandera/rosparam_handler_tutorial)-Repository
 
+## Setting parameters on the server
+If you change your parameters at runtime from within the code, you can upload the current state of the parameters with
+```cpp
+params_.toParamServer();
+```
+This will set all non-const parameters with their current value on the ros parameter server.
+
+## Setting parameters at launch time
+If you want to run your node with parameters other then the default parameters, then they have to be set on the parameter server before the node starts.
+To ease the burden of setting all parameters one after the other, roslaunch has the [rosparam](http://wiki.ros.org/roslaunch/XML/rosparam) argument to load a YAML file containing a whole set of key value pairs.
+Rosparam handler provides a script, to automatically generates a YAML file for you to use. Calling it will generate a file in your current directory.
+```sh
+rosrun rosparam_handler generate_yaml <path/to/Tutorial.params>
+```
+
 ## Publisher and subscriber
 Publishers and subscribers are already initialized and ready to use. If they are defined to be configruable, the `fromParamServer()` function takes care of updating the topic.
 In order to actually use the subscriber, you need to register your message callback(s) once on startup. Keep in mind that subscribers are actually shared pointers:
@@ -106,3 +121,7 @@ def reconfigure_callback(self, config, level):
     print("Parameter dummy changed to {}".format(self.params.dummy))
 ```
 
+And a call to set the parameters on the server will look like this:
+```python
+self.params.to_param_server
+```
