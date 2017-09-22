@@ -38,6 +38,7 @@ TEST(RosparamHandler, DefaultPublisher) {
     ASSERT_NO_THROW(testParams.fromParamServer());
 
     ASSERT_EQ(testParams.publisher_w_default.getTopic(), "/test/rosparam_handler_test/out_topic");
+}
 
 TEST(RosparamHandler, DefaultsOnParamServer) {
     ros::NodeHandle nh("~");

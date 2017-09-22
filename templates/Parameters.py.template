@@ -67,7 +67,7 @@ class ${ClassName}Parameters(dict):
         """
         for param_name, param_value in self.iteritems():
             config = next((item for item in param_description if item["name"] == param_name), None)
-            if not config['constant']:
+            if config and not config['constant']:
                 full_name = "/" + param_name if config['global_scope'] else "~" + param_name
                 rospy.set_param(full_name, param_value)
                

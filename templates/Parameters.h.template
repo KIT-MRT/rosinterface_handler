@@ -103,6 +103,7 @@ $non_default_params    );
   const std::string globalNamespace;
   const std::string privateNamespace;
   const std::string nodeName;
+  ros::NodeHandle privateNodeHandle;
 };
 
 } // namespace ${pkgname}
