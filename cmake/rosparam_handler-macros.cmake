@@ -59,6 +59,10 @@ macro(generate_ros_parameter_files)
             list(APPEND ${PROJECT_NAME}_LOCAL_CFG_FILES "${_output_cfg}")
             list(APPEND ${PROJECT_NAME}_params_generated ${_output_cpp} ${_output_cfg} ${_output_py})
 
+            # make file show up in ides
+            STRING(REGEX REPLACE "/" "-" IDE_TARGET_NAME ${PROJECT_NAME}-show-${_input})
+            add_custom_target(${IDE_TARGET_NAME} SOURCES ${_input})
+
             install(
                     FILES ${_output_cpp}
                     DESTINATION ${CATKIN_PACKAGE_INCLUDE_DESTINATION}

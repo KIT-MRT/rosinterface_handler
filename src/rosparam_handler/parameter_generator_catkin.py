@@ -220,6 +220,7 @@ class ParameterGenerator(object):
 
         - If no default value is given, you need to specify one in your launch file
         - Global parameters, vectors, maps and constant params can not be configurable
+        - Global parameters, vectors and maps can not have a default, min or max value
 
         :param self:
         :param name: The Name of you new parameter
@@ -846,10 +847,3 @@ class ParameterGenerator(object):
         else:
             # Pray and hope that it is a string
             return bool(param)
-
-
-# Create derived class for yaml generation
-class YamlGenerator(ParameterGenerator):
-    def _generateImpl(self):
-        self._generateyml()
-        return 0
