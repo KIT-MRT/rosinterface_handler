@@ -156,7 +156,8 @@ class InterfaceGenerator(object):
             'queue_size_param': queue_size_param,
             'no_delay': no_delay,
             'configurable': configurable,
-            'description': description
+            'description': description,
+            'global_scope': global_scope
         }
         self.subscribers.append(newparam)
 
@@ -208,7 +209,8 @@ class InterfaceGenerator(object):
             'topic_param': topic_param,
             'queue_size_param': queue_size_param,
             'configurable': configurable,
-            'description': description
+            'description': description,
+            'global_scope': global_scope
         }
         self.publishers.append(newparam)
 
@@ -541,19 +543,21 @@ class InterfaceGenerator(object):
             # add subscribe for parameter server
             topic_param = subscriber['topic_param']
             queue_size_param = subscriber['queue_size_param']
+            node_handle = "publicNodeHandler" if subscriber['global_scope'] else "privateNodeHandle"
             if subscriber['no_delay']:
                 no_delay = ", ros::TransportHints().tcpNoDelay()"
             else:
                 no_delay = ""
-            sub_adv_from_server.append(Template('    $name->subscribe(privateNodeHandle, $topic, $queue$noDelay);')
+            sub_adv_from_server.append(Template('    $name->subscribe($nodeHandle, $topic, $queue$noDelay);')
                                          .substitute(name=name, topic=topic_param,queue=queue_size_param,
-                                                     noDelay=no_delay))
+                                                     noDelay=no_delay, nodeHandle=node_handle))
             if subscriber['configurable']:
                 sub_adv_from_config.append(Template('    if($topic != config.$topic || $queue != config.$queue) {\n'
-                                                      '      $name->subscribe(privateNodeHandle, config.$topic, '
+                                                      '      $name->subscribe($nodeHandle, config.$topic, '
                                                       'config.$queue$noDelay);\n'
                                                       '    }').substitute(name=name,topic=topic_param,
-                                                                          queue=queue_size_param, noDelay=no_delay))
+                                                                          queue=queue_size_param, noDelay=no_delay,
+                                                                          nodeHandle=node_handle))
 
         for publisher in publishers:
             name = publisher['name']
@@ -577,15 +581,17 @@ class InterfaceGenerator(object):
             # add subscribe for parameter server
             topic_param = publisher['topic_param']
             queue_size_param = publisher['queue_size_param']
-            sub_adv_from_server.append(Template('    $name = privateNodeHandle.advertise<$type>($topic, $queue);')
+            node_handle = "publicNodeHandler" if subscriber['global_scope'] else "privateNodeHandle"
+            sub_adv_from_server.append(Template('    $name = $nodeHandle.advertise<$type>($topic, $queue);')
                                          .substitute(name=name, type=type, topic=topic_param, queue=queue_size_param,
-                                                     noDelay=no_delay))
+                                                     noDelay=no_delay, nodeHandle=node_handle))
             if publisher['configurable']:
                 sub_adv_from_config.append(Template('    if($topic != config.$topic || $queue != config.$queue) {\n'
-                                                      '      $name = privateNodeHandle.advertise<$type>(config.$topic, '
+                                                      '      $name = $nodeHandle.advertise<$type>(config.$topic, '
                                                       'config.$queue);\n'
                                                       '    }').substitute(name=name, type=type, topic=topic_param,
-                                                                          queue=queue_size_param))
+                                                                          queue=queue_size_param,
+                                                                          nodeHandle=node_handle))
         includes = "\n".join(includes)
         subscriber_entries = "\n".join(subscriber_entries)
         publisher_entries = "\n".join(publisher_entries)

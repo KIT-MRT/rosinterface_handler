@@ -44,20 +44,25 @@ class ${ClassName}Interface(dict):
             self[k] = self.get_param(k, config)
         for subscriber in subscriber_description:
             name = subscriber['name']
+            topic = self[subscriber['topic_param']]
+            topic = "/" + topic if subscriber['global_scope'] else "~" + topic
+
             # rescue the callbacks if existing
             if name in self:
                 callbacks = self[name].callbacks
                 self[name].callbacks = {}
             else:
                 callbacks = {}
-            self[name] = message_filters.Subscriber(self[subscriber['topic_param']], self.get_type(subscriber),
+            self[name] = message_filters.Subscriber(topic, self.get_type(subscriber),
                                                     queue_size=self[subscriber['queue_size_param']],
                                                     tcp_nodelay=subscriber['no_delay'])
             self[name].callbacks = callbacks
         for publisher in publisher_description:
             name = publisher['name']
-            self[name] = rospy.Publisher(self[publisher['topic_param']], self.get_type(publisher),
-                                              queue_size=self[publisher['queue_size_param']])
+            topic = self[publisher['topic_param']]
+            topic = "/" + topic if publisher['global_scope'] else "~" + topic
+            self[name] = rospy.Publisher(topic, self.get_type(publisher),
+                                         queue_size=self[publisher['queue_size_param']])
 
 
 

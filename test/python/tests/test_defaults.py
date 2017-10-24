@@ -24,11 +24,11 @@ class TestDefaults(unittest.TestCase):
 
     def test_defaults_subscriber(self):
         params = DefaultsInterface()
-        self.assertEqual(params.subscriber_w_default.sub.name, "/test/in_topic")
+        self.assertEqual(params.subscriber_w_default.sub.name, "/test/rosinterface_handler_python_test/in_topic")
 
     def test_defaults_publisher(self):
         params = DefaultsInterface()
-        self.assertEqual(params.publisher_w_default.name, "/test/out_topic")
+        self.assertEqual(params.publisher_w_default.name, "/test/rosinterface_handler_python_test/out_topic")
 
     def test_defaults_on_server(self):
         params = DefaultsInterface()
