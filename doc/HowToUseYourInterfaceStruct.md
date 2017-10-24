@@ -4,8 +4,8 @@
 
 ## Generated files
 When creating params files as described in [How to write your first .params file](HowToWriteYourFirstParamsFile.md), you will end up with the following two files:
-- *'include/rosparam_tutorials/TutorialParameters.h'*
-- *'include/rosparam_tutorials/TutorialConfig.h'*
+- *'include/rosinterface_tutorials/TutorialParameters.h'*
+- *'include/rosinterface_tutorials/TutorialConfig.h'*
 
 The '<name>Parameters.h' file will hold a struct called `<name>Parameters`.  
 The '<name>Config.h' file will hold the normal dynamic_reconfigure Config struct.
@@ -13,13 +13,13 @@ The '<name>Config.h' file will hold the normal dynamic_reconfigure Config struct
 For your code it is enough to include the \*Parameters.h file, e.g.
 
 ```cpp
-#include "rosparam_tutorials/TutorialParameters.h"
+#include "rosinterface_tutorials/TutorialParameters.h"
 ```
 
 You can now add an instance of the parameter struct to your class:
 
 ```cpp
-rosparam_tutorials::TutorialParameters params_;
+rosinterface_tutorials::TutorialParameters params_;
 ```
 
 ## Initializing the struct.
@@ -37,7 +37,7 @@ MyNodeClass::MyNodeClass()
 
 If you do not use a class (which you should do though in my opinion), you can create it like so:
 ```cpp
-rosparam_tutorials::TutorialParameters params_{ros::NodeHandle("~")}
+rosinterface_tutorials::TutorialParameters params_{ros::NodeHandle("~")}
 params_.fromParamServer();
 ```
 Note: If you have set the logger level for your node to debug, you will get information on which values have been retrieved.  
@@ -52,7 +52,7 @@ void reconfigureRequest(TutorialConfig& config, uint32_t level) {
 ```
 This will update all values that were specified as configurable. At the same time, it assures that all dynamic_reconfigure parameters live in the same namespace as those on the parameter server to avoid problems with redundant parameters.
 
-You can find a running version of this example code in the [rosparam_handler_tutorial](https://github.com/cbandera/rosparam_handler_tutorial)-Repository
+You can find a running version of this example code in the [rosinterface_handler_tutorial](https://github.com/cbandera/rosinterface_handler_tutorial)-Repository
 
 ## Setting parameters on the server
 If you change your parameters at runtime from within the code, you can upload the current state of the parameters with
@@ -63,10 +63,10 @@ This will set all non-const parameters with their current value on the ros param
 
 ## Setting parameters at launch time
 If you want to run your node with parameters other then the default parameters, then they have to be set on the parameter server before the node starts.
-To ease the burden of setting all parameters one after the other, roslaunch has the [rosparam](http://wiki.ros.org/roslaunch/XML/rosparam) argument to load a YAML file containing a whole set of key value pairs.
-Rosparam handler provides a script, to automatically generates a YAML file for you to use. Calling it will generate a file in your current directory.
+To ease the burden of setting all parameters one after the other, roslaunch has the [rosinterface](http://wiki.ros.org/roslaunch/XML/rosinterface) argument to load a YAML file containing a whole set of key value pairs.
+Rosinterface handler provides a script, to automatically generates a YAML file for you to use. Calling it will generate a file in your current directory.
 ```sh
-rosrun rosparam_handler generate_yaml <path/to/Tutorial.params>
+rosrun rosinterface_handler generate_yaml <path/to/Tutorial.if>
 ```
 
 ## Publisher and subscriber
@@ -106,7 +106,7 @@ void reconfigureRequest(TutorialConfig& config, uint32_t level) {
 ## Python
 All your parameters are fully available in python nodes as well. Just import the parameter file:
 ```python
-from rosparam_tutorials.param.TutorialParameters import TutorialParameters
+from rosinterface_tutorials.param.TutorialParameters import TutorialParameters
 ```
 
 Unlike in C++, the call to fromParamServer is not necessary:

@@ -1,8 +1,8 @@
 import unittest
-from rosparam_handler.param.DefaultsMissingParameters import DefaultsMissingParameters
+from rosinterface_handler.param.DefaultsMissingInterface import DefaultsMissingInterface
 
 
-class TestDefaultsMissingParameters(unittest.TestCase):
+class TestDefaultsMissingInterface(unittest.TestCase):
     def test_defaults_missing(self):
         with self.assertRaises(KeyError):
-            params = DefaultsMissingParameters()
+            params = DefaultsMissingInterface()

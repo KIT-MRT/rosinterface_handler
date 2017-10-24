@@ -1,12 +1,12 @@
 # How to Write Your First .params File
-**Description**: This tutorial will familiarize you with .params files that allow you to use rosparam_handler.
+**Description**: This tutorial will familiarize you with .params files that allow you to use rosinterface_handler.
 **Tutorial Level**: INTERMEDIATE
 
 ## Basic Setup
 
-To begin lets create a package called rosparam_tutorials which depends on rospy, roscpp, rosparam_handler and dynamic_reconfigure.
+To begin lets create a package called rosinterface_tutorials which depends on rospy, roscpp, rosinterface_handler and dynamic_reconfigure.
 ```shell
-catkin_create_pkg --rosdistro ROSDISTRO rospy roscpp rosparam_handler dynamic_reconfigure
+catkin_create_pkg --rosdistro ROSDISTRO rospy roscpp rosinterface_handler dynamic_reconfigure
 ```
 Where ROSDISTRO is the ROS distribution you are using.
 
@@ -21,7 +21,7 @@ Lastly you will need to create a params file, for this example we'll call it Tut
 Add the following to your Tutorials.params file:
 ```python
 #!/usr/bin/env python
-from rosparam_handler.parameter_generator_catkin import *
+from rosinterface_handler.parameter_generator_catkin import *
 gen = ParameterGenerator()
 
 # Parameters with different types
@@ -42,7 +42,7 @@ gen.add("vector_bool", paramtype="std::vector<bool>", description="A vector of b
 gen.add("map_string_float", paramtype="std::map<std::string,float>", description="A map of <std::string,float> with default value.", default={"a":0.1, "b":1.2, "c":2.3, "d":3.4, "e":4.5}, min=0, max=5)
 
 # Constant and configurable parameters
-gen.add("optimal_parameter", paramtype="double", description="Optimal parameter, can not be set via rosparam", default=10, constant=True)
+gen.add("optimal_parameter", paramtype="double", description="Optimal parameter, can not be set via rosinterface", default=10, constant=True)
 gen.add("configurable_parameter", paramtype="double", description="This parameter can be set via dynamic_reconfigure", configurable=True)
 
 # Defining the namespace
@@ -66,7 +66,7 @@ gen.add_subscriber("my_subscriber", message_type="std_msgs::Header", description
 gen.add_publisher("my_publisher", message_type="std_msgs::Header", description="publisher", default_topic="publisher_topic")
 
 #Syntax : Package, Node, Config Name(The final name will be MyDummyConfig)
-exit(gen.generate("rosparam_tutorials", "example_node", "Tutorial"))
+exit(gen.generate("rosinterface_tutorials", "example_node", "Tutorial"))
 ```
 
 ## Line by line
@@ -75,7 +75,7 @@ Now lets break the code down line by line.
 ### Initialization
 ```python
 #!/usr/bin/env python
-from rosparam_handler.parameter_generator_catkin import *
+from rosinterface_handler.parameter_generator_catkin import *
 gen = ParameterGenerator()
 ```
 This first lines are pretty simple, they just initialize ros, import and instantiate the parameter generator.
@@ -119,7 +119,7 @@ These lines add parameters, which either have default values, which means that t
 
 ```python
 # Constant and configurable parameters
-gen.add("optimal_parameter", paramtype="double", description="Optimal parameter, can not be set via rosparam", default=10, constant=True)
+gen.add("optimal_parameter", paramtype="double", description="Optimal parameter, can not be set via rosinterface", default=10, constant=True)
 gen.add("configurable_parameter", paramtype="double", description="This parameter can be set via dynamic_reconfigure", configurable_parameter=True)
 ```
 
@@ -158,7 +158,7 @@ gen.add_subscriber("my_subscriber", message_type="std_msgs::Header", description
 gen.add_publisher("my_publisher", message_type="std_msgs::Header", description="publisher", default_topic="publisher_topic")
 ```
 
-Using these commands, the rosparam handler can even do the subscribing and advertising for you. The rosparam handler makes sure the node is always connected to the right topic. A parameter for the topic and the queue size will be automatically generated for you.
+Using these commands, the rosinterface handler can even do the subscribing and advertising for you. The rosinterface handler makes sure the node is always connected to the right topic. A parameter for the topic and the queue size will be automatically generated for you.
 The signature for both commands are very similar. They take the following mandatory elements:
 - **name**: Base name of the subscriber/publisher. Will be name of the object in the parameter struct. The topic parameter is then *name*_topic and the queue size *name*_queue_size (unless overriden).
 - **message_type**: Type of message including its namespace (e.g. std_msgs::Header). This will also be used to generate the name of the header/module to include (unless overriden).
@@ -182,7 +182,7 @@ The following parameters are optional. Many of them will be automatically deduce
 ### The final step
 
 ```python
-exit(gen.generate("rosparam_tutorials", "example_node", "Tutorial"))
+exit(gen.generate("rosinterface_tutorials", "example_node", "Tutorial"))
 ```
 
 The last line simply tells the generator to generate the necessary files and exit the program. The second parameter is the name of a node this could run in (used to generate documentation only), the third parameter is a name prefix the generated files will get (e.g. "<name>Config.h" for the dynamic_reconfigure struct and "<name>Parameters.h" for the parameter struct.
@@ -200,8 +200,8 @@ chmod a+x cfg/Tutorials.params
 Next we need to add the following lines to our CMakeLists.txt.
 
 ```cmake
-#add rosparam_handler api
-find_package(catkin REQUIRED rosparam_handler dynamic_reconfigure)
+#add rosinterface_handler api
+find_package(catkin REQUIRED rosinterface_handler dynamic_reconfigure)
 
 generate_ros_parameter_files(
   cfg/Tutorials.params
@@ -211,7 +211,7 @@ generate_ros_parameter_files(
 
 # make sure configure headers are built before any node using them
 add_dependencies(example_node ${PROJECT_NAME}_gencfg) # For dynamic_reconfigure
-add_dependencies(example_node ${PROJECT_NAME}_genparam) # For rosparam_handler
+add_dependencies(example_node ${PROJECT_NAME}_genparam) # For rosinterface_handler
 ```
 Note: You need a node example_node that is already built, before the add_dependencies line is reached (ref Create a node in C++).  
 

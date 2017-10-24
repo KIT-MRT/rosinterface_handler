@@ -1,10 +1,10 @@
 import unittest
-from rosparam_handler.param.MinMaxParameters import MinMaxParameters
+from rosinterface_handler.param.MinMaxInterface import MinMaxInterface
 
 
-class TestMinMaxParameters(unittest.TestCase):
+class TestMinMaxInterface(unittest.TestCase):
     def test_min_max_parameters(self):
-        params = MinMaxParameters()
+        params = MinMaxInterface()
         self.assertEqual(params.int_param_w_minmax, 2)
         self.assertAlmostEqual(params.double_param_w_minmax, 2.)
 

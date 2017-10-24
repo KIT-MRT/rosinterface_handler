@@ -3,7 +3,7 @@
 
 int main(int argc, char** argv) {
     testing::InitGoogleTest(&argc, argv);
-    ros::init(argc, argv, "rosparam_handler_test");
+    ros::init(argc, argv, "rosinterface_handler_test");
     // The async spinner lets you publish and receive messages during the tests,
     // no need to call spinOnce()
     ros::AsyncSpinner spinner(1);

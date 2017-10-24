@@ -5,10 +5,10 @@ import unittest
 modules = glob.glob(dirname(__file__)+"/*.py")
 __all__ = [ basename(f)[:-3] for f in modules if isfile(f) and not f.endswith('__init__.py')]
 
-class RosparamTestSuite(unittest.TestSuite):
+class RosinterfaceTestSuite(unittest.TestSuite):
 
         def __init__(self):
-            super(RosparamTestSuite, self).__init__()
+            super(RosinterfaceTestSuite, self).__init__()
 
             # Collect test cases
             testcases = {}

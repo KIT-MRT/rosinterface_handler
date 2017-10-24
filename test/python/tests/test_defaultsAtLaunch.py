@@ -1,10 +1,10 @@
 import unittest
-from rosparam_handler.param.DefaultsAtLaunchParameters import DefaultsAtLaunchParameters
+from rosinterface_handler.param.DefaultsAtLaunchInterface import DefaultsAtLaunchInterface
 
 
 class TestDefaultsAtLaunch(unittest.TestCase):
     def test_defaults_at_launch(self):
-        params = DefaultsAtLaunchParameters()
+        params = DefaultsAtLaunchInterface()
         self.assertEqual(params.int_param_wo_default, 1)
         self.assertAlmostEqual(params.double_param_wo_default, 1.1)
         self.assertEqual(params.str_param_wo_default, "Hello World")
@@ -18,9 +18,9 @@ class TestDefaultsAtLaunch(unittest.TestCase):
         self.assertEqual(params.enum_param_wo_default, 1)
 
     def test_defaults_at_launch_subscriber(self):
-        params = DefaultsAtLaunchParameters()
+        params = DefaultsAtLaunchInterface()
         self.assertEqual(params.subscriber_wo_default.sub.name, "/test/in_topic")
 
     def test_defaults_at_launch_publisher(self):
-        params = DefaultsAtLaunchParameters()
+        params = DefaultsAtLaunchInterface()
         self.assertEqual(params.publisher_wo_default.name, "/test/out_topic")

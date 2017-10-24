@@ -5,8 +5,8 @@ import os
 sys.path.append(os.path.join(os.path.dirname(__file__),"../../src"))
 ######################################################
 
-from rosparam_handler.parameter_generator_catkin import *
-gen = ParameterGenerator()
+from rosinterface_handler.interface_generator_catkin import *
+gen = InterfaceGenerator()
 
 # Parameters with different types
 gen.add("int_param_w_minmax", paramtype="int", description="An Integer parameter", default=3, min=0, max=2)
@@ -18,4 +18,4 @@ gen.add("vector_double_param_w_minmax", paramtype="std::vector<double>", descrip
 gen.add("map_param_w_minmax", paramtype="std::map<std::string,double>", description="A map parameter", default={"value1": -1.2,"value2": 1.2,"value3": 2.2}, min=0., max=2.)
 
 #Syntax : Package, Node, Config Name(The final name will be MyDummyConfig)
-exit(gen.generate("rosparam_handler", "rosparam_handler_test", "MinMax"))
+exit(gen.generate("rosinterface_handler", "rosinterface_handler_test", "MinMax"))

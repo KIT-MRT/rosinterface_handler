@@ -42,11 +42,11 @@ def eprint(*args, **kwargs):
     sys.exit(1)
 
 
-class ParameterGenerator(object):
+class InterfaceGenerator(object):
     """Automatic config file and header generator"""
 
     def __init__(self, parent=None, group=""):
-        """Constructor for ParamGenerator"""
+        """Constructor for InterfaceGenerator"""
         self.enums = []
         self.parameters = []
         self.subscribers = []
@@ -61,7 +61,7 @@ class ParameterGenerator(object):
 
         if len(sys.argv) != 5:
             eprint(
-                "ParameterGenerator: Unexpected amount of args, did you try to call this directly? You shouldn't do this!")
+                "InterfaceGenerator: Unexpected amount of args, did you try to call this directly? You shouldn't do this!")
 
         self.dynconfpath = sys.argv[1]
         self.share_dir = sys.argv[2]
@@ -80,7 +80,7 @@ class ParameterGenerator(object):
         """
         if not name:
             eprint("You have added a group with an empty group name. This is not supported!")
-        child = ParameterGenerator(self, name)
+        child = InterfaceGenerator(self, name)
         self.childs.append(child)
         return child
 
@@ -303,13 +303,13 @@ class ParameterGenerator(object):
         if param['configurable'] and (
                             param['global_scope'] or param['is_vector'] or param['is_map'] or param['constant']):
             eprint(param['name'],
-                   "Global Parameters, vectors, maps and constant params can not be declared configurable! ")
+                   "Global Interfaces, vectors, maps and constant params can not be declared configurable! ")
         if param['global_scope'] and param['default'] is not None:
             eprint(param['name'], "Default values for global parameters should not be specified in node! ")
         if param['constant'] and param['default'] is None:
             eprint(param['name'], "Constant parameters need a default value!")
         if param['name'] in [p['name'] for p in self.parameters]:
-            eprint(param['name'], "Parameter with the same name exists already")
+            eprint(param['name'], "Interface with the same name exists already")
         if param['edit_method'] == '':
             param['edit_method'] = '""'
         elif param['edit_method'] != '""':
@@ -347,7 +347,7 @@ class ParameterGenerator(object):
     def _test_primitive_type(name, drtype):
         """
         Test whether parameter has one of the accepted C++ types
-        :param name: Parametername
+        :param name: Interfacename
         :param drtype: Typestring
         :return:
         """
@@ -489,7 +489,7 @@ class ParameterGenerator(object):
         """
 
         # Read in template file
-        templatefile = os.path.join(self.dynconfpath, "templates", "Parameters.h.template")
+        templatefile = os.path.join(self.dynconfpath, "templates", "Interface.h.template")
         with open(templatefile, 'r') as f:
             template = f.read()
 
@@ -535,7 +535,7 @@ class ParameterGenerator(object):
                                                '*/').substitute(type=type, name=name, description=description))
 
             # add initialisation
-            subscribers_init.append(Template(',\n    $name{std::make_shared<message_filters::Subscriber<$type>>()}')
+            subscribers_init.append(Template(' $name{std::make_shared<message_filters::Subscriber<$type>>()},\n   ')
                                    .substitute(name=name, type=type))
 
             # add subscribe for parameter server
@@ -627,14 +627,14 @@ class ParameterGenerator(object):
                                               '*/').substitute(type=param['type'], name=name,
                                                                description=param['description'],
                                                                default=self._get_cvalue(param, "default")))
-                from_server.append(Template('    rosparam_handler::testConstParam($paramname);').substitute(paramname=full_name))
+                from_server.append(Template('    rosinterface_handler::testConstParam($paramname);').substitute(paramname=full_name))
             else:
                 param_entries.append(Template('  ${type} ${name}; /*!< ${description} */').substitute(
                     type=param['type'], name=name, description=param['description']))
-                from_server.append(Template('    success &= rosparam_handler::getParam($paramname, $name$default);').substitute(
+                from_server.append(Template('    success &= rosinterface_handler::getParam($paramname, $name$default);').substitute(
                     paramname=full_name, name=name, default=default, description=param['description']))
                 to_server.append(
-                    Template('  rosparam_handler::setParam(${paramname},${name});').substitute(paramname=full_name, name=name))
+                    Template('  rosinterface_handler::setParam(${paramname},${name});').substitute(paramname=full_name, name=name))
 
             # Test for configurable params
             if param['configurable']:
@@ -648,10 +648,10 @@ class ParameterGenerator(object):
             else:
                 ttype = param['type']
             if param['min'] is not None:
-                test_limits.append(Template('    rosparam_handler::testMin<$type>($paramname, $name, $min);').substitute(
+                test_limits.append(Template('    rosinterface_handler::testMin<$type>($paramname, $name, $min);').substitute(
                     paramname=full_name, name=name, min=param['min'], type=ttype))
             if param['max'] is not None:
-                test_limits.append(Template('    rosparam_handler::testMax<$type>($paramname, $name, $max);').substitute(
+                test_limits.append(Template('    rosinterface_handler::testMax<$type>($paramname, $name, $max);').substitute(
                     paramname=full_name, name=name, max=param['max'], type=ttype))
 
             # Add debug output
@@ -678,7 +678,7 @@ class ParameterGenerator(object):
                                                 subscribers=subscriber_entries, publishers=publisher_entries,
                                                 initSubscribers=subscribers_init)
 
-        header_file = os.path.join(self.cpp_gen_dir, self.classname + "Parameters.h")
+        header_file = os.path.join(self.cpp_gen_dir, self.classname + "Interface.h")
         try:
             if not os.path.exists(os.path.dirname(header_file)):
                 os.makedirs(os.path.dirname(header_file))
@@ -708,7 +708,7 @@ class ParameterGenerator(object):
         imports = "\n".join(imports)
 
         # Read in template file
-        templatefile = os.path.join(self.dynconfpath, "templates", "Parameters.py.template")
+        templatefile = os.path.join(self.dynconfpath, "templates", "Interface.py.template")
         with open(templatefile, 'r') as f:
             template = f.read()
 
@@ -717,7 +717,7 @@ class ParameterGenerator(object):
                                                 subscriberDescription=subscriberDescription,
                                                 publisherDescription=publisherDescription)
 
-        py_file = os.path.join(self.py_gen_dir, "param", self.classname + "Parameters.py")
+        py_file = os.path.join(self.py_gen_dir, "param", self.classname + "Interface.py")
         try:
             if not os.path.exists(os.path.dirname(py_file)):
                 os.makedirs(os.path.dirname(py_file))
@@ -738,7 +738,7 @@ class ParameterGenerator(object):
         """
         params = self._get_parameters()
 
-        content = "### This file was generated using the rosparam_handler generate_yaml script.\n"
+        content = "### This file was generated using the rosinterface_handler generate_yaml script.\n"
 
         for entry in params:
             if not entry["constant"]:
@@ -755,7 +755,7 @@ class ParameterGenerator(object):
                 else:
                     content += str(entry["name"]) + ": \n"
 
-        yaml_file = os.path.join(os.getcwd(), self.classname + "Parameters.yaml")
+        yaml_file = os.path.join(os.getcwd(), self.classname + "Interface.yaml")
 
         with open(yaml_file, 'w') as f:
             f.write(content)

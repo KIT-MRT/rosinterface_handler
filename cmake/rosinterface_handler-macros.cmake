@@ -1,9 +1,9 @@
 
-macro(generate_ros_parameter_files)
+macro(generate_ros_interface_files)
     set(CFG_FILES "${ARGN}")
-    set(ROSPARAM_HANDLER_ROOT_DIR "${ROSPARAM_HANDLER_CMAKE_DIR}/..")
+    set(ROSINTERFACE_HANDLER_ROOT_DIR "${ROSINTERFACE_HANDLER_CMAKE_DIR}/..")
     if (${PROJECT_NAME}_CATKIN_PACKAGE)
-        message(FATAL_ERROR "generate_parameter_files() must be called before catkin_package() in project '${PROJECT_NAME}'")
+        message(FATAL_ERROR "generate_interface_files() must be called before catkin_package() in project '${PROJECT_NAME}'")
     endif ()
 
     # ensure that package destination variables are defined
@@ -24,18 +24,18 @@ macro(generate_ros_parameter_files)
         endif ()
 
         get_filename_component(_cfgext ${_cfg} EXT)
-        if( _cfgext STREQUAL ".params" OR _cfgext STREQUAL ".mrtcfg")
+        if( _cfgext STREQUAL ".if")
             # Define required input files
-            set(genparam_build_files
-                    ${ROSPARAM_HANDLER_ROOT_DIR}/templates/ConfigType.h.template
-                    ${ROSPARAM_HANDLER_ROOT_DIR}/templates/Parameters.h.template
+            set(geninterface_build_files
+                    ${ROSINTERFACE_HANDLER_ROOT_DIR}/templates/ConfigType.h.template
+                    ${ROSINTERFACE_HANDLER_ROOT_DIR}/templates/Interface.h.template
                     )
 
             # Define output files
             get_filename_component(_cfgonly ${_cfg} NAME_WE)
             set(_output_cfg ${CATKIN_DEVEL_PREFIX}/${CATKIN_PACKAGE_SHARE_DESTINATION}/cfg/${_cfgonly}.cfg)
-            set(_output_cpp ${CATKIN_DEVEL_PREFIX}/${CATKIN_PACKAGE_INCLUDE_DESTINATION}/${_cfgonly}Parameters.h)
-            set(_output_py ${CATKIN_DEVEL_PREFIX}/${CATKIN_PACKAGE_PYTHON_DESTINATION}/param/${_cfgonly}Parameters.py)
+            set(_output_cpp ${CATKIN_DEVEL_PREFIX}/${CATKIN_PACKAGE_INCLUDE_DESTINATION}/${_cfgonly}Interface.h)
+            set(_output_py ${CATKIN_DEVEL_PREFIX}/${CATKIN_PACKAGE_PYTHON_DESTINATION}/interface/${_cfgonly}Interface.py)
 
 
             # Create command
@@ -43,7 +43,7 @@ macro(generate_ros_parameter_files)
             set(_cmd
                     ${CATKIN_ENV}
                     ${_input}
-                    ${ROSPARAM_HANDLER_ROOT_DIR}
+                    ${ROSINTERFACE_HANDLER_ROOT_DIR}
                     ${CATKIN_DEVEL_PREFIX}/${CATKIN_PACKAGE_SHARE_DESTINATION}
                     ${CATKIN_DEVEL_PREFIX}/${CATKIN_PACKAGE_INCLUDE_DESTINATION}
                     ${CATKIN_DEVEL_PREFIX}/${CATKIN_PACKAGE_PYTHON_DESTINATION}
@@ -52,12 +52,12 @@ macro(generate_ros_parameter_files)
             add_custom_command(OUTPUT
                     ${_output_cpp} ${_output_cfg} ${_output_py}
                     COMMAND ${_cmd}
-                    DEPENDS ${_input} ${genparam_build_files}
-                    COMMENT "Generating parameter files from ${_cfgonly}"
+                    DEPENDS ${_input} ${geninterface_build_files}
+                    COMMENT "Generating interface files from ${_cfgonly}"
                     )
 
             list(APPEND ${PROJECT_NAME}_LOCAL_CFG_FILES "${_output_cfg}")
-            list(APPEND ${PROJECT_NAME}_params_generated ${_output_cpp} ${_output_cfg} ${_output_py})
+            list(APPEND ${PROJECT_NAME}_interfaces_generated ${_output_cpp} ${_output_cfg} ${_output_py})
 
             # make file show up in ides
             STRING(REGEX REPLACE "/" "-" IDE_TARGET_NAME ${PROJECT_NAME}-show-${_input})
@@ -69,17 +69,19 @@ macro(generate_ros_parameter_files)
             )
         elseif( _cfgext STREQUAL ".cfg" )
             list(APPEND ${PROJECT_NAME}_LOCAL_CFG_FILES "${_cfg}")
+        elseif( _cfgext STREQUAL ".param" )
+            message(WARNING "Found old .param Files. Rosparam handler and rosinterface handler should not be used in combination!")
         else()
             message(WARNING "Unknown file ending : ${_cfgext}. Skipping")
         endif()
 
     endforeach (_cfg)
 
-    # genparam target for hard dependency on generate_parameter generation
-    add_custom_target(${PROJECT_NAME}_genparam ALL DEPENDS ${${PROJECT_NAME}_params_generated})
+    # geninterface target for hard dependency on generate_interface generation
+    add_custom_target(${PROJECT_NAME}_geninterface ALL DEPENDS ${${PROJECT_NAME}_interfaces_generated})
 
     # register target for catkin_package(EXPORTED_TARGETS)
-    list(APPEND ${PROJECT_NAME}_EXPORTED_TARGETS ${PROJECT_NAME}_genparam)
+    list(APPEND ${PROJECT_NAME}_EXPORTED_TARGETS ${PROJECT_NAME}_geninterface)
 
     # make sure we can find generated headers and that they overlay all other includes
     include_directories(BEFORE ${CATKIN_DEVEL_PREFIX}/${CATKIN_GLOBAL_INCLUDE_DESTINATION})
@@ -88,11 +90,11 @@ macro(generate_ros_parameter_files)
     # ensure that the folder exists
     file(MAKE_DIRECTORY ${CATKIN_DEVEL_PREFIX}/${CATKIN_GLOBAL_INCLUDE_DESTINATION})
     #Require C++11
-    set_property(TARGET ${PROJECT_NAME}_genparam PROPERTY CXX_STANDARD 11)
-    set_property(TARGET ${PROJECT_NAME}_genparam PROPERTY CXX_STANDARD_REQUIRED ON)
+    set_property(TARGET ${PROJECT_NAME}_geninterface PROPERTY CXX_STANDARD 11)
+    set_property(TARGET ${PROJECT_NAME}_geninterface PROPERTY CXX_STANDARD_REQUIRED ON)
 
     # install python files
-    install_ros_python_parameter_files()
+    install_ros_python_interface_files()
 
     # generate dynamic reconfigure files
     if(dynamic_reconfigure_FOUND_CATKIN_PROJECT)
@@ -104,9 +106,9 @@ macro(generate_ros_parameter_files)
     endif()
 endmacro()
 
-macro(install_ros_python_parameter_files)
-    if(NOT install_ros_python_parameter_files_CALLED)
-        set(install_ros_python_parameter_files_CALLED TRUE)
+macro(install_ros_python_interface_files)
+    if(NOT install_ros_python_interface_files_CALLED)
+        set(install_ros_python_interface_files_CALLED TRUE)
 
         # mark that generate_dynamic_reconfigure_options() was called in order to detect wrong order of calling with catkin_python_setup()
         set(${PROJECT_NAME}_GENERATE_DYNAMIC_RECONFIGURE TRUE)
@@ -125,16 +127,16 @@ macro(install_ros_python_parameter_files)
                )
         endif()
             
-        # generate param module __init__.py
-        if(NOT EXISTS ${CATKIN_DEVEL_PREFIX}/${CATKIN_PACKAGE_PYTHON_DESTINATION}/param/__init__.py)
-            file(WRITE ${CATKIN_DEVEL_PREFIX}/${CATKIN_PACKAGE_PYTHON_DESTINATION}/param/__init__.py "")
+        # generate interface module __init__.py
+        if(NOT EXISTS ${CATKIN_DEVEL_PREFIX}/${CATKIN_PACKAGE_PYTHON_DESTINATION}/interface/__init__.py)
+            file(WRITE ${CATKIN_DEVEL_PREFIX}/${CATKIN_PACKAGE_PYTHON_DESTINATION}/interface/__init__.py "")
         endif()
         
         # compile python code before installing
         find_package(PythonInterp REQUIRED)
-        install(CODE "execute_process(COMMAND \"${PYTHON_EXECUTABLE}\" -m compileall \"${CATKIN_DEVEL_PREFIX}/${CATKIN_PACKAGE_PYTHON_DESTINATION}/param\")")
+        install(CODE "execute_process(COMMAND \"${PYTHON_EXECUTABLE}\" -m compileall \"${CATKIN_DEVEL_PREFIX}/${CATKIN_PACKAGE_PYTHON_DESTINATION}/interface\")")
         install(
-            DIRECTORY ${CATKIN_DEVEL_PREFIX}/${CATKIN_PACKAGE_PYTHON_DESTINATION}/param
+            DIRECTORY ${CATKIN_DEVEL_PREFIX}/${CATKIN_PACKAGE_PYTHON_DESTINATION}/interface
             DESTINATION ${CATKIN_PACKAGE_PYTHON_DESTINATION}
             )
     endif()

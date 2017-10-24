@@ -5,8 +5,8 @@ import os
 sys.path.append(os.path.join(os.path.dirname(__file__),"../../src"))
 ######################################################
 
-from rosparam_handler.parameter_generator_catkin import *
-gen = ParameterGenerator()
+from rosinterface_handler.interface_generator_catkin import *
+gen = InterfaceGenerator()
 
 # Parameters with different types
 gen.add("int_param_wo_default", paramtype="int", description="An Integer parameter")
@@ -27,4 +27,4 @@ gen.add_subscriber("subscriber_wo_default", description="subscriber", message_ty
 gen.add_publisher("publisher_wo_default", description="publisher", message_type="std_msgs::Header")
 
 #Syntax : Package, Node, Config Name(The final name will be MyDummyConfig)
-exit(gen.generate("rosparam_handler", "rosparam_handler_test", "DefaultsAtLaunch"))
+exit(gen.generate("rosinterface_handler", "rosinterface_handler_test", "DefaultsAtLaunch"))

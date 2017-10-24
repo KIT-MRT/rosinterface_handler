@@ -1,13 +1,13 @@
 <?xml version="1.0"?>
 <package>
-  <name>rosparam_handler</name>
+  <name>rosinterface_handler</name>
   <version>0.1.1</version>
-  <description>An easy wrapper for using parameters in ROS.</description>
+  <description>An easy toolbox to generate interfaces from a node to the ROS world.</description>
   <license>BSD</license>
 
- <maintainer email="wirges@fzi.de">Sascha Wirges</maintainer>
+  <maintainer email="poggenhans@fzi.de">Fabian Poggenhans</maintainer>
   <author email="cbandera@posteo.de">Claudio Bandera</author>
-  <url type="repository">https://github.com/cbandera/rosparam_handler.git</url>
+  <url type="repository">https://github.com/cbandera/rosinterface_handler.git</url>
 
   <buildtool_depend>catkin</buildtool_depend>
   <run_depend>catkin</run_depend>
