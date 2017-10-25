@@ -45,7 +45,8 @@ class ${ClassName}Interface(dict):
         for subscriber in subscriber_description:
             name = subscriber['name']
             topic = self[subscriber['topic_param']]
-            topic = "/" + topic if subscriber['global_scope'] else "~" + topic
+            if not topic.startswith('/'):
+                topic = "/" + topic if subscriber['global_scope'] else "~" + topic
 
             # rescue the callbacks if existing
             if name in self:
@@ -60,7 +61,8 @@ class ${ClassName}Interface(dict):
         for publisher in publisher_description:
             name = publisher['name']
             topic = self[publisher['topic_param']]
-            topic = "/" + topic if publisher['global_scope'] else "~" + topic
+            if not topic.startswith('/'):
+                topic = "/" + topic if publisher['global_scope'] else "~" + topic
             self[name] = rospy.Publisher(topic, self.get_type(publisher),
                                          queue_size=self[publisher['queue_size_param']])
 

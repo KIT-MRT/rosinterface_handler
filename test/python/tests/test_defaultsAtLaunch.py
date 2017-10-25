@@ -1,5 +1,5 @@
 import unittest
-from rosinterface_handler.param.DefaultsAtLaunchInterface import DefaultsAtLaunchInterface
+from rosinterface_handler.interface.DefaultsAtLaunchInterface import DefaultsAtLaunchInterface
 
 
 class TestDefaultsAtLaunch(unittest.TestCase):

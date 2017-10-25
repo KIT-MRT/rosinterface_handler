@@ -1,5 +1,5 @@
 import unittest
-from rosinterface_handler.param.DefaultsInterface import DefaultsInterface
+from rosinterface_handler.interface.DefaultsInterface import DefaultsInterface
 import rospy
 
 

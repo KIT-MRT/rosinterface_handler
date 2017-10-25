@@ -1,5 +1,5 @@
 import unittest
-from rosinterface_handler.param.DefaultsMissingInterface import DefaultsMissingInterface
+from rosinterface_handler.interface.DefaultsMissingInterface import DefaultsMissingInterface
 
 
 class TestDefaultsMissingInterface(unittest.TestCase):

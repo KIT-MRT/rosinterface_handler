@@ -15,10 +15,10 @@ def generate_yaml(in_file):
     out_file = os.path.join(os.getcwd(), basename + "Parameters.yaml")
     print("Yaml file is written to: {}".format(out_file))
 
-    # Mock call arguments for call to ParamGenerator
+    # Mock call arguments for call to InterfaceGenerator
     sys.argv[1:4] = ["", "", "", ""]
     # Redirect import statement
-    sys.modules['rosinterface_handler.parameter_generator_catkin'] = __import__('sys')
+    sys.modules['rosinterface_handler.interface_generator_catkin'] = __import__('sys')
 
     # Execute param file in mocked environment
     global_vars = {"__file__": in_file, 'InterfaceGenerator': YamlGenerator}

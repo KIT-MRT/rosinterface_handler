@@ -723,7 +723,7 @@ class InterfaceGenerator(object):
                                                 subscriberDescription=subscriberDescription,
                                                 publisherDescription=publisherDescription)
 
-        py_file = os.path.join(self.py_gen_dir, "param", self.classname + "Interface.py")
+        py_file = os.path.join(self.py_gen_dir, "interface", self.classname + "Interface.py")
         try:
             if not os.path.exists(os.path.dirname(py_file)):
                 os.makedirs(os.path.dirname(py_file))
@@ -732,7 +732,7 @@ class InterfaceGenerator(object):
             pass
         with open(py_file, 'w') as f:
             f.write(content)
-        init_file = os.path.join(self.py_gen_dir, "param", "__init__.py")
+        init_file = os.path.join(self.py_gen_dir, "interface", "__init__.py")
         with open(init_file, 'wa') as f:
             f.write("")
 
@@ -853,3 +853,10 @@ class InterfaceGenerator(object):
         else:
             # Pray and hope that it is a string
             return bool(param)
+
+
+# Create derived class for yaml generation
+class YamlGenerator(InterfaceGenerator):
+    def _generateImpl(self):
+        self._generateyml()
+        return 0

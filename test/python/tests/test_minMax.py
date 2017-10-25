@@ -1,5 +1,5 @@
 import unittest
-from rosinterface_handler.param.MinMaxInterface import MinMaxInterface
+from rosinterface_handler.interface.MinMaxInterface import MinMaxInterface
 
 
 class TestMinMaxInterface(unittest.TestCase):
