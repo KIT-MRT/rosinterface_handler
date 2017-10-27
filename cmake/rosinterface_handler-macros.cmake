@@ -24,7 +24,7 @@ macro(generate_ros_interface_files)
         endif ()
 
         get_filename_component(_cfgext ${_cfg} EXT)
-        if( _cfgext STREQUAL ".if")
+        if( _cfgext STREQUAL ".rosif")
             # Define required input files
             set(geninterface_build_files
                     ${ROSINTERFACE_HANDLER_ROOT_DIR}/templates/ConfigType.h.template
