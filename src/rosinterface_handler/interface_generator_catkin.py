@@ -31,8 +31,6 @@ from string import Template
 import sys
 import os
 import re
-import message_filters
-message_filters.Subscriber
 
 def eprint(*args, **kwargs):
     print("************************************************", file=sys.stderr, **kwargs)
@@ -305,13 +303,13 @@ class InterfaceGenerator(object):
         if param['configurable'] and (
                             param['global_scope'] or param['is_vector'] or param['is_map'] or param['constant']):
             eprint(param['name'],
-                   "Global Interfaces, vectors, maps and constant params can not be declared configurable! ")
+                   "Global parameters, vectors, maps and constant params can not be declared configurable! ")
         if param['global_scope'] and param['default'] is not None:
             eprint(param['name'], "Default values for global parameters should not be specified in node! ")
         if param['constant'] and param['default'] is None:
             eprint(param['name'], "Constant parameters need a default value!")
         if param['name'] in [p['name'] for p in self.parameters]:
-            eprint(param['name'], "Interface with the same name exists already")
+            eprint(param['name'], "Parameter with the same name exists already")
         if param['edit_method'] == '':
             param['edit_method'] = '""'
         elif param['edit_method'] != '""':

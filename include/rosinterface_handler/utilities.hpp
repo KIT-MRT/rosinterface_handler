@@ -39,9 +39,9 @@ std::ostream& operator<<(std::ostream& stream, const std::map<T1, T2>& map) {
 
 namespace rosinterface_handler {
 
-/// \brief Sets the logger level according to a standardized interfaceeter name 'verbosity'.
+/// \brief Sets the logger level according to a standardized parameter name 'verbosity'.
 ///
-/// \interface nodeHandle The ROS node handle to search for the interfaceeter 'verbosity'.
+/// \interface nodeHandle The ROS node handle to search for the parameter 'verbosity'.
 inline void setLoggerLevel(const ros::NodeHandle& nodeHandle) {
 
     std::string verbosity;
@@ -117,7 +117,7 @@ inline void exit(const std::string msg = "Runtime Error in rosinterface handler.
     throw std::runtime_error(msg);
 }
 
-/// \brief Set interfaceeter on ROS interfaceeter server
+/// \brief Set parameter on ROS parameter server
 ///
 /// \interface key Parameter name
 /// \interface val Parameter value
@@ -126,26 +126,26 @@ inline void setParam(const std::string key, T val) {
     ros::param::set(key, val);
 }
 
-/// \brief Get interfaceeter from ROS interfaceeter server
+/// \brief Get parameter from ROS parameter server
 ///
 /// \interface key Parameter name
 /// \interface val Parameter value
 template <typename T>
 inline bool getParam(const std::string key, T& val) {
     if (!ros::param::has(key)) {
-        ROS_ERROR_STREAM("Parameter '" << key << "' is not defined.");
+        ROS_WARN_STREAM("Parameter '" << key << "' is not defined.");
         return false;
     } else if (!ros::param::get(key, val)) {
-        ROS_ERROR_STREAM("Could not retrieve interfaceeter'" << key << "'. Does it have a different type?");
+        ROS_ERROR_STREAM("Could not retrieve parameter'" << key << "'. Does it have a different type?");
         return false;
     } else {
         return true;
     }
 }
 
-/// \brief Get interfaceeter from ROS interfaceeter server or use default value
+/// \brief Get parameter from ROS parameter server or use default value
 ///
-/// If interfaceeter does not exist on server yet, the default value is used and set on server.
+/// If parameter does not exist on server yet, the default value is used and set on server.
 /// \interface key Parameter name
 /// \interface val Parameter value
 /// \interface defaultValue Parameter default value
@@ -162,18 +162,18 @@ inline bool getParam(const std::string key, T& val, const T& defaultValue) {
     }
 }
 
-/// \brief Tests that interfaceeter is not set on the interfaceeter server
+/// \brief Tests that parameter is not set on the parameter server
 inline bool testConstParam(const std::string key) {
     if (ros::param::has(key)) {
         ROS_WARN_STREAM("Parameter " << key
-                                     << "' was set on the interfaceeter server eventhough it was defined to be constant.");
+                                     << "' was set on the parameter server eventhough it was defined to be constant.");
         return false;
     } else {
         return true;
     }
 }
 
-/// \brief Limit interfaceeter to lower bound if interfaceeter is a scalar.
+/// \brief Limit parameter to lower bound if parameter is a scalar.
 ///
 /// \interface key Parameter name
 /// \interface val Parameter value
@@ -187,7 +187,7 @@ inline void testMin(const std::string key, T& val, T min = std::numeric_limits<T
     }
 }
 
-/// \brief Limit interfaceeter to lower bound if interfaceeter is a vector.
+/// \brief Limit parameter to lower bound if parameter is a vector.
 ///
 /// \interface key Parameter name
 /// \interface val Parameter value
@@ -198,7 +198,7 @@ inline void testMin(const std::string key, std::vector<T>& val, T min = std::num
         testMin(key, v, min);
 }
 
-/// \brief Limit interfaceeter to lower bound if interfaceeter is a map.
+/// \brief Limit parameter to lower bound if parameter is a map.
 ///
 /// \interface key Parameter name
 /// \interface val Parameter value
@@ -209,7 +209,7 @@ inline void testMin(const std::string key, std::map<K, T>& val, T min = std::num
         testMin(key, v.second, min);
 }
 
-/// \brief Limit interfaceeter to upper bound if interfaceeter is a scalar.
+/// \brief Limit parameter to upper bound if parameter is a scalar.
 ///
 /// \interface key Parameter name
 /// \interface val Parameter value
@@ -223,7 +223,7 @@ inline void testMax(const std::string key, T& val, T max = std::numeric_limits<T
     }
 }
 
-/// \brief Limit interfaceeter to upper bound if interfaceeter is a vector.
+/// \brief Limit parameter to upper bound if parameter is a vector.
 ///
 /// \interface key Parameter name
 /// \interface val Parameter value
@@ -234,7 +234,7 @@ inline void testMax(const std::string key, std::vector<T>& val, T max = std::num
         testMax(key, v, max);
 }
 
-/// \brief Limit interfaceeter to upper bound if interfaceeter is a map.
+/// \brief Limit parameter to upper bound if parameter is a map.
 ///
 /// \interface key Parameter name
 /// \interface val Parameter value
