@@ -1,2 +1,6 @@
 *.pyc
 .idea
+CMakeLists.txt.user
+*~
+*.autosave
+

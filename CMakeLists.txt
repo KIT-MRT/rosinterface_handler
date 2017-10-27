@@ -10,7 +10,7 @@ if (CATKIN_ENABLE_TESTING)
     find_package(catkin REQUIRED COMPONENTS dynamic_reconfigure rostest roscpp message_filters std_msgs)
     set(ROSINTERFACE_HANDLER_CMAKE_DIR ${CMAKE_CURRENT_LIST_DIR}/cmake)
     include(cmake/rosinterface_handler-macros.cmake)
-        file(GLOB PROJECT_TEST_FILES_INTERFACE RELATIVE "${CMAKE_CURRENT_LIST_DIR}" "test/cfg/*.if")
+        file(GLOB PROJECT_TEST_FILES_INTERFACE RELATIVE "${CMAKE_CURRENT_LIST_DIR}" "test/cfg/*.rosif")
         generate_ros_interface_files(${PROJECT_TEST_FILES_INTERFACE})
 endif()
 
