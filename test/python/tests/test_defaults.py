@@ -20,7 +20,8 @@ class TestDefaults(unittest.TestCase):
         self.assertEqual(params.vector_string_param_w_default, ["Hello", "World"])
 
         self.assertEqual(params.map_param_w_default, {"Hello": "World"})
-        self.assertEqual(params.enum_param_w_default, 1)
+        self.assertEqual(params.enum_int_param_w_default, 1)
+        self.assertEqual(params.enum_str_param_w_default, "One")
 
     def test_defaults_subscriber(self):
         params = DefaultsInterface()
@@ -43,7 +44,8 @@ class TestDefaults(unittest.TestCase):
         self.assertEqual(params.vector_string_param_w_default, rospy.get_param("~vector_string_param_w_default"))
 
         self.assertEqual(params.map_param_w_default, rospy.get_param("~map_param_w_default"))
-        self.assertEqual(params.enum_param_w_default, rospy.get_param("~enum_param_w_default"))
+        self.assertEqual(params.enum_int_param_w_default, rospy.get_param("~enum_int_param_w_default"))
+        self.assertEqual(params.enum_str_param_w_default, rospy.get_param("~enum_str_param_w_default"))
 
     def test_set_parameters_on_server(self):
         params = DefaultsInterface()
@@ -57,7 +59,8 @@ class TestDefaults(unittest.TestCase):
         params.vector_bool_param_w_default = [True, False];
         params.vector_string_param_w_default = ["World", "Hello"];
         params.map_param_w_default = {"World": "Hello"};
-        params.enum_param_w_default = 2;
+        params.enum_int_param_w_default = 2;
+        params.enum_str_param_w_default = "Two"
 
         # Upload parameters
         params.to_param_server()
@@ -73,4 +76,5 @@ class TestDefaults(unittest.TestCase):
         self.assertEqual(params.vector_string_param_w_default, rospy.get_param("~vector_string_param_w_default"))
 
         self.assertEqual(params.map_param_w_default, rospy.get_param("~map_param_w_default"))
-        self.assertEqual(params.enum_param_w_default, rospy.get_param("~enum_param_w_default"))
+        self.assertEqual(params.enum_int_param_w_default, rospy.get_param("~enum_int_param_w_default"))
+        self.assertEqual(params.enum_str_param_w_default, rospy.get_param("~enum_str_param_w_default"))

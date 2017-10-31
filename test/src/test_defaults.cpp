@@ -22,7 +22,9 @@ TEST(RosinterfaceHandler, DefaultParams) {
     std::map<std::string, std::string> tmp{{"Hello", "World"}};
     ASSERT_EQ(tmp, testInterface.map_param_w_default);
 
-    ASSERT_EQ(1, testInterface.enum_param_w_default);
+    ASSERT_EQ(1, testInterface.enum_int_param_w_default);
+    ASSERT_EQ("One", testInterface.enum_str_param_w_default);
+
 }
 
 TEST(RosinterfaceHandler, DefaultSubscriber) {
@@ -92,9 +94,14 @@ TEST(RosinterfaceHandler, DefaultsOnParamServer) {
         EXPECT_EQ(map_param_w_default, testInterface.map_param_w_default);
     }
     {
-        int enum_interface;
-        ASSERT_TRUE(nh.getParam("enum_param_w_default", enum_interface));
-        EXPECT_EQ(enum_interface, testInterface.enum_param_w_default);
+        int enum_int_interface;
+        ASSERT_TRUE(nh.getParam("enum_int_param_w_default", enum_int_interface));
+        EXPECT_EQ(enum_int_interface, testInterface.enum_int_param_w_default);
+    }
+    {
+        std::string enum_str_interface;
+        ASSERT_TRUE(nh.getParam("enum_str_param_w_default", enum_str_interface));
+        EXPECT_EQ(enum_str_interface, testInterface.enum_str_param_w_default);
     }
 }
 
@@ -112,7 +119,8 @@ TEST(RosinterfaceHandler, SetParamOnServer) {
     testInterface.vector_bool_param_w_default = std::vector<bool>{true, false};
     testInterface.vector_string_param_w_default = std::vector<std::string>{"World", "Hello"};
     testInterface.map_param_w_default = std::map<std::string, std::string>{{"World", "Hello"}};
-    testInterface.enum_param_w_default = 2;
+    testInterface.enum_int_param_w_default = 2;
+    testInterface.enum_str_param_w_default = "Two";
 
     testInterface.toParamServer();
 
@@ -163,8 +171,13 @@ TEST(RosinterfaceHandler, SetParamOnServer) {
         EXPECT_EQ(map_param_w_default, testInterface.map_param_w_default);
     }
     {
-        int enum_interface;
-        ASSERT_TRUE(nh.getParam("enum_param_w_default", enum_interface));
-        EXPECT_EQ(enum_interface, testInterface.enum_param_w_default);
+        int enum_int_interface;
+        ASSERT_TRUE(nh.getParam("enum_int_param_w_default", enum_int_interface));
+        EXPECT_EQ(enum_int_interface, testInterface.enum_int_param_w_default);
+    }
+    {
+        std::string enum_str_interface;
+        ASSERT_TRUE(nh.getParam("enum_str_param_w_default", enum_str_interface));
+        EXPECT_EQ(enum_str_interface, testInterface.enum_str_param_w_default);
     }
 }

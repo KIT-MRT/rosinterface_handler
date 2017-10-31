@@ -15,7 +15,8 @@ class TestDefaultsAtLaunch(unittest.TestCase):
         self.assertEqual(params.vector_string_param_wo_default, ["Hello", "World"])
 
         self.assertEqual(params.map_param_wo_default, {"Hello": "World"})
-        self.assertEqual(params.enum_param_wo_default, 1)
+        self.assertEqual(params.enum_int_param_wo_default, 1)
+        self.assertEqual(params.enum_str_param_wo_default, "Two")
 
     def test_defaults_at_launch_subscriber(self):
         params = DefaultsAtLaunchInterface()

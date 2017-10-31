@@ -22,7 +22,8 @@ TEST(RosinterfaceHandler, DefaultsAtLaunch) {
     std::map<std::string, std::string> tmp{{"Hello", "World"}};
     ASSERT_EQ(tmp, testInterface.map_param_wo_default);
 
-    ASSERT_EQ(1, testInterface.enum_param_wo_default);
+    ASSERT_EQ(1, testInterface.enum_int_param_wo_default);
+    ASSERT_EQ("Two", testInterface.enum_str_param_wo_default);
 }
 
 TEST(RosinterfaceHandler, AtLaunchSubscriber) {

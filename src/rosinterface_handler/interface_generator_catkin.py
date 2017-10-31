@@ -82,27 +82,35 @@ class InterfaceGenerator(object):
         self.childs.append(child)
         return child
 
-    def add_enum(self, name, description, entry_strings, default=None):
+    def add_enum(self, name, description, entry_strings, default=None, paramtype='int'):
         """
         Add an enum to dynamic reconfigure
         :param name: Name of enum parameter
         :param description: Informative documentation string
         :param entry_strings: Enum entries, must be strings! (will be numbered with increasing value)
         :param default: Default value
+        :param paramtype: 'int' or 'std::string'; defines if selecting an entry will set the parameter to the name of
+        an entry or to an int (enumerated from zero in the order of the list)
         :return:
         """
+        if paramtype != 'int' and paramtype != 'std::string':
+            eprint("Only 'int' or 'std::string' is supported as paramtype argument for add_enum!")
 
         entry_strings = [str(e) for e in entry_strings]  # Make sure we only get strings
         if default is None:
             default = 0
-        else:
+        elif paramtype == 'int':
             default = entry_strings.index(default)
-        self.add(name=name, paramtype="int", description=description, edit_method=name, default=default,
+        elif not default in entry_strings:
+            eprint("add_enum: Default value not found in entry_strings!")
+
+        self.add(name=name, paramtype=paramtype, description=description, edit_method=name, default=default,
                  configurable=True)
         for e in entry_strings:
-            self.add(name=name + "_" + e, paramtype="int", description="Constant for enum {}".format(name),
-                     default=entry_strings.index(e), constant=True)
-        self.enums.append({'name': name, 'description': description, 'values': entry_strings})
+            enum_val = entry_strings.index(e) if paramtype == 'int' else e
+            self.add(name=name + "_" + e, paramtype=paramtype, description="Constant for enum {}".format(name),
+                     default=enum_val, constant=True)
+        self.enums.append({'name': name, 'description': description, 'values': entry_strings, 'paramtype': paramtype})
 
     def add_subscriber(self, name, message_type, description, default_topic="", default_queue_size=5, no_delay=False,
                        topic_param=None, queue_size_param=None, header=None, module=None, configurable=False,
@@ -814,12 +822,12 @@ class InterfaceGenerator(object):
             param_entries.append(Template("$name = gen.enum([").substitute(
                 name=enum['name'],
                 parent=self.group))
-            i = 0
+            paramtype = self._pytype(enum['paramtype'])
             for value in enum['values']:
+                enum_val = enum['values'].index(value) if paramtype == 'int' else "'" + value + "'"
                 param_entries.append(
                     Template("    gen.const(name='$name', type='$type', value=$value, descr='$descr'),")
-                        .substitute(name=value, type="int", value=i, descr=""))
-                i += 1
+                        .substitute(name=value, type=paramtype, value=enum_val, descr=""))
             param_entries.append(Template("    ], '$description')").substitute(description=enum["description"]))
 
         for param in dynamic_params:

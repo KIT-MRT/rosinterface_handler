@@ -4,7 +4,6 @@ import sys
 import os
 sys.path.append(os.path.join(os.path.dirname(__file__),"../../src"))
 ######################################################
-
 from rosinterface_handler.interface_generator_catkin import *
 gen = InterfaceGenerator()
 
@@ -21,7 +20,8 @@ gen.add("vector_string_param_wo_default", paramtype="std::vector<std::string>", 
 
 gen.add("map_param_wo_default", paramtype="std::map<std::string,std::string>", description="A map parameter")
 
-gen.add_enum("enum_param_wo_default", description="enum", entry_strings=["Small", "Medium", "Large", "ExtraLarge"])
+gen.add_enum("enum_int_param_wo_default", description="int enum", entry_strings=["Small", "Medium", "Large", "ExtraLarge"])
+gen.add_enum("enum_str_param_wo_default", description="string enum", entry_strings=["Zero", "One", "Two", "Three"], paramtype='std::string')
 
 gen.add_subscriber("subscriber_wo_default", description="subscriber", message_type="std_msgs::Header")
 gen.add_publisher("publisher_wo_default", description="publisher", message_type="std_msgs::Header")
