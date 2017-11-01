@@ -29,6 +29,7 @@ macro(generate_ros_interface_files)
             set(geninterface_build_files
                     ${ROSINTERFACE_HANDLER_ROOT_DIR}/templates/ConfigType.h.template
                     ${ROSINTERFACE_HANDLER_ROOT_DIR}/templates/Interface.h.template
+                    ${ROSINTERFACE_HANDLER_ROOT_DIR}/src/rosinterface_handler/interface_generator_catkin.py
                     )
 
             # Define output files
