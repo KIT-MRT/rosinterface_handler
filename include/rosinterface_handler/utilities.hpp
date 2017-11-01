@@ -42,10 +42,10 @@ namespace rosinterface_handler {
 /// \brief Sets the logger level according to a standardized parameter name 'verbosity'.
 ///
 /// \interface nodeHandle The ROS node handle to search for the parameter 'verbosity'.
-inline void setLoggerLevel(const ros::NodeHandle& nodeHandle) {
+inline void setLoggerLevel(const ros::NodeHandle& nodeHandle, const std::string& verbosity_param = "verbosity") {
 
     std::string verbosity;
-    if (!nodeHandle.getParam("verbosity", verbosity)) {
+    if (!nodeHandle.getParam(verbosity_param, verbosity)) {
         verbosity = "warning";
     }
 
@@ -55,7 +55,7 @@ inline void setLoggerLevel(const ros::NodeHandle& nodeHandle) {
         level_ros = ros::console::levels::Debug;
     } else if (verbosity == "info") {
         level_ros = ros::console::levels::Info;
-    } else if (verbosity == "warning") {
+    } else if (verbosity == "warning" || verbosity == "warn") {
         level_ros = ros::console::levels::Warn;
     } else if (verbosity == "error") {
         level_ros = ros::console::levels::Error;

@@ -10,6 +10,7 @@
 # vector: [1.0, 2.0, 3.4]
 # map: {"a": "b", "c": "d"}
 
+verbosity_param_wo_default: 'info'
 int_param_wo_default: 1
 double_param_wo_default: 1.1
 str_param_wo_default: "Hello World"

@@ -5,6 +5,9 @@ from rosinterface_handler.interface.DefaultsAtLaunchInterface import DefaultsAtL
 class TestDefaultsAtLaunch(unittest.TestCase):
     def test_defaults_at_launch(self):
         params = DefaultsAtLaunchInterface()
+
+        self.assertEqual(params.verbosity_param_wo_default, 'info')
+
         self.assertEqual(params.int_param_wo_default, 1)
         self.assertAlmostEqual(params.double_param_wo_default, 1.1)
         self.assertEqual(params.str_param_wo_default, "Hello World")

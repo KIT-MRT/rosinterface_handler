@@ -65,6 +65,9 @@ my_group.add("subparam", paramtype="std::string", description="This parameter is
 gen.add_subscriber("my_subscriber", message_type="std_msgs::Header", description="subscriber", configurable=True)
 gen.add_publisher("my_publisher", message_type="std_msgs::Header", description="publisher", default_topic="publisher_topic")
 
+# Logging
+gen.add_verbosity_param(configurable=True)
+
 #Syntax : Package, Node, Config Name(The final name will be MyDummyConfig)
 exit(gen.generate("rosinterface_tutorials", "example_node", "Tutorial"))
 ```
@@ -178,6 +181,20 @@ The following parameters are optional. Many of them will be automatically deduce
 - **constant**: If this is true, the parameters will not be fetched from param server,
         but the default value is kept.
 
+
+### Defining verbosity
+```python
+# Logging
+gen.add_verbosity_param(configurable=True)
+```
+
+Changing the verbosity of nodes to debug (or silence) something can be annoying.
+By calling `add_verbosity_param()`, *rosinterface_handler* adds a verbosity parameter (named *verbosity* by default) for you and will automatically set
+the verbosity of the node. If you make the parameter *configurable*, you can comfortably select the verbosity in the
+*rqt_reconfigure* window. The following parameters are optional:
+- **name**: Name of the verbosity parameter.
+- **configurable**: Show the verbosity in the *rqt_reconfigure* window.
+- **default**: Initial verbosity (can be `debug`, `info`, `warning`, `error` or `fatal`).
 
 ### The final step
 
