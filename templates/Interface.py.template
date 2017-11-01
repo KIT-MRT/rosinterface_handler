@@ -11,10 +11,13 @@ $imports
 param_description = $paramDescription
 subscriber_description = $subscriberDescription
 publisher_description = $publisherDescription
+verbosity_param = $verbosityParam
 
 if subscriber_description:
     # only import if necessary
     import message_filters
+if verbosity_param:
+    import logging
 
 defaults = {}
 
@@ -71,6 +74,8 @@ class ${ClassName}Interface(dict):
                 topic = "/" + topic if publisher['global_scope'] else "~" + topic
             self[name] = rospy.Publisher(topic, self.get_type(publisher),
                                          queue_size=self[publisher['queue_size_param']])
+        if verbosity_param:
+            logging.getLogger('rosout').setLevel(self._map_verbosity(self[verbosity_param]))
 
 
 
@@ -90,6 +95,9 @@ class ${ClassName}Interface(dict):
         Should be called in the callback of dynamic_reconfigure.
         :param config: config object from dynamic reconfigure
         """
+        if verbosity_param and config[verbosity_param] != self[verbosity_param]:
+            logging.getLogger('rosout').setLevel(self._map_verbosity(config[verbosity_param]))
+            rospy.logdebug("Verbosity set to " + config[verbosity_param])
         for subscriber in subscriber_description:
             if not subscriber['configurable']:
                 continue
@@ -213,3 +221,14 @@ class ${ClassName}Interface(dict):
     @staticmethod
     def get_type(config):
         return eval(config['import'] + '.' + config['type'].split('::')[-1])
+
+    @staticmethod
+    def _map_verbosity(verbosity):
+        return {
+              'DEBUG':    logging.DEBUG,
+              'INFO':     logging.INFO,
+              'WARN':     logging.WARN,
+              'WARNING':  logging.WARN,
+              'ERROR':    logging.ERROR,
+              'FATAL':    logging.FATAL,
+              }[verbosity.upper()]

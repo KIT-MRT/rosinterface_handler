@@ -13,6 +13,8 @@ class TestDefaults(unittest.TestCase):
         # make sure from_param_server can be called repeatedly
         params.from_param_server()
 
+        self.assertEqual(params.verbosity_param_w_default, 'info')
+
         self.assertEqual(params.int_param_w_default, 1)
         self.assertAlmostEqual(params.double_param_w_default, 1.1)
         self.assertEqual(params.str_param_w_default, "Hello World")
@@ -37,6 +39,8 @@ class TestDefaults(unittest.TestCase):
     def test_defaults_on_server(self):
         params = DefaultsInterface()
         # now all parameters should be set on param server
+        self.assertEqual(params.verbosity_param_w_default, rospy.get_param("~verbosity_param_w_default"))
+
         self.assertEqual(params.int_param_w_default, rospy.get_param("~int_param_w_default"))
         self.assertAlmostEqual(params.double_param_w_default, rospy.get_param("~double_param_w_default"))
         self.assertEqual(params.str_param_w_default, rospy.get_param("~str_param_w_default"))
@@ -53,6 +57,7 @@ class TestDefaults(unittest.TestCase):
     def test_set_parameters_on_server(self):
         params = DefaultsInterface()
 
+        params.verbosity_param_w_default = 'warning'
         params.int_param_w_default = 2
         params.double_param_w_default = 2.2
         params.str_param_w_default = "World Hello"
@@ -69,6 +74,8 @@ class TestDefaults(unittest.TestCase):
         params.to_param_server()
 
         # now all parameters should be set on param server
+        self.assertEqual(params.verbosity_param_w_default, rospy.get_param("~verbosity_param_w_default"))
+
         self.assertEqual(params.int_param_w_default, rospy.get_param("~int_param_w_default"))
         self.assertAlmostEqual(params.double_param_w_default, rospy.get_param("~double_param_w_default"))
         self.assertEqual(params.str_param_w_default, rospy.get_param("~str_param_w_default"))

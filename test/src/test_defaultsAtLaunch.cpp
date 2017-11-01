@@ -9,6 +9,8 @@ TEST(RosinterfaceHandler, DefaultsAtLaunch) {
     IfType testInterface(ros::NodeHandle("~"));
     ASSERT_NO_THROW(testInterface.fromParamServer());
 
+    ASSERT_EQ("info", testInterface.verbosity_param_wo_default);
+
     ASSERT_EQ(1, testInterface.int_param_wo_default);
     ASSERT_DOUBLE_EQ(1.1, testInterface.double_param_wo_default);
     ASSERT_EQ("Hello World", testInterface.str_param_wo_default);

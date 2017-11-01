@@ -9,6 +9,8 @@ TEST(RosinterfaceHandler, DefaultParams) {
     IfType testInterface(ros::NodeHandle("~"));
     ASSERT_NO_THROW(testInterface.fromParamServer());
 
+    ASSERT_EQ("info", testInterface.verbosity_param_w_default);
+
     ASSERT_EQ(1, testInterface.int_param_w_default);
     ASSERT_DOUBLE_EQ(1.1, testInterface.double_param_w_default);
     ASSERT_EQ("Hello World", testInterface.str_param_w_default);
@@ -48,6 +50,11 @@ TEST(RosinterfaceHandler, DefaultsOnParamServer) {
     ASSERT_NO_THROW(testInterface.fromParamServer());
 
     // values should now be set on interface server
+    {
+        std::string verbosity;
+        ASSERT_TRUE(nh.getParam("verbosity_param_w_default", verbosity));
+        EXPECT_EQ(verbosity, testInterface.verbosity_param_w_default);
+    }
     {
         int int_interface;
         ASSERT_TRUE(nh.getParam("int_param_w_default", int_interface));
@@ -110,6 +117,7 @@ TEST(RosinterfaceHandler, SetParamOnServer) {
     IfType testInterface(nh);
     ASSERT_NO_THROW(testInterface.fromParamServer());
 
+    testInterface.verbosity_param_w_default = "warning";
     testInterface.int_param_w_default = 2;
     testInterface.double_param_w_default = 2.2;
     testInterface.str_param_w_default = "World Hello";
@@ -125,6 +133,11 @@ TEST(RosinterfaceHandler, SetParamOnServer) {
     testInterface.toParamServer();
 
     // values should now be set on interface server
+    {
+        std::string verbosity;
+        ASSERT_TRUE(nh.getParam("verbosity_param_w_default", verbosity));
+        EXPECT_EQ(verbosity, testInterface.verbosity_param_w_default);
+    }
     {
         int int_interface;
         ASSERT_TRUE(nh.getParam("int_param_w_default", int_interface));

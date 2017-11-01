@@ -8,6 +8,8 @@ sys.path.append(os.path.join(os.path.dirname(__file__),"../../src"))
 from rosinterface_handler.interface_generator_catkin import *
 gen = InterfaceGenerator()
 
+gen.add_verbosity_param("verbosity_param_w_default", configurable=False, default='info')
+
 # Parameters with different types
 gen.add("int_param_w_default", paramtype="int", description="An Integer parameter", default=1)
 gen.add("double_param_w_default", paramtype="double",description="A double parameter", default=1.1)

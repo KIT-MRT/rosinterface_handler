@@ -50,6 +50,7 @@ class InterfaceGenerator(object):
         self.subscribers = []
         self.publishers = []
         self.childs = []
+        self.verbosity = None
         self.parent = parent
         if group:
             self.group = group
@@ -69,6 +70,31 @@ class InterfaceGenerator(object):
         self.pkgname = None
         self.nodename = None
         self.classname = None
+
+    def add_verbosity_param(self, name='verbosity', default='info', configurable=False):
+        """
+        Adds a parameter that will define the logging verbosity of the node. The verbosity can either be 'debug',
+        'info', 'warning', 'error' or 'fatal'.
+        The verbosity will be updated automatically by fromParamServer() or fromConfig().
+        :param name: (optional) Name of the parameter that will define the verbosity
+        :param default: (optional) Default verbosity
+        :param configurable: (optional) Should the topic name and message queue size be dynamically configurable?
+        :return:
+        """
+        if self.verbosity:
+            eprint("add_verbosity_param has already been called. You can only add one verbosity parameter per file!")
+        if self.parent:
+            eprint("You can not call add_verbosity_param on a group! Call it on the main parameter generator instead!")
+        self.verbosity = name
+        if configurable:
+            self.add_enum(name, 'Sets the verbosity for this node',
+                          entry_strings=['debug', 'info', 'warning', 'error', 'fatal'],
+                          default=default,
+                          paramtype='std::string')
+        else:
+            self.add(name, description='Sets the verbosity for this node', paramtype='std::string', default=default)
+
+
 
     def add_group(self, name):
         """
@@ -670,6 +696,18 @@ class InterfaceGenerator(object):
             string_representation.append(Template('      << "\t" << p.$namespace << "$name:" << p.$name << '
                                                   '"\\n"\n').substitute(namespace=namespace, name=name))
 
+        # set verbosity (must be last line in from server and first in from config)
+        if self.verbosity:
+            from_server.append(Template('    rosinterface_handler::setLoggerLevel(privateNodeHandle, "$verbosity");').substitute(
+                verbosity=self.verbosity))
+            param_entry = next((entry for entry in params if entry['name'] == self.verbosity), None)
+            if param_entry and param_entry['configurable']:
+                verb_check = Template('    if(config.$verbosity != this->$verbosity) {\n'
+                                      '        rosinterface_handler::setParam(privateNamespace + "$verbosity",config.$verbosity);\n'
+                                      '        rosinterface_handler::setLoggerLevel(privateNodeHandle, "$verbosity");\n'
+                                      '    }').substitute(verbosity=self.verbosity)
+                from_config.insert(0, verb_check)
+
         param_entries = "\n".join(param_entries)
         string_representation = "".join(string_representation)
         non_default_params = "".join(non_default_params)
@@ -710,6 +748,10 @@ class InterfaceGenerator(object):
         paramDescription = str(params)
         subscriberDescription = str(self._get_subscribers())
         publisherDescription = str(self._get_publishers())
+        if self.verbosity:
+            verbosityParam = '"' + self.verbosity + '"'
+        else:
+            verbosityParam = None
 
         #generate import statements
         imports = set()
@@ -727,7 +769,8 @@ class InterfaceGenerator(object):
         content = Template(template).substitute(pkgname=self.pkgname, ClassName=self.classname, imports=imports,
                                                 paramDescription=paramDescription,
                                                 subscriberDescription=subscriberDescription,
-                                                publisherDescription=publisherDescription)
+                                                publisherDescription=publisherDescription,
+                                                verbosityParam=verbosityParam)
 
         py_file = os.path.join(self.py_gen_dir, "interface", self.classname + "Interface.py")
         try:
