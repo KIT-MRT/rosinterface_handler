@@ -10,6 +10,9 @@ class TestDefaults(unittest.TestCase):
         :return:
         """
         params = DefaultsInterface()
+        # make sure from_param_server can be called repeatedly
+        params.from_param_server()
+
         self.assertEqual(params.int_param_w_default, 1)
         self.assertAlmostEqual(params.double_param_w_default, 1.1)
         self.assertEqual(params.str_param_w_default, "Hello World")

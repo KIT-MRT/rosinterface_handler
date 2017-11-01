@@ -20,6 +20,10 @@ defaults = {}
 
 for param in param_description:
     defaults[param['name']] = param['default']
+for subscriber in subscriber_description:
+    defaults[subscriber['name']] = None
+for publisher in publisher_description:
+    defaults[publisher['name']] = None
 
 
 class ${ClassName}Interface(dict):
@@ -37,11 +41,13 @@ class ${ClassName}Interface(dict):
         """
         for k, v in self.iteritems():
             config = next((item for item in param_description if item["name"] == k), None)
+            if not config:
+                continue
             if config['constant']:
                 self.test_const_param(k)
                 continue
-
             self[k] = self.get_param(k, config)
+
         for subscriber in subscriber_description:
             name = subscriber['name']
             topic = self[subscriber['topic_param']]
@@ -49,7 +55,7 @@ class ${ClassName}Interface(dict):
                 topic = "/" + topic if subscriber['global_scope'] else "~" + topic
 
             # rescue the callbacks if existing
-            if name in self:
+            if name in self and self[name]:
                 callbacks = self[name].callbacks
                 self[name].callbacks = {}
             else:
