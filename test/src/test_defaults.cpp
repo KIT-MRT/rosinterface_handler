@@ -49,7 +49,7 @@ TEST(RosinterfaceHandler, DefaultsOnParamServer) {
     IfType testInterface(nh);
     ASSERT_NO_THROW(testInterface.fromParamServer());
 
-    // values should now be set on interface server
+    // values should now be set on parameter server
     {
         std::string verbosity;
         ASSERT_TRUE(nh.getParam("verbosity_param_w_default", verbosity));
@@ -132,7 +132,7 @@ TEST(RosinterfaceHandler, SetParamOnServer) {
 
     testInterface.toParamServer();
 
-    // values should now be set on interface server
+    // values should now be set on parameter server
     {
         std::string verbosity;
         ASSERT_TRUE(nh.getParam("verbosity_param_w_default", verbosity));

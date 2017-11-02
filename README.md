@@ -29,7 +29,7 @@ The `rosinterface_handler` let's you:
 
 ## Usage
 See the Tutorials on
-- [How to write your first .params file](doc/HowToWriteYourFirstInterfaceFile.md)
+- [How to write your first .rosif file](doc/HowToWriteYourFirstInterfaceFile.md)
 - [How to use your parameter struct](doc/HowToUseYourInterfaceStruct.md)
 
 ## Installation
