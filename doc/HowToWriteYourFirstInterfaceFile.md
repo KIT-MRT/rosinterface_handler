@@ -18,7 +18,7 @@ Lastly you will need to create a params file, for this example we'll call it Tut
 
 ## The params File
 
-Add the following to your Tutorials.params file:
+Add the following to your Tutorials.rosif file:
 ```python
 #!/usr/bin/env python
 from rosinterface_handler.parameter_generator_catkin import *
@@ -211,7 +211,7 @@ NOTE: The third parameter should be equal to the params file name, without exten
 In order to make this params file usable it must be executable, so lets use the following command to make it excecutable
 
 ```shell
-chmod a+x cfg/Tutorials.params
+chmod a+x cfg/Tutorials.rosif
 ```
 
 Next we need to add the following lines to our CMakeLists.txt.
@@ -221,19 +221,19 @@ Next we need to add the following lines to our CMakeLists.txt.
 find_package(catkin REQUIRED rosinterface_handler dynamic_reconfigure)
 
 generate_ros_parameter_files(
-  cfg/Tutorials.params
+  cfg/Tutorials.rosif
   cfg/SomeOtherCfgFile.cfg
   #...
 )
 
 # make sure configure headers are built before any node using them
 add_dependencies(example_node ${PROJECT_NAME}_gencfg) # For dynamic_reconfigure
-add_dependencies(example_node ${PROJECT_NAME}_genparam) # For rosinterface_handler
+add_dependencies(example_node ${PROJECT_NAME}_geninterface) # For rosinterface_handler
 ```
 Note: You need a node example_node that is already built, before the add_dependencies line is reached (ref Create a node in C++).  
 
 This will run our params file when the package is built. The last thing to do is to build the package and we're done!
 
-Note: It should be noted here, that you have to pass **all** '.params' **and all** '.cfg' files to the generate_parameter_files call. This is because dynamic_reconfigure can only be called once per package. Your normal cfg files will be passed on together with the newly created cfg files.
+Note: It should be noted here, that you have to pass **all** '.rosif' **and all** '.cfg' files to the generate_parameter_files call. This is because dynamic_reconfigure can only be called once per package. Your normal cfg files will be passed on together with the newly created cfg files.
 
-For information on how to use the resulting parameter struct in your code, see the next tutorial on [How to use your parameter struct](HowToUseYourParameterStruct.md).
+For information on how to use the resulting parameter struct in your code, see the next tutorial on [How to use your interface struct](HowToUseYourInterfaceStruct.md).
