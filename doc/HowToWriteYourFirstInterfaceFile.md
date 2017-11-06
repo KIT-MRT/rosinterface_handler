@@ -81,7 +81,7 @@ Now lets break the code down line by line.
 from rosinterface_handler.parameter_generator_catkin import *
 gen = ParameterGenerator()
 ```
-This first lines are pretty simple, they just initialize ros, import and instantiate the parameter generator.
+These first lines are pretty simple, they just initialize ros, import and instantiate the parameter generator.
 
 ### Adding parameters
 Now that we have a generator we can start to define parameters. The add function adds a parameter to the list of parameters. It takes a the following mandatory arguments:
