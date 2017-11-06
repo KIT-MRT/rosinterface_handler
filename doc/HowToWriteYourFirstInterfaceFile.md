@@ -14,7 +14,7 @@ Now in your package create a cfg directory, this is where all cfg and params fil
 ```shell
 mkdir cfg
 ```
-Lastly you will need to create a params file, for this example we'll call it Tutorials.params, and open it in your favorite editor.
+Lastly you will need to create a params file, for this example we'll call it Tutorials.rosif, and open it in your favorite editor.
 
 ## The params File
 
