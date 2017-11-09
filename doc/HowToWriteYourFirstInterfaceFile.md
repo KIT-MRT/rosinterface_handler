@@ -1,5 +1,6 @@
-# How to Write Your First .params File
-**Description**: This tutorial will familiarize you with .params files that allow you to use rosinterface_handler.
+# How to Write Your First .rosif File
+**Description**: This tutorial will familiarize you with .rosif files that allow you to use rosinterface_handler.
+
 **Tutorial Level**: INTERMEDIATE
 
 ## Basic Setup
