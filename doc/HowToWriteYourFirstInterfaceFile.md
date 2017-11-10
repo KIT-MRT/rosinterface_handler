@@ -11,13 +11,13 @@ catkin_create_pkg --rosdistro ROSDISTRO rospy roscpp rosinterface_handler dynami
 ```
 Where ROSDISTRO is the ROS distribution you are using.
 
-Now in your package create a cfg directory, this is where all cfg and params files live:
+Now in your package create a cfg directory, this is where all cfg and rosif files live:
 ```shell
 mkdir cfg
 ```
-Lastly you will need to create a params file, for this example we'll call it Tutorials.rosif, and open it in your favorite editor.
+Lastly you will need to create a rosif file, for this example we'll call it Tutorials.rosif, and open it in your favorite editor.
 
-## The params File
+## The .rosif File
 
 Add the following to your Tutorials.rosif file:
 ```python
@@ -205,11 +205,11 @@ exit(gen.generate("rosinterface_tutorials", "example_node", "Tutorial"))
 
 The last line simply tells the generator to generate the necessary files and exit the program. The second parameter is the name of a node this could run in (used to generate documentation only), the third parameter is a name prefix the generated files will get (e.g. "<name>Config.h" for the dynamic_reconfigure struct and "<name>Parameters.h" for the parameter struct.
 
-NOTE: The third parameter should be equal to the params file name, without extension. Otherwise the libraries will be generated in every build, forcing a recompilation of the nodes which use them.
+NOTE: The third parameter should be equal to the .rosif file name, without extension. Otherwise the libraries will be generated in every build, forcing a recompilation of the nodes which use them.
 
-## Add params file to CMakeLists
+## Add rosif file to CMakeLists
 
-In order to make this params file usable it must be executable, so lets use the following command to make it excecutable
+In order to make this rosif file usable it must be executable, so lets use the following command to make it excecutable
 
 ```shell
 chmod a+x cfg/Tutorials.rosif
@@ -233,7 +233,7 @@ add_dependencies(example_node ${PROJECT_NAME}_geninterface) # For rosinterface_h
 ```
 Note: You need a node example_node that is already built, before the add_dependencies line is reached (ref Create a node in C++).  
 
-This will run our params file when the package is built. The last thing to do is to build the package and we're done!
+This will run our rosif file when the package is built. The last thing to do is to build the package and we're done!
 
 Note: It should be noted here, that you have to pass **all** '.rosif' **and all** '.cfg' files to the generate_parameter_files call. This is because dynamic_reconfigure can only be called once per package. Your normal cfg files will be passed on together with the newly created cfg files.
 
