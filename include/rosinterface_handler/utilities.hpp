@@ -1,10 +1,10 @@
 #pragma once
 
 #include <limits>
-#include <stdlib.h>
 #include <string>
-#include <ros/ros.h>
-#include <boost/algorithm/string.hpp>
+#include <ros/param.h>
+#include <ros/node_handle.h>
+#include <ros/this_node.h>
 
 /// \brief Helper function to test for std::vector
 template <typename T>

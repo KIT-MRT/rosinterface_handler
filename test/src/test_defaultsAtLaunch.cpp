@@ -1,5 +1,4 @@
 #include <gtest/gtest.h>
-#include <ros/ros.h>
 #include <rosinterface_handler/DefaultsAtLaunchInterface.h>
 
 typedef rosinterface_handler::DefaultsAtLaunchInterface IfType;
