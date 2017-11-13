@@ -111,6 +111,29 @@ inline std::string getNodeName(const ros::NodeHandle& privateNodeHandle) {
     return name;
 }
 
+/// \brief Retrieve the parent node handle from a node handle (or /)
+///
+/// @interface privateNodeHandle Any ROS node handle (e.g.
+/// ros::NodeHandle("~") ).
+/// @return parent namespace or "/"
+inline std::string getParentNamespace(const ros::NodeHandle& nodeHandle) {
+    std::string name_space = nodeHandle.getNamespace();
+    std::string parent_name_space = name_space.substr(0, name_space.find_last_of("/"));
+    return parent_name_space.empty()? "/" : parent_name_space;
+}
+
+/// \brief Retrieve the topic to subscribe to (aware of global topic names)
+///
+/// @interface name_space Parent namespace (with trailing "/")
+/// @interface topic Global or local topic
+/// @return name_space + topic or topic if topic is global
+inline std::string getTopic(const std::string& name_space, const std::string& topic) {
+    if(topic.empty() || topic[0] == '/') {
+        return topic;
+    }
+    return name_space + topic;
+}
+
 /// \brief ExitFunction for rosinterface_handler
 inline void exit(const std::string msg = "Runtime Error in rosinterface handler.") {
     // std::exit(EXIT_FAILURE);

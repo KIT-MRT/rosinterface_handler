@@ -140,7 +140,7 @@ class InterfaceGenerator(object):
 
     def add_subscriber(self, name, message_type, description, default_topic="", default_queue_size=5, no_delay=False,
                        topic_param=None, queue_size_param=None, header=None, module=None, configurable=False,
-                       global_scope=False, constant=False):
+                       scope='private', constant=False):
         """
         Adds a subscriber to your parameter struct and a parameter for its topic and queue size. Don't forget to add a
         dependency to message_filter and the package for the message used to your package.xml!
@@ -156,8 +156,8 @@ class InterfaceGenerator(object):
         :param header: (optional) Header name to include. Will be deduced for message type if None.
         :param module: (optional) Module to import from (e.g. std_msgs.msg). Will be automatically deduced if None.
         :param configurable: (optional) Should the topic name and message queue size be dynamically configurable?
-        :param global_scope: (optional) If true, parameter for topic and queue size is searched in global ('/')
-        namespace instead of private ('~') ns
+        :param scope: (optional) Either "global", "public" or "private". A "global" subscriber will subscribe to /topic,
+        a "public" one to /namespace/topic and a "private" one to /namespace/node_name/topic.
         :param constant: (optional) If this is true, the parameters will not be fetched from param server,
         but the default value is kept.
         :return: None
@@ -168,9 +168,9 @@ class InterfaceGenerator(object):
         if not queue_size_param:
             queue_size_param = name + '_queue_size'
         self.add(name=topic_param, paramtype='std::string', description='Topic for ' + description,
-                 default=default_topic, configurable=configurable, global_scope=global_scope, constant=constant)
+                 default=default_topic, configurable=configurable, global_scope=False, constant=constant)
         self.add(name=queue_size_param, paramtype='int', description='Queue size for ' + description, min=0,
-                 default=default_queue_size, configurable=configurable, global_scope=global_scope, constant=constant)
+                 default=default_queue_size, configurable=configurable, global_scope=False, constant=constant)
 
         # normalize the topic type (we want it to contain ::)
         normalized_message_type = message_type.replace("/", "::").replace(".", "::")
@@ -189,12 +189,12 @@ class InterfaceGenerator(object):
             'no_delay': no_delay,
             'configurable': configurable,
             'description': description,
-            'global_scope': global_scope
+            'scope': scope.lower()
         }
         self.subscribers.append(newparam)
 
     def add_publisher(self, name, message_type, description, default_topic="", default_queue_size=5, topic_param=None,
-                      queue_size_param=None, header=None, module=None, configurable=False, global_scope=False,
+                      queue_size_param=None, header=None, module=None, configurable=False, scope="private",
                       constant=False):
         """
         Adds a publisher to your parameter struct and a parameter for its topic and queue size. Don't forget to add a
@@ -210,8 +210,8 @@ class InterfaceGenerator(object):
         :param header: (optional) Header name to include. Will be deduced for message type if None.
         :param module: (optional) Module to import from (e.g. std_msgs.msg). Will be automatically deduced if None.
         :param configurable: (optional) Should the topic name and message queue size be dynamically configurable?
-        :param global_scope: (optional) If true, parameter for topic and queue size is searched in global ('/')
-        namespace instead of private ('~') ns
+        :param scope: (optional) Either "global", "public" or "private". A "global" subscriber will subscribe to /topic,
+        a "public" one to /namespace/topic and a "private" one to /namespace/node_name/topic.
         :param constant: (optional) If this is true, the parameters will not be fetched from param server,
         but the default value is kept.
         :return: None
@@ -222,9 +222,9 @@ class InterfaceGenerator(object):
         if not queue_size_param:
             queue_size_param = name + '_queue_size'
         self.add(name=topic_param, paramtype='std::string', description='Topic for ' + description,
-                 default=default_topic, configurable=configurable, global_scope=global_scope, constant=constant)
+                 default=default_topic, configurable=configurable, global_scope=False, constant=constant)
         self.add(name=queue_size_param, paramtype='int', description='Queue size for ' + description, min=0,
-                 default=default_queue_size, configurable=configurable, global_scope=global_scope, constant=constant)
+                 default=default_queue_size, configurable=configurable, global_scope=False, constant=constant)
 
         # normalize the topic type (we want it to contain ::)
         normalized_message_type = message_type.replace("/", "::").replace(".", "::")
@@ -242,7 +242,7 @@ class InterfaceGenerator(object):
             'queue_size_param': queue_size_param,
             'configurable': configurable,
             'description': description,
-            'global_scope': global_scope
+            'scope': scope.lower()
         }
         self.publishers.append(newparam)
 
@@ -575,21 +575,31 @@ class InterfaceGenerator(object):
             # add subscribe for parameter server
             topic_param = subscriber['topic_param']
             queue_size_param = subscriber['queue_size_param']
-            node_handle = "publicNodeHandler" if subscriber['global_scope'] else "privateNodeHandle"
+            scope = subscriber['scope']
+            if scope == 'private':
+                name_space = "privateNamespace"
+            elif scope == 'public':
+                name_space = "publicNamespace"
+            elif scope == 'global':
+                name_space = "globalNamespace"
+            else:
+                eprint("Unknown scope specified for subscriber {}: {}".format(name, scope))
             if subscriber['no_delay']:
                 no_delay = ", ros::TransportHints().tcpNoDelay()"
             else:
                 no_delay = ""
-            sub_adv_from_server.append(Template('    $name->subscribe($nodeHandle, $topic, $queue$noDelay);')
-                                         .substitute(name=name, topic=topic_param,queue=queue_size_param,
-                                                     noDelay=no_delay, nodeHandle=node_handle))
+            sub_adv_from_server.append(Template('    $name->subscribe(privateNodeHandle, '
+                                                'rosinterface_handler::getTopic($namespace, $topic), $queue$noDelay);')
+                                       .substitute(name=name, topic=topic_param,queue=queue_size_param,
+                                                   noDelay=no_delay, namespace=name_space))
             if subscriber['configurable']:
                 sub_adv_from_config.append(Template('    if($topic != config.$topic || $queue != config.$queue) {\n'
-                                                      '      $name->subscribe($nodeHandle, config.$topic, '
-                                                      'config.$queue$noDelay);\n'
-                                                      '    }').substitute(name=name,topic=topic_param,
-                                                                          queue=queue_size_param, noDelay=no_delay,
-                                                                          nodeHandle=node_handle))
+                                                    '      $name->subscribe(privateNodeHandle, '
+                                                    'rosinterface_handler::getTopic($namespace, config.$topic), '
+                                                    'config.$queue$noDelay);\n'
+                                                    '    }').substitute(name=name,topic=topic_param,
+                                                                        queue=queue_size_param, noDelay=no_delay,
+                                                                        namespace=name_space))
 
         for publisher in publishers:
             name = publisher['name']
@@ -613,17 +623,27 @@ class InterfaceGenerator(object):
             # add subscribe for parameter server
             topic_param = publisher['topic_param']
             queue_size_param = publisher['queue_size_param']
-            node_handle = "publicNodeHandler" if subscriber['global_scope'] else "privateNodeHandle"
-            sub_adv_from_server.append(Template('    $name = $nodeHandle.advertise<$type>($topic, $queue);')
-                                         .substitute(name=name, type=type, topic=topic_param, queue=queue_size_param,
-                                                     noDelay=no_delay, nodeHandle=node_handle))
+            scope = publisher['scope'].lower()
+            if scope == 'private':
+                name_space = "privateNamespace"
+            elif scope == 'public':
+                name_space = "publicNamespace"
+            elif scope == 'global':
+                name_space = "globalNamespace"
+            else:
+                eprint("Unknown scope specified for publisher {}: {}".format(name, scope))
+            sub_adv_from_server.append(Template('    $name = privateNodeHandle.advertise<$type>('
+                                                'rosinterface_handler::getTopic($namespace, $topic), $queue);')
+                                       .substitute(name=name, type=type, topic=topic_param, queue=queue_size_param,
+                                                   noDelay=no_delay, namespace=name_space))
             if publisher['configurable']:
                 sub_adv_from_config.append(Template('    if($topic != config.$topic || $queue != config.$queue) {\n'
-                                                      '      $name = $nodeHandle.advertise<$type>(config.$topic, '
-                                                      'config.$queue);\n'
-                                                      '    }').substitute(name=name, type=type, topic=topic_param,
-                                                                          queue=queue_size_param,
-                                                                          nodeHandle=node_handle))
+                                                    '      $name = privateNodeHandle.advertise<$type>('
+                                                    'rosinterface_handler::getTopic($namespace, config.$topic), '
+                                                    'config.$queue);\n'
+                                                    '    }').substitute(name=name, type=type, topic=topic_param,
+                                                                        queue=queue_size_param,
+                                                                        namespace=name_space))
         includes = "\n".join(includes)
         subscriber_entries = "\n".join(subscriber_entries)
         publisher_entries = "\n".join(publisher_entries)

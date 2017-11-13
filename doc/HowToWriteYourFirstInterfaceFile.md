@@ -169,7 +169,7 @@ The signature for both commands are very similar. They take the following mandat
 - **description**: Chose an informative documentation string for this subscriber/publisher.
 
 The following parameters are optional. Many of them will be automatically deduced from the mandatory parameters:
-- **default_topic**: Default topic to subscribe to. If empty the
+- **default_topic**: Default topic to subscribe to. If empty, the subscriber/publisher will initialized in an invalid state.
 - **default_queue_size**: Default queue size of the subscriber/publisher.
 - **no_delay** _(only for add_subscriber)_: Set the tcp_no_delay parameter for subscribing. Recommended for larger messages.
 - **topic_param**: Name of the param configuring the topic. Will be "*name*_topic" if None.
@@ -177,8 +177,9 @@ The following parameters are optional. Many of them will be automatically deduce
 - **header**: Header name to include. Will be deduced for message type if None.
 - **module**: Module to import from (e.g. std_msgs.msg). Will be automatically deduced if None.
 - **configurable**: Should the subscribed topic and message queue size be dynamically configurable?
-- **global_scope**: If true, parameter for topic and queue size is searched in global ('/')
-        namespace instead of private ('~') ns
+- **scope**: Either *global*, *public* or *private*. A *global* subscriber/publisher will subscribe to `/topic`,
+        a *public* one to `/namespace/topic` and a *private* one to `/namespace/node_name/topic`. If the topic starts with "/",
+        the node will always subscribe globally.
 - **constant**: If this is true, the parameters will not be fetched from param server,
         but the default value is kept.
 

@@ -34,6 +34,12 @@ TEST(RosinterfaceHandler, AtLaunchSubscriber) {
 
     ASSERT_TRUE(!!testInterface.subscriber_wo_default);
     ASSERT_EQ(testInterface.subscriber_wo_default->getTopic(), "/test/rosinterface_handler_test/in_topic");
+
+    ASSERT_TRUE(!!testInterface.subscriber_public_wo_default);
+    ASSERT_EQ(testInterface.subscriber_public_wo_default->getTopic(), "/test/in_topic");
+
+    ASSERT_TRUE(!!testInterface.subscriber_global_wo_default);
+    ASSERT_EQ(testInterface.subscriber_global_wo_default->getTopic(), "/in_topic");
 }
 
 TEST(RosinterfaceHandler, AtLaunchPublisher) {
@@ -41,4 +47,6 @@ TEST(RosinterfaceHandler, AtLaunchPublisher) {
     ASSERT_NO_THROW(testInterface.fromParamServer());
 
     ASSERT_EQ(testInterface.publisher_wo_default.getTopic(), "/test/rosinterface_handler_test/out_topic");
+    ASSERT_EQ(testInterface.publisher_public_wo_default.getTopic(), "/test/out_topic");
+    ASSERT_EQ(testInterface.publisher_global_wo_default.getTopic(), "/out_topic");
 }

@@ -53,9 +53,7 @@ class ${ClassName}Interface(dict):
 
         for subscriber in subscriber_description:
             name = subscriber['name']
-            topic = self[subscriber['topic_param']]
-            if not topic.startswith('/'):
-                topic = "/" + topic if subscriber['global_scope'] else "~" + topic
+            topic = self._get_topic(subscriber['scope'], self[subscriber['topic_param']])
 
             # rescue the callbacks if existing
             if name in self and self[name]:
@@ -69,9 +67,7 @@ class ${ClassName}Interface(dict):
             self[name].callbacks = callbacks
         for publisher in publisher_description:
             name = publisher['name']
-            topic = self[publisher['topic_param']]
-            if not topic.startswith('/'):
-                topic = "/" + topic if publisher['global_scope'] else "~" + topic
+            topic = self._get_topic(publisher['scope'], self[publisher['topic_param']])
             self[name] = rospy.Publisher(topic, self.get_type(publisher),
                                          queue_size=self[publisher['queue_size_param']])
         if verbosity_param:
@@ -99,26 +95,28 @@ class ${ClassName}Interface(dict):
             logging.getLogger('rosout').setLevel(self._map_verbosity(config[verbosity_param]))
             rospy.logdebug("Verbosity set to " + config[verbosity_param])
         for subscriber in subscriber_description:
-            if not subscriber['configurable']:
+            topic_param = subscriber['topic_param']
+            if not topic_param in config:
                 continue
             name = subscriber['name']
-            topic_param = subscriber['topic_param']
             queue_param = subscriber['queue_size_param']
             if config[topic_param] != self[topic_param] or config[queue_param] != self[queue_param]:
                 callbacks = self[name].callbacks
                 self[name].callbacks = {}
-                self[name] = message_filters.Subscriber(config[topic_param], self.get_type(subscriber),
+                topic = self._get_topic(subscriber['scope'], config[topic_param])
+                self[name] = message_filters.Subscriber(topic, self.get_type(subscriber),
                                                         queue_size=config[queue_param],
                                                         tcp_nodelay=subscriber['no_delay'])
                 self[name].callbacks = callbacks
         for publisher in publisher_description:
-            if not publisher['configurable']:
+            topic_param = publisher['topic_param']
+            if not topic_param in config:
                 continue
             name = publisher['name']
-            topic_param = publisher['topic_param']
             queue_param = publisher['queue_size_param']
+            topic = self._get_topic(publisher['scope'], config[topic_param])
             if config[topic_param] != self[topic_param] or config[queue_param] != self[queue_param]:
-                self[name] = rospy.Publisher(config[topic_param], self.get_type(publisher), queue_size=config[queue_param])
+                self[name] = rospy.Publisher(topic, self.get_type(publisher), queue_size=config[queue_param])
         for k, v in config.iteritems():
             # handle reserved name groups
             if k == "groups":
@@ -221,6 +219,12 @@ class ${ClassName}Interface(dict):
     @staticmethod
     def get_type(config):
         return eval(config['import'] + '.' + config['type'].split('::')[-1])
+
+    @staticmethod
+    def _get_topic(scope, topic):
+        if not topic.startswith('/') and scope != 'public':
+            return "/" + topic if scope == 'global' else "~" + topic
+        return topic
 
     @staticmethod
     def _map_verbosity(verbosity):

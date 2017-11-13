@@ -31,10 +31,14 @@ class TestDefaults(unittest.TestCase):
     def test_defaults_subscriber(self):
         params = DefaultsInterface()
         self.assertEqual(params.subscriber_w_default.sub.name, "/test/rosinterface_handler_python_test/in_topic")
+        self.assertEqual(params.subscriber_public_w_default.sub.name, "/test/in_topic")
+        self.assertEqual(params.subscriber_global_w_default.sub.name, "/in_topic")
 
     def test_defaults_publisher(self):
         params = DefaultsInterface()
         self.assertEqual(params.publisher_w_default.name, "/test/rosinterface_handler_python_test/out_topic")
+        self.assertEqual(params.publisher_public_w_default.name, "/test/out_topic")
+        self.assertEqual(params.publisher_global_w_default.name, "/out_topic")
 
     def test_defaults_on_server(self):
         params = DefaultsInterface()
@@ -88,3 +92,38 @@ class TestDefaults(unittest.TestCase):
         self.assertEqual(params.map_param_w_default, rospy.get_param("~map_param_w_default"))
         self.assertEqual(params.enum_int_param_w_default, rospy.get_param("~enum_int_param_w_default"))
         self.assertEqual(params.enum_str_param_w_default, rospy.get_param("~enum_str_param_w_default"))
+
+    def test_set_reconfigure_config(self):
+        interface = DefaultsInterface()
+        interface.from_param_server()
+
+        config = dict()
+        config['int_param_w_default'] = 2
+        config['subscriber_w_default_topic'] = "/in_topic"
+        config['subscriber_public_w_default_topic'] = "/in_topic"
+        config['subscriber_global_w_default_topic'] = "/in_topic"
+        config['subscriber_w_default_queue_size'] = 5
+        config['subscriber_public_w_default_queue_size'] = 5
+        config['subscriber_global_w_default_queue_size'] = 5
+        config['publisher_w_default_topic'] = "/out_topic"
+        config['publisher_public_w_default_topic'] = "/out_topic"
+        config['publisher_global_w_default_topic'] = "/out_topic"
+        config['publisher_w_default_queue_size'] = 5
+        config['publisher_public_w_default_queue_size'] = 5
+        config['publisher_global_w_default_queue_size'] = 5
+
+        interface.from_config(config)
+
+        # test params
+        self.assertEqual(config['int_param_w_default'], interface.int_param_w_default)
+
+        # test subscriber
+        self.assertEqual(interface.subscriber_w_default.sub.name, "/in_topic")
+        self.assertEqual(interface.subscriber_public_w_default.sub.name, "/in_topic")
+        self.assertEqual(interface.subscriber_global_w_default.sub.name, "/in_topic")
+
+        # test publisher
+        self.assertEqual(interface.publisher_w_default.name, "/out_topic")
+        self.assertEqual(interface.publisher_public_w_default.name, "/out_topic")
+        self.assertEqual(interface.publisher_global_w_default.name, "/out_topic")
+

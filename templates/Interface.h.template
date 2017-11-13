@@ -41,6 +41,7 @@ struct ${ClassName}Interface {
 
   ${ClassName}Interface(const ros::NodeHandle& private_node_handle)
   :$initSubscribers globalNamespace{"/"},
+    publicNamespace{rosinterface_handler::getParentNamespace(private_node_handle) + "/"},
     privateNamespace{private_node_handle.getNamespace() + "/"},
     nodeName{rosinterface_handler::getNodeName(private_node_handle)},
     privateNodeHandle{private_node_handle} {}
@@ -101,6 +102,7 @@ $non_default_params    );
   }
 
   const std::string globalNamespace;
+  const std::string publicNamespace;
   const std::string privateNamespace;
   const std::string nodeName;
   ros::NodeHandle privateNodeHandle;

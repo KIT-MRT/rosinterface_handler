@@ -26,7 +26,11 @@ gen.add_enum("enum_int_param_wo_default", description="int enum", entry_strings=
 gen.add_enum("enum_str_param_wo_default", description="string enum", entry_strings=["Zero", "One", "Two", "Three"], paramtype='std::string')
 
 gen.add_subscriber("subscriber_wo_default", description="subscriber", message_type="std_msgs::Header")
+gen.add_subscriber("subscriber_public_wo_default", description="public subscriber",  message_type="std_msgs::Header", scope="public")
+gen.add_subscriber("subscriber_global_wo_default", description="global subscriber", message_type="std_msgs::Header", scope='global')
 gen.add_publisher("publisher_wo_default", description="publisher", message_type="std_msgs::Header")
+gen.add_publisher("publisher_public_wo_default", description="public publisher", message_type="std_msgs::Header", scope='public')
+gen.add_publisher("publisher_global_wo_default", description="global publisher", message_type="std_msgs::Header", scope='global')
 
 #Syntax : Package, Node, Config Name(The final name will be MyDummyConfig)
 exit(gen.generate("rosinterface_handler", "rosinterface_handler_test", "DefaultsAtLaunch"))

@@ -24,7 +24,11 @@ class TestDefaultsAtLaunch(unittest.TestCase):
     def test_defaults_at_launch_subscriber(self):
         params = DefaultsAtLaunchInterface()
         self.assertEqual(params.subscriber_wo_default.sub.name, "/test/rosinterface_handler_python_test/in_topic")
+        self.assertEqual(params.subscriber_public_wo_default.sub.name, "/test/in_topic")
+        self.assertEqual(params.subscriber_global_wo_default.sub.name, "/in_topic")
 
     def test_defaults_at_launch_publisher(self):
         params = DefaultsAtLaunchInterface()
         self.assertEqual(params.publisher_wo_default.name, "/test/rosinterface_handler_python_test/out_topic")
+        self.assertEqual(params.publisher_public_wo_default.name, "/test/out_topic")
+        self.assertEqual(params.publisher_global_wo_default.name, "/out_topic")

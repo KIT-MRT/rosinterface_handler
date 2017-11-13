@@ -35,6 +35,12 @@ TEST(RosinterfaceHandler, DefaultSubscriber) {
 
     ASSERT_TRUE(!!testInterface.subscriber_w_default);
     ASSERT_EQ(testInterface.subscriber_w_default->getTopic(), "/test/rosinterface_handler_test/in_topic");
+
+    ASSERT_TRUE(!!testInterface.subscriber_public_w_default);
+    ASSERT_EQ(testInterface.subscriber_public_w_default->getTopic(), "/test/in_topic");
+
+    ASSERT_TRUE(!!testInterface.subscriber_global_w_default);
+    ASSERT_EQ(testInterface.subscriber_global_w_default->getTopic(), "/in_topic");
 }
 
 TEST(RosinterfaceHandler, DefaultPublisher) {
@@ -42,6 +48,8 @@ TEST(RosinterfaceHandler, DefaultPublisher) {
     ASSERT_NO_THROW(testInterface.fromParamServer());
 
     ASSERT_EQ(testInterface.publisher_w_default.getTopic(), "/test/rosinterface_handler_test/out_topic");
+    ASSERT_EQ(testInterface.publisher_public_w_default.getTopic(), "/test/out_topic");
+    ASSERT_EQ(testInterface.publisher_global_w_default.getTopic(), "/out_topic");
 }
 
 TEST(RosinterfaceHandler, DefaultsOnParamServer) {
@@ -193,4 +201,33 @@ TEST(RosinterfaceHandler, SetParamOnServer) {
         ASSERT_TRUE(nh.getParam("enum_str_param_w_default", enum_str_interface));
         EXPECT_EQ(enum_str_interface, testInterface.enum_str_param_w_default);
     }
+}
+
+TEST(RosinterfaceHandler, FromDynamicReconfigure) {
+    ros::NodeHandle nh("~");
+    IfType testInterface(nh);
+    ASSERT_NO_THROW(testInterface.fromParamServer());
+
+    ConfigType config;
+    config.int_param_w_default = 2;
+    config.subscriber_w_default_topic = "/in_topic";
+    config.subscriber_public_w_default_topic = "/in_topic";
+    config.subscriber_global_w_default_topic = "/in_topic";
+    config.publisher_w_default_topic = "/out_topic";
+    config.publisher_public_w_default_topic = "/out_topic";
+    config.publisher_global_w_default_topic = "/out_topic";
+    testInterface.fromConfig(config);
+
+    // params
+    EXPECT_EQ(testInterface.int_param_w_default, 2);
+
+    // subscriber
+    EXPECT_EQ(testInterface.subscriber_w_default->getTopic(), "/in_topic");
+    EXPECT_EQ(testInterface.subscriber_public_w_default->getTopic(), "/in_topic");
+    EXPECT_EQ(testInterface.subscriber_global_w_default->getTopic(), "/in_topic");
+
+    // publisher
+    EXPECT_EQ(testInterface.publisher_w_default.getTopic(), "/out_topic");
+    EXPECT_EQ(testInterface.publisher_public_w_default.getTopic(), "/out_topic");
+    EXPECT_EQ(testInterface.publisher_global_w_default.getTopic(), "/out_topic");
 }

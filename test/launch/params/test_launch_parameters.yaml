@@ -23,4 +23,8 @@ map_param_wo_default: {"Hello": "World"}
 enum_int_param_wo_default: 1
 enum_str_param_wo_default: "Two"
 subscriber_wo_default_topic: "in_topic"
+subscriber_public_wo_default_topic: "in_topic"
+subscriber_global_wo_default_topic: "in_topic"
 publisher_wo_default_topic: "out_topic"
+publisher_public_wo_default_topic: "out_topic"
+publisher_global_wo_default_topic: "out_topic"
