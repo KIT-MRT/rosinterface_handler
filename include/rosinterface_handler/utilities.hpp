@@ -41,7 +41,7 @@ namespace rosinterface_handler {
 
 /// \brief Sets the logger level according to a standardized parameter name 'verbosity'.
 ///
-/// \interface nodeHandle The ROS node handle to search for the parameter 'verbosity'.
+/// \param nodeHandle The ROS node handle to search for the parameter 'verbosity'.
 inline void setLoggerLevel(const ros::NodeHandle& nodeHandle, const std::string& verbosity_param = "verbosity") {
 
     std::string verbosity;
@@ -98,7 +98,7 @@ inline void showNodeInfo() {
 
 /// \brief Retrieve node name
 ///
-/// @interface privateNodeHandle The private ROS node handle (i.e.
+/// @param privateNodeHandle The private ROS node handle (i.e.
 /// ros::NodeHandle("~") ).
 /// @return node name
 inline std::string getNodeName(const ros::NodeHandle& privateNodeHandle) {
@@ -113,7 +113,7 @@ inline std::string getNodeName(const ros::NodeHandle& privateNodeHandle) {
 
 /// \brief Retrieve the parent node handle from a node handle (or /)
 ///
-/// @interface privateNodeHandle Any ROS node handle (e.g.
+/// @param privateNodeHandle Any ROS node handle (e.g.
 /// ros::NodeHandle("~") ).
 /// @return parent namespace or "/"
 inline std::string getParentNamespace(const ros::NodeHandle& nodeHandle) {
@@ -124,8 +124,8 @@ inline std::string getParentNamespace(const ros::NodeHandle& nodeHandle) {
 
 /// \brief Retrieve the topic to subscribe to (aware of global topic names)
 ///
-/// @interface name_space Parent namespace (with trailing "/")
-/// @interface topic Global or local topic
+/// @param name_space Parent namespace (with trailing "/")
+/// @param topic Global or local topic
 /// @return name_space + topic or topic if topic is global
 inline std::string getTopic(const std::string& name_space, const std::string& topic) {
     if(topic.empty() || topic[0] == '/') {
@@ -142,8 +142,8 @@ inline void exit(const std::string msg = "Runtime Error in rosinterface handler.
 
 /// \brief Set parameter on ROS parameter server
 ///
-/// \interface key Parameter name
-/// \interface val Parameter value
+/// \param key Parameter name
+/// \param val Parameter value
 template <typename T>
 inline void setParam(const std::string key, T val) {
     ros::param::set(key, val);
@@ -151,8 +151,8 @@ inline void setParam(const std::string key, T val) {
 
 /// \brief Get parameter from ROS parameter server
 ///
-/// \interface key Parameter name
-/// \interface val Parameter value
+/// \param key Parameter name
+/// \param val Parameter value
 template <typename T>
 inline bool getParam(const std::string key, T& val) {
     if (!ros::param::has(key)) {
@@ -169,9 +169,9 @@ inline bool getParam(const std::string key, T& val) {
 /// \brief Get parameter from ROS parameter server or use default value
 ///
 /// If parameter does not exist on server yet, the default value is used and set on server.
-/// \interface key Parameter name
-/// \interface val Parameter value
-/// \interface defaultValue Parameter default value
+/// \param key Parameter name
+/// \param val Parameter value
+/// \param defaultValue Parameter default value
 template <typename T>
 inline bool getParam(const std::string key, T& val, const T& defaultValue) {
     if (!getParam(key, val)) {
@@ -198,9 +198,9 @@ inline bool testConstParam(const std::string key) {
 
 /// \brief Limit parameter to lower bound if parameter is a scalar.
 ///
-/// \interface key Parameter name
-/// \interface val Parameter value
-/// \interface min Lower Threshold
+/// \param key Parameter name
+/// \param val Parameter value
+/// \param min Lower Threshold
 template <typename T>
 inline void testMin(const std::string key, T& val, T min = std::numeric_limits<T>::min()) {
     if (val < min) {
@@ -212,9 +212,9 @@ inline void testMin(const std::string key, T& val, T min = std::numeric_limits<T
 
 /// \brief Limit parameter to lower bound if parameter is a vector.
 ///
-/// \interface key Parameter name
-/// \interface val Parameter value
-/// \interface min Lower Threshold
+/// \param key Parameter name
+/// \param val Parameter value
+/// \param min Lower Threshold
 template <typename T>
 inline void testMin(const std::string key, std::vector<T>& val, T min = std::numeric_limits<T>::min()) {
     for (auto& v : val)
@@ -223,9 +223,9 @@ inline void testMin(const std::string key, std::vector<T>& val, T min = std::num
 
 /// \brief Limit parameter to lower bound if parameter is a map.
 ///
-/// \interface key Parameter name
-/// \interface val Parameter value
-/// \interface min Lower Threshold
+/// \param key Parameter name
+/// \param val Parameter value
+/// \param min Lower Threshold
 template <typename K, typename T>
 inline void testMin(const std::string key, std::map<K, T>& val, T min = std::numeric_limits<T>::min()) {
     for (auto& v : val)
@@ -234,9 +234,9 @@ inline void testMin(const std::string key, std::map<K, T>& val, T min = std::num
 
 /// \brief Limit parameter to upper bound if parameter is a scalar.
 ///
-/// \interface key Parameter name
-/// \interface val Parameter value
-/// \interface min Lower Threshold
+/// \param key Parameter name
+/// \param val Parameter value
+/// \param min Lower Threshold
 template <typename T>
 inline void testMax(const std::string key, T& val, T max = std::numeric_limits<T>::max()) {
     if (val > max) {
@@ -248,9 +248,9 @@ inline void testMax(const std::string key, T& val, T max = std::numeric_limits<T
 
 /// \brief Limit parameter to upper bound if parameter is a vector.
 ///
-/// \interface key Parameter name
-/// \interface val Parameter value
-/// \interface min Lower Threshold
+/// \param key Parameter name
+/// \param val Parameter value
+/// \param min Lower Threshold
 template <typename T>
 inline void testMax(const std::string key, std::vector<T>& val, T max = std::numeric_limits<T>::max()) {
     for (auto& v : val)
@@ -259,9 +259,9 @@ inline void testMax(const std::string key, std::vector<T>& val, T max = std::num
 
 /// \brief Limit parameter to upper bound if parameter is a map.
 ///
-/// \interface key Parameter name
-/// \interface val Parameter value
-/// \interface min Lower Threshold
+/// \param key Parameter name
+/// \param val Parameter value
+/// \param min Lower Threshold
 template <typename K, typename T>
 inline void testMax(const std::string key, std::map<K, T>& val, T max = std::numeric_limits<T>::max()) {
     for (auto& v : val)
