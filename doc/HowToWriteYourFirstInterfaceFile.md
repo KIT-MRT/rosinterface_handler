@@ -22,8 +22,8 @@ Lastly you will need to create a rosif file, for this example we'll call it Tuto
 Add the following to your Tutorials.rosif file:
 ```python
 #!/usr/bin/env python
-from rosinterface_handler.parameter_generator_catkin import *
-gen = ParameterGenerator()
+from rosinterface_handler.interface_generator_catkin import *
+gen = InterfaceGenerator()
 
 # Parameters with different types
 gen.add("int_param", paramtype="int", description="An Integer parameter")
@@ -79,8 +79,8 @@ Now lets break the code down line by line.
 ### Initialization
 ```python
 #!/usr/bin/env python
-from rosinterface_handler.parameter_generator_catkin import *
-gen = ParameterGenerator()
+from rosinterface_handler.interface_generator_catkin import *
+gen = InterfaceGenerator()
 ```
 These first lines are pretty simple, they just initialize ros, import and instantiate the parameter generator.
 
