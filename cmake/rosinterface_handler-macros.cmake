@@ -61,7 +61,7 @@ macro(generate_ros_interface_files)
             list(APPEND ${PROJECT_NAME}_interfaces_generated ${_output_cpp} ${_output_cfg} ${_output_py})
 
             # make file show up in ides
-            STRING(REGEX REPLACE "/" "-" IDE_TARGET_NAME ${PROJECT_NAME}-show-${_input})
+            STRING(REGEX REPLACE "/" "-" IDE_TARGET_NAME ${PROJECT_NAME}-show-cfg-${_cfgonly})
             add_custom_target(${IDE_TARGET_NAME} SOURCES ${_input})
 
             install(
