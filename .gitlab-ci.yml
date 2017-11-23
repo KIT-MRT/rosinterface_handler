@@ -28,7 +28,7 @@ build:
     # Build project and resolve deps at the same time in debug mode
     - mrt catkin build -rd --debug --default_yes --no-status --no-color $CI_PROJECT_NAME
  
-test:
+.test:
   stage: test
   script:
     # Build code again, in case caching didn't work
