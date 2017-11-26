@@ -39,7 +39,7 @@ install(
 )
 
 install(
-        DIRECTORY include/rosinterface_handler
+        DIRECTORY include/rosinterface_handler/
         DESTINATION ${CATKIN_PACKAGE_INCLUDE_DESTINATION}
 )
 
