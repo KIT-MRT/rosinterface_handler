@@ -222,7 +222,7 @@ Next we need to add the following lines to our CMakeLists.txt.
 #add rosinterface_handler api
 find_package(catkin REQUIRED rosinterface_handler dynamic_reconfigure)
 
-generate_ros_parameter_files(
+generate_ros_interface_files(
   cfg/Tutorials.rosif
   cfg/SomeOtherCfgFile.cfg
   #...
