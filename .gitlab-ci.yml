@@ -39,7 +39,7 @@ test:
     # Summarize results
     - catkin_test_results --verbose build_debug/$CI_PROJECT_NAME
 
-deps:
+.deps:
     stage: deps
     only:
     # only execute if this is the master branch
