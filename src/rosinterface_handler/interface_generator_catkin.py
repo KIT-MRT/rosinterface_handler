@@ -635,7 +635,7 @@ class InterfaceGenerator(object):
             sub_adv_from_server.append(Template('    $name = privateNodeHandle.advertise<$type>('
                                                 'rosinterface_handler::getTopic($namespace, $topic), $queue);')
                                        .substitute(name=name, type=type, topic=topic_param, queue=queue_size_param,
-                                                   noDelay=no_delay, namespace=name_space))
+                                                   namespace=name_space))
             if publisher['configurable']:
                 sub_adv_from_config.append(Template('    if($topic != config.$topic || $queue != config.$queue) {\n'
                                                     '      $name = privateNodeHandle.advertise<$type>('
