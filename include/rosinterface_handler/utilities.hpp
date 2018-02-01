@@ -149,19 +149,34 @@ inline void setParam(const std::string key, T val) {
     ros::param::set(key, val);
 }
 
-/// \brief Get parameter from ROS parameter server
+/// \brief Get parameter from ROS parameter server quietly
 ///
 /// \param key Parameter name
 /// \param val Parameter value
 template <typename T>
-inline bool getParam(const std::string key, T& val) {
+inline bool getParamImpl(const std::string key, T& val) {
     if (!ros::param::has(key)) {
-        ROS_WARN_STREAM("Parameter '" << key << "' is not defined.");
         return false;
     } else if (!ros::param::get(key, val)) {
         ROS_ERROR_STREAM("Could not retrieve parameter'" << key << "'. Does it have a different type?");
         return false;
     } else {
+        // Param was already retrieved with last if statement.
+        return true;
+    }
+}
+
+/// \brief Get parameter from ROS parameter server or print error
+///
+/// \param key Parameter name
+/// \param val Parameter value
+template <typename T>
+inline bool getParam(const std::string key, T& val) {
+    if (!getParamImpl(key, val)) {
+        ROS_ERROR_STREAM("Parameter '" << key << "' is not defined.");
+        return false;
+    } else {
+        // Param was already retrieved with last if statement.
         return true;
     }
 }
@@ -174,10 +189,10 @@ inline bool getParam(const std::string key, T& val) {
 /// \param defaultValue Parameter default value
 template <typename T>
 inline bool getParam(const std::string key, T& val, const T& defaultValue) {
-    if (!getParam(key, val)) {
+    if (!getParamImpl(key, val)) {
         val = defaultValue;
         ros::param::set(key, defaultValue);
-        ROS_INFO_STREAM("Setting default value.");
+        ROS_INFO_STREAM("Parameter '" << key << "' is not defined. Setting default value.");
         return true;
     } else {
         // Param was already retrieved with last if statement.
