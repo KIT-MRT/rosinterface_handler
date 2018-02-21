@@ -2,8 +2,8 @@
 
 #include <limits>
 #include <string>
-#include <ros/param.h>
 #include <ros/node_handle.h>
+#include <ros/param.h>
 #include <ros/this_node.h>
 
 /// \brief Helper function to test for std::vector
@@ -119,7 +119,7 @@ inline std::string getNodeName(const ros::NodeHandle& privateNodeHandle) {
 inline std::string getParentNamespace(const ros::NodeHandle& nodeHandle) {
     std::string name_space = nodeHandle.getNamespace();
     std::string parent_name_space = name_space.substr(0, name_space.find_last_of("/"));
-    return parent_name_space.empty()? "/" : parent_name_space;
+    return parent_name_space.empty() ? "/" : parent_name_space;
 }
 
 /// \brief Retrieve the topic to subscribe to (aware of global topic names)
@@ -128,7 +128,7 @@ inline std::string getParentNamespace(const ros::NodeHandle& nodeHandle) {
 /// @param topic Global or local topic
 /// @return name_space + topic or topic if topic is global
 inline std::string getTopic(const std::string& name_space, const std::string& topic) {
-    if(topic.empty() || topic[0] == '/') {
+    if (topic.empty() || topic[0] == '/') {
         return topic;
     }
     return name_space + topic;

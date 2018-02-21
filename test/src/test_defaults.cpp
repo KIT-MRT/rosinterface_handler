@@ -25,7 +25,6 @@ TEST(RosinterfaceHandler, DefaultParams) {
 
     ASSERT_EQ(1, testInterface.enum_int_param_w_default);
     ASSERT_EQ("One", testInterface.enum_str_param_w_default);
-
 }
 
 TEST(RosinterfaceHandler, DefaultSubscriber) {
