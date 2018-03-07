@@ -23,6 +23,7 @@ $includeError
 #endif
 #ifdef DYNAMIC_RECONFIGURE_FOUND
 #include <${pkgname}/${ClassName}Config.h>
+#include <functional>
 #else
 struct ${ClassName}Config{};
 #endif
@@ -44,7 +45,11 @@ struct ${ClassName}Interface {
     publicNamespace{rosinterface_handler::getParentNamespace(private_node_handle) + "/"},
     privateNamespace{private_node_handle.getNamespace() + "/"},
     nodeName{rosinterface_handler::getNodeName(private_node_handle)},
-    privateNodeHandle{private_node_handle} {}
+    privateNodeHandle{private_node_handle} {
+#ifdef DYNAMIC_RECONFIGURE_FOUND
+    reconfigureServer.setCallback(boost::bind(& ${ClassName}Interface::fromConfig, this, _1, _2));
+#endif
+    }
 
   /// \brief Get values from parameter server
   /// 
@@ -82,6 +87,10 @@ $fromConfig
 #endif
   }
 
+  void setReconfigureCallback(std::function<void(const Config&, const uint32_t)> func) {
+    reconfigureServer.setCallback(func);
+  }
+
   /// \brief Stream operator for printing parameter struct
   friend std::ostream& operator<<(std::ostream& os, const ${ClassName}Interface& p)
   {
@@ -106,6 +115,10 @@ $non_default_params    );
   const std::string privateNamespace;
   const std::string nodeName;
   ros::NodeHandle privateNodeHandle;
+#ifdef DYNAMIC_RECONFIGURE_FOUND
+  dynamic_reconfigure::Server<Config> reconfigureServer;
+#endif
+
 };
 
 } // namespace ${pkgname}
