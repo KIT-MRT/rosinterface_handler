@@ -23,6 +23,7 @@ $includeError
 #endif
 #ifdef DYNAMIC_RECONFIGURE_FOUND
 #include <${pkgname}/${ClassName}Config.h>
+#include <dynamic_reconfigure/server.h>
 #include <functional>
 #else
 struct ${ClassName}Config{};
