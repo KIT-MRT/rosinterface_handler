@@ -1,7 +1,7 @@
 <?xml version="1.0"?>
 <package>
   <name>rosinterface_handler</name>
-  <version>0.1.1</version>
+  <version>0.2.1</version>
   <description>An easy toolbox to generate interfaces from a node to the ROS world.</description>
   <license>BSD</license>
 
@@ -16,5 +16,7 @@
   <test_depend>dynamic_reconfigure</test_depend>
   <test_depend>message_filters</test_depend>
   <test_depend>std_msgs</test_depend>
+  <test_depend>geometry_msgs</test_depend>
+  <test_depend>diagnostic_updater</test_depend>
 </package>
 

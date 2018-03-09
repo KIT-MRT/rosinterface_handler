@@ -8,6 +8,7 @@
 import rospy
 $imports
 
+inf = float('inf')
 param_description = $paramDescription
 subscriber_description = $subscriberDescription
 publisher_description = $publisherDescription
@@ -18,6 +19,7 @@ if subscriber_description:
     import message_filters
 if verbosity_param:
     import logging
+
 
 defaults = {}
 

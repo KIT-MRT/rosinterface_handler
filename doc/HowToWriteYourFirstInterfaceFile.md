@@ -182,6 +182,12 @@ The following parameters are optional. Many of them will be automatically deduce
         the node will always subscribe globally.
 - **constant**: If this is true, the parameters will not be fetched from param server,
         but the default value is kept.
+- **diagnosed**: Enables diagnostics for the subscriber/publisher. Can be configured with the params below.
+        The message must have a header. Not yet supported for python.
+- **min_frequency**: Sets the default minimum frequency for the subscriber/publisher
+- **min_frequency_param**: Sets the parameter for the minimum frequency. Defaults to <name>_min_frequency
+- **max_delay**: Sets the default maximal header delay for the topics in seconds.
+- **max_delay_param**: Parameter for the maximal delay. Defaults to <name>_max_delay.
 
 
 ### Defining verbosity
@@ -197,6 +203,13 @@ the verbosity of the node. If you make the parameter *configurable*, you can com
 - **name**: Name of the verbosity parameter.
 - **configurable**: Show the verbosity in the *rqt_reconfigure* window.
 - **default**: Initial verbosity (can be `debug`, `info`, `warning`, `error` or `fatal`).
+
+### Diagnosed publishers
+Diagnosed publisher/subscriber are created by passing `diagnosed=True` to the add_subscriber/publisher definition in the interface file.
+Before you do this, you must add a line `gen.add_diagnostic_updater()` to your file and not forget to add _diagnostic_updater_ as a dependency to your package.
+You can control the expected minimal frequency by setting the respective parameter. The delay of the messages can be monitored like this as well.
+ 
+Currently this is not supported for python (the flag is ignored).
 
 ### The final step
 

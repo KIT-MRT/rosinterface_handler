@@ -91,18 +91,11 @@ sync.registerCallback(boost::bind(&callback, _1, _2));
 ```
 
 
-### Diagnosed publishers
-Diagnosed publishers are supported too as they can be initialized with the publisher from the interface struct.
-In the case of configurable publishers, this needs to be done in the reconfigure callback to ensure the diagnosed publisher is always publishing to the right topic. Don't worry, the overhead is very small.
-```cpp
-void reconfigureRequest(TutorialConfig& config, uint32_t level) {
-    interface_.fromConfig(config);
-    diagnosed_publisher = diagnostic_updater::DiagnosedPublisher<std_msgs::Header>(interface_->my_publisher, updater_,frequency_param, timestamp_param);
-    // now use the diagnosed_publisher
-    std_msgs::Header my_msg;
-    diagnosed_publisher.publish(my_msg);
-}
-```
+### Diagnosed publishers/subscribers
+Diagnosed publishers and subscribers work similar to the nomal publisher/subsribers and update their diagnostic status by themselves. 
+No more action is required on them. However, the `updater` member inside your Interface object has an `update()` function 
+that needs to be called regularly so that updates are published. Refer to the documentation of `diagnostic_updater` for more information.
+
 
 ## Python
 All your interface definitions are fully available in python nodes as well. Just import the interface file:
