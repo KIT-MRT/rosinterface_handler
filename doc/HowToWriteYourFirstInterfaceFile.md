@@ -172,7 +172,7 @@ The signature for both commands are very similar. They take the following mandat
 - **description**: Chose an informative documentation string for this subscriber/publisher.
 
 The following parameters are optional. Many of them will be automatically deduced from the mandatory parameters:
-- **default_topic**: Default topic to subscribe to. If empty, the subscriber/publisher will initialized in an invalid state.
+- **default_topic**: Default topic to subscribe to. If this is an empty string, the subscriber/publisher will initialized in an invalid state. If it is `None` (default), the node will report an error if the topic is not defined by a parameter.
 - **default_queue_size**: Default queue size of the subscriber/publisher.
 - **no_delay** _(only for add_subscriber)_: Set the tcp_no_delay parameter for subscribing. Recommended for larger messages.
 - **topic_param**: Name of the param configuring the topic. Will be "*name*_topic" if None.
@@ -191,6 +191,8 @@ The following parameters are optional. Many of them will be automatically deduce
 - **min_frequency_param**: Sets the parameter for the minimum frequency. Defaults to <name>_min_frequency
 - **max_delay**: Sets the default maximal header delay for the topics in seconds.
 - **max_delay_param**: Parameter for the maximal delay. Defaults to <name>_max_delay.
+
+To define the topic, just set the topic parameter (usually <my_subscriber>_topic) to the topic of your dreams in your launch or config file.
 
 
 ### Defining verbosity

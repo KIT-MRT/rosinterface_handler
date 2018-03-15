@@ -162,7 +162,7 @@ class InterfaceGenerator(object):
                      default=enum_val, constant=True)
         self.enums.append({'name': name, 'description': description, 'values': entry_strings, 'paramtype': paramtype})
 
-    def add_subscriber(self, name, message_type, description, default_topic="", default_queue_size=5, no_delay=False,
+    def add_subscriber(self, name, message_type, description, default_topic=None, default_queue_size=5, no_delay=False,
                        topic_param=None, queue_size_param=None, header=None, module=None, configurable=False,
                        scope='private', constant=False, diagnosed=False, min_frequency=0., min_frequency_param=None,
                        max_delay=float('inf'), max_delay_param=None):
@@ -239,7 +239,7 @@ class InterfaceGenerator(object):
         }
         self.subscribers.append(newparam)
 
-    def add_publisher(self, name, message_type, description, default_topic="", default_queue_size=5, topic_param=None,
+    def add_publisher(self, name, message_type, description, default_topic=None, default_queue_size=5, topic_param=None,
                       queue_size_param=None, header=None, module=None, configurable=False, scope="private",
                       constant=False, diagnosed=False, min_frequency=0., min_frequency_param=None, max_delay=float('inf'),
                       max_delay_param=None):
