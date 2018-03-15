@@ -50,6 +50,7 @@ class InterfaceGenerator(object):
         self.subscribers = []
         self.publishers = []
         self.childs = []
+        self.tf = None
         self.verbosity = None
         self.parent = parent
         self.diagnostics_enabled = False
@@ -104,6 +105,19 @@ class InterfaceGenerator(object):
         if self.parent:
             eprint("You can not call add_diagnostic_updater on a group! Call it on the main parameter generator instead!")
         self.diagnostics_enabled = True
+
+    def add_tf(self, buffer_name="tf_buffer", listener_name="tf_listener", broadcaster_name=None):
+        """
+        Adds tf transformer/broadcaster as members to the interface object
+        :param buffer_name: Name of the tf2_ros::Buffer member in the interface object
+        :param listener_name: Name of the tf2_ros::TransformListener member in the interface object.
+        Will not be created if none.
+        :param broadcaster: Name of the tf2_ros::TransformBroadcaster member in the interface object.
+        Will not be created if none.
+        """
+        if listener_name and not buffer_name:
+            eprint("If you specify a tf listener, the tf buffer can not be empty!")
+        self.tf = {"buffer_name": buffer_name, "listener_name": listener_name, "broadcaster_name": broadcaster_name}
 
 
     def add_group(self, name):
@@ -615,9 +629,25 @@ class InterfaceGenerator(object):
 
         if self.diagnostics_enabled:
             param_entries.append('diagnostic_updater::Updater updater;')
-            subscribers_init.append('\n,    updater{ros::NodeHandle(), private_node_handle, nodeName_}')
+            subscribers_init.append(',\n    updater{ros::NodeHandle(), private_node_handle, nodeName_}')
             includes.append('#include <rosinterface_handler/diagnostic_subscriber.hpp>')
             from_server.append('    updater.setHardwareID("none");')
+
+        if self.tf:
+            listener = self.tf["listener_name"]
+            buffer = self.tf["buffer_name"]
+            broadcaster = self.tf["broadcaster_name"]
+            if buffer:
+                includes.append('#include <tf2_ros/buffer.h>')
+                param_entries.append('tf2_ros::Buffer {};'.format(buffer))
+            if listener:
+                includes.append('#include <tf2_ros/transform_listener.h>')
+                param_entries.append('tf2_ros::TransformListener {};'.format(listener))
+                subscribers_init.append(',\n    {}{{{}}}'.format(listener, buffer))
+            if broadcaster:
+                includes.append('#include <tf2_ros/transform_broadcaster.h>')
+                param_entries.append('tf2_ros::TransformBroadcaster {};'.format(broadcaster))
+
 
         for subscriber in subscribers:
             name = subscriber['name']
@@ -896,7 +926,8 @@ class InterfaceGenerator(object):
                                                 paramDescription=paramDescription,
                                                 subscriberDescription=subscriberDescription,
                                                 publisherDescription=publisherDescription,
-                                                verbosityParam=verbosityParam)
+                                                verbosityParam=verbosityParam,
+                                                tfConfig=self.tf)
 
         py_file = os.path.join(self.py_gen_dir, "interface", self.classname + "Interface.py")
         try:

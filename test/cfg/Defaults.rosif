@@ -10,6 +10,7 @@ gen = InterfaceGenerator()
 
 gen.add_verbosity_param("verbosity_param_w_default", configurable=False, default='info')
 gen.add_diagnostic_updater()
+gen.add_tf(buffer_name="tf_buffer", listener_name="tf_listener", broadcaster_name="tf_broadcaster")
 
 # Parameters with different types
 gen.add("int_param_w_default", paramtype="int", description="An Integer parameter", default=1, configurable=True)
