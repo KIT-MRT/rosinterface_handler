@@ -108,7 +108,7 @@ class InterfaceGenerator(object):
 
     def add_tf(self, buffer_name="tf_buffer", listener_name="tf_listener", broadcaster_name=None):
         """
-        Adds tf transformer/broadcaster as members to the interface object
+        Adds tf transformer/broadcaster as members to the interface object. Don't forget to depend your package on tf2_ros.
         :param buffer_name: Name of the tf2_ros::Buffer member in the interface object
         :param listener_name: Name of the tf2_ros::TransformListener member in the interface object.
         Will not be created if none.

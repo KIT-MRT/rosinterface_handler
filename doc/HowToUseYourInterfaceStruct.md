@@ -96,7 +96,6 @@ Diagnosed publishers and subscribers work similar to the nomal publisher/subsrib
 No more action is required on them. However, the `updater` member inside your Interface object has an `update()` function 
 that needs to be called regularly so that updates are published. Refer to the documentation of `diagnostic_updater` for more information.
 
-
 ## Python
 All your interface definitions are fully available in python nodes as well. Just import the interface file:
 ```python

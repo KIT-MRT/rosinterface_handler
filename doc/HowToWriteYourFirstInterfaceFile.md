@@ -69,6 +69,9 @@ gen.add_publisher("my_publisher", message_type="std_msgs::Header", description="
 # Logging
 gen.add_verbosity_param(configurable=True)
 
+# TF
+gen.add_tf(buffer_name="tf_buffer", listener_name="tf_listener", broadcaster_name="tf_broadcaster")
+
 #Syntax : Package, Node, Config Name(The final name will be MyDummyConfig)
 exit(gen.generate("rosinterface_tutorials", "example_node", "Tutorial"))
 ```
@@ -203,6 +206,16 @@ the verbosity of the node. If you make the parameter *configurable*, you can com
 - **name**: Name of the verbosity parameter.
 - **configurable**: Show the verbosity in the *rqt_reconfigure* window.
 - **default**: Initial verbosity (can be `debug`, `info`, `warning`, `error` or `fatal`).
+### TF
+```python
+gen.add_tf(buffer_name="tf_buffer", listener_name="tf_listener", broadcaster_name="tf_broadcaster")
+```
+
+The rosinterface handler can also generate the tf objects for you (your package must depend on tf2_ros, of course).
+In the end, your interface object will have three more members: A tf_buffer, a tf_listener and a tf_broadcaster that you can use for handling transformations. These are the supported parameters:
+- **buffer_name**: Optional: Name of the tf2_ros::Buffer member in the interface object. Required if listener_name is not `None`.
+- **listener_name**: Optional: Name of the tf2_ros::TransformListener member in the interface object. Will not be created if `None`
+- **broadcaster**: Optional: Name of the tf2_ros::TransformBroadcaster member in the interface object. Will not be created if `None`
 
 ### Diagnosed publishers
 Diagnosed publisher/subscriber are created by passing `diagnosed=True` to the add_subscriber/publisher definition in the interface file.
@@ -210,6 +223,8 @@ Before you do this, you must add a line `gen.add_diagnostic_updater()` to your f
 You can control the expected minimal frequency by setting the respective parameter. The delay of the messages can be monitored like this as well.
  
 Currently this is not supported for python (the flag is ignored).
+
+
 
 ### The final step
 
