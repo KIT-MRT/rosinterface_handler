@@ -115,6 +115,8 @@ class InterfaceGenerator(object):
         :param broadcaster_name: Name of the tf2_ros::TransformBroadcaster member in the interface object.
         Will not be created if none.
         """
+        if self.parent:
+            eprint("You can not call add_tf on a group! Call it on the main parameter generator instead!")
         if listener_name and not buffer_name:
             eprint("If you specify a tf listener, the tf buffer can not be empty!")
         self.tf = {"buffer_name": buffer_name, "listener_name": listener_name, "broadcaster_name": broadcaster_name}
