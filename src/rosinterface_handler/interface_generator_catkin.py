@@ -112,7 +112,7 @@ class InterfaceGenerator(object):
         :param buffer_name: Name of the tf2_ros::Buffer member in the interface object
         :param listener_name: Name of the tf2_ros::TransformListener member in the interface object.
         Will not be created if none.
-        :param broadcaster: Name of the tf2_ros::TransformBroadcaster member in the interface object.
+        :param broadcaster_name: Name of the tf2_ros::TransformBroadcaster member in the interface object.
         Will not be created if none.
         """
         if listener_name and not buffer_name:

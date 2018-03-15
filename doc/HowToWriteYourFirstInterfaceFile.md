@@ -217,7 +217,7 @@ The rosinterface handler can also generate the tf objects for you (your package 
 In the end, your interface object will have three more members: A tf_buffer, a tf_listener and a tf_broadcaster that you can use for handling transformations. These are the supported parameters:
 - **buffer_name**: Optional: Name of the tf2_ros::Buffer member in the interface object. Required if listener_name is not `None`.
 - **listener_name**: Optional: Name of the tf2_ros::TransformListener member in the interface object. Will not be created if `None`
-- **broadcaster**: Optional: Name of the tf2_ros::TransformBroadcaster member in the interface object. Will not be created if `None`
+- **broadcaster_name**: Optional: Name of the tf2_ros::TransformBroadcaster member in the interface object. Will not be created if `None`
 
 ### Diagnosed publishers
 Diagnosed publisher/subscriber are created by passing `diagnosed=True` to the add_subscriber/publisher definition in the interface file.
