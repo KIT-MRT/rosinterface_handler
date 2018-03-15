@@ -534,6 +534,8 @@ class InterfaceGenerator(object):
         self.nodename = nodename
         self.classname = classname
 
+        print("Generating interface file for node {} (class {}) in package {}".format(nodename, classname, pkgname))
+
         if self.parent:
             eprint("You should not call generate on a group! Call it on the main parameter generator instead!")
 

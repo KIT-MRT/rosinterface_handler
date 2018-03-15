@@ -99,6 +99,16 @@ $fromConfig
 $string_representation;
     return os;
   }
+
+  /// \brief get the node handle that the interface struct uses internally
+  ros::NodeHandle getPrivateNodeHandle() {
+      return privateNodeHandle_;
+  }
+
+  /// \brief returns the name of the node (works in nodelets, too)
+  const std::string& nodeName() {
+      return nodeName_;
+  }
 private:
   const std::string globalNamespace_;
   const std::string publicNamespace_;
