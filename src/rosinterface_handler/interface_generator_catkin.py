@@ -631,7 +631,7 @@ class InterfaceGenerator(object):
 
         if self.diagnostics_enabled:
             param_entries.append('diagnostic_updater::Updater updater;')
-            subscribers_init.append(',\n    updater{ros::NodeHandle(), private_node_handle, nodeName_}')
+            subscribers_init.append(',\n    updater{ros::NodeHandle(), private_node_handle, "/"+nodeName_}')
             includes.append('#include <rosinterface_handler/diagnostic_subscriber.hpp>')
             from_server.append('    updater.setHardwareID("none");')
 
