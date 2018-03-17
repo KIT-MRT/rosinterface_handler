@@ -205,27 +205,34 @@ TEST(RosinterfaceHandler, FromDynamicReconfigure) {
     ros::NodeHandle nh("~");
     IfType testInterface(nh);
     ASSERT_NO_THROW(testInterface.fromParamServer());
+    testInterface.updater.force_update();
 
     ConfigType config;
     config.int_param_w_default = 2;
     config.subscriber_w_default_topic = "/in_topic";
+    config.subscriber_diag_w_default_topic = "/in_point_topic";
     config.subscriber_public_w_default_topic = "/in_topic";
     config.subscriber_global_w_default_topic = "/in_topic";
     config.publisher_w_default_topic = "/out_topic";
+    config.publisher_diag_w_default_topic = "/out_point_topic";
     config.publisher_public_w_default_topic = "/out_topic";
     config.publisher_global_w_default_topic = "/out_topic";
     testInterface.fromConfig(config);
+
+    testInterface.updater.force_update();
 
     // params
     EXPECT_EQ(testInterface.int_param_w_default, 2);
 
     // subscriber
     EXPECT_EQ(testInterface.subscriber_w_default->getTopic(), "/in_topic");
+    EXPECT_EQ(testInterface.subscriber_diag_w_default->getTopic(), "/in_point_topic");
     EXPECT_EQ(testInterface.subscriber_public_w_default->getTopic(), "/in_topic");
     EXPECT_EQ(testInterface.subscriber_global_w_default->getTopic(), "/in_topic");
 
     // publisher
     EXPECT_EQ(testInterface.publisher_w_default.getTopic(), "/out_topic");
+    EXPECT_EQ(testInterface.publisher_diag_w_default.getTopic(), "/out_point_topic");
     EXPECT_EQ(testInterface.publisher_public_w_default.getTopic(), "/out_topic");
     EXPECT_EQ(testInterface.publisher_global_w_default.getTopic(), "/out_topic");
 }

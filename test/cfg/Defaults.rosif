@@ -9,6 +9,8 @@ from rosinterface_handler.interface_generator_catkin import *
 gen = InterfaceGenerator()
 
 gen.add_verbosity_param("verbosity_param_w_default", configurable=False, default='info')
+gen.add_diagnostic_updater()
+gen.add_tf(buffer_name="tf_buffer", listener_name="tf_listener", broadcaster_name="tf_broadcaster")
 
 # Parameters with different types
 gen.add("int_param_w_default", paramtype="int", description="An Integer parameter", default=1, configurable=True)
@@ -27,9 +29,11 @@ gen.add_enum("enum_int_param_w_default", description="enum", entry_strings=["Sma
 gen.add_enum("enum_str_param_w_default", description="string enum", entry_strings=["Zero", "One", "Two", "Three"], default="One", paramtype='std::string')
 
 gen.add_subscriber("subscriber_w_default", description="subscriber", default_topic="in_topic", message_type="std_msgs::Header", configurable=True)
+gen.add_subscriber("subscriber_diag_w_default", description="subscriber", default_topic="in_point_topic", message_type="geometry_msgs::PointStamped", configurable=True, diagnosed=True)
 gen.add_subscriber("subscriber_public_w_default", description="public subscriber", default_topic="in_topic", message_type="std_msgs::Header", scope="public", configurable=True)
 gen.add_subscriber("subscriber_global_w_default", description="global subscriber", default_topic="in_topic", message_type="std_msgs::Header", scope="global", configurable=True)
 gen.add_publisher("publisher_w_default", description="publisher", default_topic="out_topic", message_type="std_msgs::Header", configurable=True)
+gen.add_publisher("publisher_diag_w_default", description="publisher", default_topic="out_point_topic", message_type="geometry_msgs::PointStamped", configurable=True, diagnosed=True)
 gen.add_publisher("publisher_public_w_default", description="public publisher", default_topic="out_topic", message_type="std_msgs::Header", scope="public", configurable=True)
 gen.add_publisher("publisher_global_w_default", description="global publisher", default_topic="out_topic", message_type="std_msgs::Header", scope="global", configurable=True)
 

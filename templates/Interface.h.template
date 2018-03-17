@@ -36,18 +36,28 @@ struct ${ClassName}Interface {
   using Config = ${ClassName}Config;
 #ifdef MESSAGE_FILTERS_FOUND
   template<typename T>
-  using SubscriberPtr = std::shared_ptr<message_filters::Subscriber<T>>;
+  using Subscriber = message_filters::Subscriber<T>;
+  template<typename T>
+  using SubscriberPtr = std::shared_ptr<Subscriber<T>>;
+#endif
+#ifdef IF_HANDLER_DIAGNOSTICS_INCLUDED
+  template<typename T>
+  using DiagSubscriber = rosinterface_handler::DiagnosedSubscriber<T>;
+  template<typename T>
+  using DiagSubscriberPtr = std::shared_ptr<DiagSubscriber<T>>;
+  template<typename T>
+  using DiagPublisher = rosinterface_handler::DiagnosedPublisher<T>;
 #endif
 
   ${ClassName}Interface(const ros::NodeHandle& private_node_handle)
-  :$initSubscribers globalNamespace{"/"},
-    publicNamespace{rosinterface_handler::getParentNamespace(private_node_handle) + "/"},
-    privateNamespace{private_node_handle.getNamespace() + "/"},
-    nodeName{rosinterface_handler::getNodeName(private_node_handle)},
-    privateNodeHandle{private_node_handle} {}
+  : globalNamespace_{"/"},
+    publicNamespace_{rosinterface_handler::getParentNamespace(private_node_handle) + "/"},
+    privateNamespace_{private_node_handle.getNamespace() + "/"},
+    nodeName_{rosinterface_handler::getNodeName(private_node_handle)},
+    privateNodeHandle_{private_node_handle}$initSubscribers {}
 
   /// \brief Get values from parameter server
-  /// 
+  ///
   /// Will fail if a value can not be found and no default value is given.
   void fromParamServer(){
     bool success = true;
@@ -65,7 +75,7 @@ $test_limits
 
   /// \brief Set parameters on ROS parameter server.
   void toParamServer(){
-$toParamServer        
+$toParamServer
   }
 
   /// \brief Update configurable parameters.
@@ -85,27 +95,38 @@ $fromConfig
   /// \brief Stream operator for printing parameter struct
   friend std::ostream& operator<<(std::ostream& os, const ${ClassName}Interface& p)
   {
-    os << "[" << p.nodeName << "]\nNode " << p.nodeName << " has the following parameters:\n"
+    os << "[" << p.nodeName_ << "]\nNode " << p.nodeName_ << " has the following parameters:\n"
 $string_representation;
     return os;
   }
 
-  $parameters
-  $publishers
-  $subscribers
+  /// \brief get the node handle that the interface struct uses internally
+  ros::NodeHandle getPrivateNodeHandle() {
+      return privateNodeHandle_;
+  }
+
+  /// \brief returns the name of the node (works in nodelets, too)
+  const std::string& nodeName() {
+      return nodeName_;
+  }
+private:
+  const std::string globalNamespace_;
+  const std::string publicNamespace_;
+  const std::string privateNamespace_;
+  const std::string nodeName_;
+  ros::NodeHandle privateNodeHandle_;
+
+public:
+$parameters
+$publishers
+$subscribers
 
 private:
   /// \brief Issue a warning about missing default parameters.
   void missingParamsWarning(){
-    ROS_WARN_STREAM("[" << nodeName << "]\nThe following parameters do not have default values and need to be specified:\n"
+    ROS_WARN_STREAM("[" << nodeName_ << "]\nThe following parameters do not have default values and need to be specified:\n"
 $non_default_params    );
   }
-
-  const std::string globalNamespace;
-  const std::string publicNamespace;
-  const std::string privateNamespace;
-  const std::string nodeName;
-  ros::NodeHandle privateNodeHandle;
 };
 
 } // namespace ${pkgname}

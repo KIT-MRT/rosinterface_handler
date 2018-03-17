@@ -8,16 +8,21 @@
 import rospy
 $imports
 
+inf = float('inf')
 param_description = $paramDescription
 subscriber_description = $subscriberDescription
 publisher_description = $publisherDescription
 verbosity_param = $verbosityParam
+tf_config = $tfConfig
 
 if subscriber_description:
     # only import if necessary
     import message_filters
 if verbosity_param:
     import logging
+if tf_config:
+    import tf2_ros
+
 
 defaults = {}
 
@@ -33,6 +38,8 @@ class ${ClassName}Interface(dict):
     def __init__(self):
         super(self.__class__, self).__init__(defaults)
         self.from_param_server()
+        if tf_config:
+            self._init_tf()
 
     __getattr__ = dict.__getitem__
     __setattr__ = dict.__setitem__
@@ -72,8 +79,6 @@ class ${ClassName}Interface(dict):
                                          queue_size=self[publisher['queue_size_param']])
         if verbosity_param:
             logging.getLogger('rosout').setLevel(self._map_verbosity(self[verbosity_param]))
-
-
 
     def to_param_server(self):
         """
@@ -124,6 +129,17 @@ class ${ClassName}Interface(dict):
             if not k in self:
                 raise TypeError("Element {} of config is not part of parameters.".format(k))
             self[k] = v
+
+    def _init_tf(self):
+            listener = tf_config["listener_name"]
+            buffer = tf_config["buffer_name"]
+            broadcaster = tf_config["broadcaster_name"]
+            if buffer:
+                self[buffer] = tf2_ros.Buffer()
+            if listener:
+                self[listener] = tf2_ros.TransformListener(self[buffer])
+            if broadcaster:
+                self[broadcaster] = tf2_ros.TransformBroadcaster
 
     @staticmethod
     def test_const_param(param_name):
@@ -219,6 +235,7 @@ class ${ClassName}Interface(dict):
     @staticmethod
     def get_type(config):
         return eval(config['import'] + '.' + config['type'].split('::')[-1])
+
 
     @staticmethod
     def _get_topic(scope, topic):

@@ -69,6 +69,9 @@ gen.add_publisher("my_publisher", message_type="std_msgs::Header", description="
 # Logging
 gen.add_verbosity_param(configurable=True)
 
+# TF
+gen.add_tf(buffer_name="tf_buffer", listener_name="tf_listener", broadcaster_name="tf_broadcaster")
+
 #Syntax : Package, Node, Config Name(The final name will be MyDummyConfig)
 exit(gen.generate("rosinterface_tutorials", "example_node", "Tutorial"))
 ```
@@ -169,7 +172,7 @@ The signature for both commands are very similar. They take the following mandat
 - **description**: Chose an informative documentation string for this subscriber/publisher.
 
 The following parameters are optional. Many of them will be automatically deduced from the mandatory parameters:
-- **default_topic**: Default topic to subscribe to. If empty, the subscriber/publisher will initialized in an invalid state.
+- **default_topic**: Default topic to subscribe to. If this is an empty string, the subscriber/publisher will initialized in an invalid state. If it is `None` (default), the node will report an error if the topic is not defined by a parameter.
 - **default_queue_size**: Default queue size of the subscriber/publisher.
 - **no_delay** _(only for add_subscriber)_: Set the tcp_no_delay parameter for subscribing. Recommended for larger messages.
 - **topic_param**: Name of the param configuring the topic. Will be "*name*_topic" if None.
@@ -182,6 +185,14 @@ The following parameters are optional. Many of them will be automatically deduce
         the node will always subscribe globally.
 - **constant**: If this is true, the parameters will not be fetched from param server,
         but the default value is kept.
+- **diagnosed**: Enables diagnostics for the subscriber/publisher. Can be configured with the params below.
+        The message must have a header. Not yet supported for python.
+- **min_frequency**: Sets the default minimum frequency for the subscriber/publisher
+- **min_frequency_param**: Sets the parameter for the minimum frequency. Defaults to <name>_min_frequency
+- **max_delay**: Sets the default maximal header delay for the topics in seconds.
+- **max_delay_param**: Parameter for the maximal delay. Defaults to <name>_max_delay.
+
+To define the topic, just set the topic parameter (usually <my_subscriber>_topic) to the topic of your dreams in your launch or config file.
 
 
 ### Defining verbosity
@@ -197,6 +208,25 @@ the verbosity of the node. If you make the parameter *configurable*, you can com
 - **name**: Name of the verbosity parameter.
 - **configurable**: Show the verbosity in the *rqt_reconfigure* window.
 - **default**: Initial verbosity (can be `debug`, `info`, `warning`, `error` or `fatal`).
+### TF
+```python
+gen.add_tf(buffer_name="tf_buffer", listener_name="tf_listener", broadcaster_name="tf_broadcaster")
+```
+
+The rosinterface handler can also generate the tf objects for you (your package must depend on tf2_ros, of course).
+In the end, your interface object will have three more members: A tf_buffer, a tf_listener and a tf_broadcaster that you can use for handling transformations. These are the supported parameters:
+- **buffer_name**: Optional: Name of the tf2_ros::Buffer member in the interface object. Required if listener_name is not `None`.
+- **listener_name**: Optional: Name of the tf2_ros::TransformListener member in the interface object. Will not be created if `None`
+- **broadcaster_name**: Optional: Name of the tf2_ros::TransformBroadcaster member in the interface object. Will not be created if `None`
+
+### Diagnosed publishers
+Diagnosed publisher/subscriber are created by passing `diagnosed=True` to the add_subscriber/publisher definition in the interface file.
+Before you do this, you must add a line `gen.add_diagnostic_updater()` to your file and not forget to add _diagnostic_updater_ as a dependency to your package.
+You can control the expected minimal frequency by setting the respective parameter. The delay of the messages can be monitored like this as well.
+ 
+Currently this is not supported for python (the flag is ignored).
+
+
 
 ### The final step
 
