@@ -37,11 +37,23 @@ macro(generate_ros_interface_files)
             set(_output_cpp ${CATKIN_DEVEL_PREFIX}/${CATKIN_PACKAGE_INCLUDE_DESTINATION}/${_cfgonly}Interface.h)
             set(_output_py ${CATKIN_DEVEL_PREFIX}/${CATKIN_PACKAGE_PYTHON_DESTINATION}/interface/${_cfgonly}Interface.py)
 
+            # We need to explicitly add the devel space to the PYTHONPATH
+            # since it might contain dynamic_reconfigure or Python code of the current package.
+            set("_CUSTOM_PYTHONPATH_ENV")
+            if(EXISTS "${CATKIN_DEVEL_PREFIX}/${CATKIN_GLOBAL_PYTHON_DESTINATION}")
+                configure_file(
+                    "${ROSINTERFACE_HANDLER_CMAKE_DIR}/setup_custom_pythonpath_rosif.sh.in"
+                    "setup_custom_pythonpath_rosif.sh"
+                    @ONLY
+                )
+                set("_CUSTOM_PYTHONPATH_ENV" "${CMAKE_CURRENT_BINARY_DIR}/setup_custom_pythonpath_rosif.sh")
+            endif()
 
             # Create command
             assert(CATKIN_ENV)
             set(_cmd
                     ${CATKIN_ENV}
+                    ${_CUSTOM_PYTHONPATH_ENV}
                     ${_input}
                     ${ROSINTERFACE_HANDLER_ROOT_DIR}
                     ${CATKIN_DEVEL_PREFIX}/${CATKIN_PACKAGE_SHARE_DESTINATION}
