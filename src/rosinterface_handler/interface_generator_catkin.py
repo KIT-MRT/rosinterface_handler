@@ -95,7 +95,7 @@ class InterfaceGenerator(object):
                           paramtype='std::string')
         else:
             self.add(name, description='Sets the verbosity for this node', paramtype='std::string', default=default)
-
+   
     def add_diagnostic_updater(self):
         """
         Adds a diagnostic updater to the interface struct. Make sure your project depends on the diagnostic_updater
@@ -362,7 +362,11 @@ class InterfaceGenerator(object):
             'global_scope': global_scope,
         }
         self._perform_checks(newparam)
-        self.parameters.append(newparam)
+        # make sure verbosity is the first param
+        if name == self.verbosity:
+            self.parameters.insert(0, newparam)
+        else:
+            self.parameters.append(newparam)
 
     def _perform_checks(self, param):
         """
@@ -853,17 +857,16 @@ class InterfaceGenerator(object):
             string_representation.append(Template('      << "\t" << p.$namespace << "$name:" << p.$name << '
                                                   '"\\n"\n').substitute(namespace=namespace, name=name))
 
-        # set verbosity (must be last line in from server and first in from config)
-        if self.verbosity:
-            from_server.append(Template('    rosinterface_handler::setLoggerLevel(privateNodeHandle_, "$verbosity");').substitute(
-                verbosity=self.verbosity))
-            param_entry = next((entry for entry in params if entry['name'] == self.verbosity), None)
-            if param_entry and param_entry['configurable']:
-                verb_check = Template('    if(config.$verbosity != this->$verbosity) {\n'
-                                      '        rosinterface_handler::setParam(privateNamespace_ + "$verbosity", config.$verbosity);\n'
-                                      '        rosinterface_handler::setLoggerLevel(privateNodeHandle_, "$verbosity");\n'
-                                      '    }').substitute(verbosity=self.verbosity)
-                from_config.insert(0, verb_check)
+            # handle verbosity param
+            if self.verbosity == name:
+                from_server.append(Template('    rosinterface_handler::setLoggerLevel(privateNodeHandle_, "$verbosity");').substitute(
+                    verbosity=self.verbosity))
+                if param['configurable']:
+                    verb_check = Template('    if(config.$verbosity != this->$verbosity) {\n'
+                                          '        rosinterface_handler::setParam(privateNamespace_ + "$verbosity", config.$verbosity);\n'
+                                          '        rosinterface_handler::setLoggerLevel(privateNodeHandle_, "$verbosity");\n'
+                                          '    }').substitute(verbosity=self.verbosity)
+                    from_config.insert(0, verb_check)
 
         param_entries = "\n".join(param_entries)
         string_representation = "".join(string_representation)
