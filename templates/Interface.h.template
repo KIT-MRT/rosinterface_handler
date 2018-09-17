@@ -22,7 +22,10 @@ $includes
 $includeError
 #endif
 #ifdef DYNAMIC_RECONFIGURE_FOUND
+#pragma GCC diagnostic push
+#pragma GCC diagnostic ignored "-Wparentheses"
 #include <${pkgname}/${ClassName}Config.h>
+#pragma GCC diagnostic pop
 #else
 struct ${ClassName}Config{};
 #endif
