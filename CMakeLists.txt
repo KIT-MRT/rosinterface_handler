@@ -3,6 +3,11 @@ project(rosinterface_handler)
 
 find_package(catkin REQUIRED)
 
+# export compile commands
+if(${CMAKE_VERSION} VERSION_GREATER "3.5.0")
+    set(CMAKE_EXPORT_COMPILE_COMMANDS YES)
+endif()
+
 catkin_python_setup()
 
 if (CATKIN_ENABLE_TESTING)
