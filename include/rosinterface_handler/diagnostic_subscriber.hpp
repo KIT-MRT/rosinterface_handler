@@ -101,13 +101,15 @@ private:
 //! Similar to diagnostic_updater::DiagnosedPublisher, but with less segfaults
 template <typename MsgT>
 class DiagnosedPublisher {
-    static_assert(ros::message_traits::HasHeader<MsgT>::value,
-                  "DiagnosedPublisher can only be used on messgaes with a header!");
-    using Publisher = diagnostic_updater::DiagnosedPublisher<const MsgT>;
+    using Publisher = ros::Publisher;
     using PublisherPtr = std::shared_ptr<Publisher>;
+    using TopicDiagnostic = diagnostic_updater::HeaderlessTopicDiagnostic;
+    using TopicDiagnosticPtr = std::unique_ptr<TopicDiagnostic>;
+    using TimeStampStatus = diagnostic_updater::TimeStampStatus;
+    using TimeStampStatusPtr = std::unique_ptr<TimeStampStatus>;
 
 public:
-    DiagnosedPublisher(diagnostic_updater::Updater& updater) : updater_{&updater} {
+    DiagnosedPublisher(diagnostic_updater::Updater& updater) : updater_{&updater}, topicDiagnostic_{} {
     }
 
     void operator=(const ros::Publisher& publisher) {
@@ -116,12 +118,22 @@ public:
 
     void publish(const boost::shared_ptr<const MsgT>& message) {
         if (!!publisher_) {
+            if(ros::message_traits::HasHeader<MsgT>::value) {
+                stamp_->tick(message->header.stamp);
+            }
+            topicDiagnostic_->tick();
+
             publisher_->publish(message);
         }
     }
 
     void publish(const MsgT& message) {
         if (!!publisher_) {
+            if(ros::message_traits::HasHeader<MsgT>::value) {
+                stamp_->tick(message.header.stamp);
+            }
+            topicDiagnostic_->tick();
+
             publisher_->publish(message);
         }
     }
@@ -133,15 +145,12 @@ public:
 
     DiagnosedPublisher& maxTimeDelay(double maxTimeDelay) {
         this->maxTimeDelay_ = maxTimeDelay;
-        if (!!publisher_) {
-            init(publisher_->getPublisher());
-        }
         return *this;
     }
 
     ros::Publisher publisher() const {
         if (!!publisher_) {
-            return publisher_->getPublisher();
+            return publisher_;
         }
         return ros::Publisher();
     }
@@ -155,19 +164,23 @@ private:
         if (!!publisher_) {
             publisher_.reset();
         }
-        auto publisherPtr =
-            new Publisher(publisher, *updater_, diagnostic_updater::FrequencyStatusParam(&minFreq_, &maxFreq_, 0.),
-                          diagnostic_updater::TimeStampStatusParam(0., maxTimeDelay_));
+        auto publisherPtr = std::make_shared<Publisher>(std::move(publisher));
         auto deleter = [ updater = updater_, name = publisherPtr->getName() ](Publisher * pub) {
             updater->removeByName(name);
             delete pub;
         };
         publisher_ = PublisherPtr(publisherPtr, deleter);
+
+        topicDiagnostic_.reset(new TopicDiagnostic(publisher.getTopic(), updater_, diagnostic_updater::FrequencyStatusParam(&minFreq_, &maxFreq_, 0.)));
+        stamp_.reset(new TimeStampStatus(0., maxTimeDelay_));
+        topicDiagnostic_->addTask(&(*stamp_));
     }
     diagnostic_updater::Updater* updater_{nullptr};
-    double minFreq_{0.};
+    double minFreq_{0.}; // We need this to pass a pointer to FrequencyStatusParam
     double maxFreq_{std::numeric_limits<double>::infinity()};
     double maxTimeDelay_{0.};
     PublisherPtr publisher_;
+    TopicDiagnosticPtr topicDiagnostic_;
+    TimeStampStatusPtr stamp_;
 };
 } // namespace rosinterface_handler
