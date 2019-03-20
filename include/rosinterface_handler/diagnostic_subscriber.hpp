@@ -5,6 +5,7 @@
 #include <message_filters/subscriber.h>
 #include <ros/forwards.h>
 #include <ros/node_handle.h>
+#include <type_traits>
 
 namespace rosinterface_handler {
 //! TopicDiagnostic does not clean up after itself. This wrapper does just that.
@@ -99,14 +100,12 @@ private:
 };
 
 //! Similar to diagnostic_updater::DiagnosedPublisher, but with less segfaults
-template <typename MsgT>
 class DiagnosedPublisher {
     using Publisher = ros::Publisher;
-    using PublisherPtr = std::shared_ptr<Publisher>;
+    using PublisherPtr = std::unique_ptr<Publisher>;
     using TopicDiagnostic = diagnostic_updater::HeaderlessTopicDiagnostic;
     using TopicDiagnosticPtr = std::unique_ptr<TopicDiagnostic>;
-    using TimeStampStatus = diagnostic_updater::TimeStampStatus;
-    using TimeStampStatusPtr = std::unique_ptr<TimeStampStatus>;
+    using TimeStampStatusPtr = std::unique_ptr<diagnostic_updater::TimeStampStatus>;
 
 public:
     DiagnosedPublisher(diagnostic_updater::Updater& updater) : updater_{&updater}, topicDiagnostic_{} {
@@ -116,22 +115,39 @@ public:
         init(publisher);
     }
 
+    template<typename MsgT, typename std::enable_if_t<ros::message_traits::HasHeader<MsgT>::value, bool> = 0>
     void publish(const boost::shared_ptr<const MsgT>& message) {
         if (!!publisher_) {
-            if(ros::message_traits::HasHeader<MsgT>::value) {
-                stamp_->tick(message->header.stamp);
-            }
+            stamp_->tick(message->header.stamp);
             topicDiagnostic_->tick();
 
             publisher_->publish(message);
         }
     }
 
+
+    template<typename MsgT, typename std::enable_if_t<!ros::message_traits::HasHeader<MsgT>::value, bool> = 0>
+    void publish(const boost::shared_ptr<const MsgT>& message) {
+        if (!!publisher_) {
+            topicDiagnostic_->tick();
+
+            publisher_->publish(message);
+        }
+    }
+
+    template<typename MsgT, typename std::enable_if_t<ros::message_traits::HasHeader<MsgT>::value, bool> = 0>
     void publish(const MsgT& message) {
         if (!!publisher_) {
-            if(ros::message_traits::HasHeader<MsgT>::value) {
-                stamp_->tick(message.header.stamp);
-            }
+            stamp_->tick(message.header.stamp);
+            topicDiagnostic_->tick();
+
+            publisher_->publish(message);
+        }
+    }
+
+    template<typename MsgT, typename std::enable_if_t<!ros::message_traits::HasHeader<MsgT>::value, bool> = 0>
+    void publish(const MsgT& message) {
+        if (!!publisher_) {
             topicDiagnostic_->tick();
 
             publisher_->publish(message);
@@ -150,7 +166,7 @@ public:
 
     ros::Publisher publisher() const {
         if (!!publisher_) {
-            return publisher_;
+            return *publisher_;
         }
         return ros::Publisher();
     }
@@ -164,15 +180,16 @@ private:
         if (!!publisher_) {
             publisher_.reset();
         }
-        auto publisherPtr = std::make_shared<Publisher>(std::move(publisher));
-        auto deleter = [ updater = updater_, name = publisherPtr->getName() ](Publisher * pub) {
-            updater->removeByName(name);
-            delete pub;
-        };
-        publisher_ = PublisherPtr(publisherPtr, deleter);
+        publisher_ = std::make_unique<Publisher>(std::move(publisher));
 
-        topicDiagnostic_.reset(new TopicDiagnostic(publisher.getTopic(), updater_, diagnostic_updater::FrequencyStatusParam(&minFreq_, &maxFreq_, 0.)));
-        stamp_.reset(new TimeStampStatus(0., maxTimeDelay_));
+        TopicDiagnosticPtr diagnosticPtr = std::make_unique<TopicDiagnostic>(new TopicDiagnostic(publisher.getTopic(), *updater_, diagnostic_updater::FrequencyStatusParam(&minFreq_, &maxFreq_, 0.)));
+        auto deleter = [ updater = updater_ ](TopicDiagnostic * diag) {
+            updater->removeByName(diag->getName());
+            delete diag;
+        };
+        topicDiagnostic_ = TopicDiagnosticPtr(diagnosticPtr, deleter);
+
+        stamp_.reset(new diagnostic_updater::TimeStampStatus(diagnostic_updater::TimeStampStatusParam(0., maxTimeDelay_)));
         topicDiagnostic_->addTask(&(*stamp_));
     }
     diagnostic_updater::Updater* updater_{nullptr};
