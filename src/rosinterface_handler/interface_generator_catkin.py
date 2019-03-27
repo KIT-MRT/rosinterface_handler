@@ -58,7 +58,7 @@ class InterfaceGenerator(object):
             self.group = group
         else:
             self.group = "gen"
-        self.group_variable = filter(str.isalnum, self.group)
+        self.group_variable = "".join(filter(str.isalnum, self.group))
 
         if len(sys.argv) != 5:
             eprint(
@@ -944,7 +944,7 @@ class InterfaceGenerator(object):
         with open(py_file, 'w') as f:
             f.write(content)
         init_file = os.path.join(self.py_gen_dir, "interface", "__init__.py")
-        with open(init_file, 'wa') as f:
+        with open(init_file, 'w') as f:
             f.write("")
 
     def _generateyml(self):
