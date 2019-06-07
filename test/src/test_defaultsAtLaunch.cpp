@@ -1,12 +1,12 @@
 #include <gtest/gtest.h>
 #include <rosinterface_handler/DefaultsAtLaunchInterface.h>
 
-typedef rosinterface_handler::DefaultsAtLaunchInterface IfType;
-typedef rosinterface_handler::DefaultsAtLaunchConfig ConfigType;
+using IfType = rosinterface_handler::DefaultsAtLaunchInterface;
+using ConfigType = rosinterface_handler::DefaultsAtLaunchConfig;
 
-TEST(RosinterfaceHandler, DefaultsAtLaunch) {
+TEST(RosinterfaceHandler, DefaultsAtLaunch) { // NOLINT(readability-function-size)
     IfType testInterface(ros::NodeHandle("~"));
-    ASSERT_NO_THROW(testInterface.fromParamServer());
+    ASSERT_NO_THROW(testInterface.fromParamServer()); // NOLINT(cppcoreguidelines-avoid-goto)
 
     ASSERT_EQ("info", testInterface.verbosity_param_wo_default);
 
@@ -29,7 +29,7 @@ TEST(RosinterfaceHandler, DefaultsAtLaunch) {
 
 TEST(RosinterfaceHandler, AtLaunchSubscriber) {
     IfType testInterface(ros::NodeHandle("~"));
-    ASSERT_NO_THROW(testInterface.fromParamServer());
+    ASSERT_NO_THROW(testInterface.fromParamServer()); // NOLINT(cppcoreguidelines-avoid-goto)
 
     ASSERT_TRUE(!!testInterface.subscriber_wo_default);
     ASSERT_EQ(testInterface.subscriber_wo_default->getTopic(), "/test/rosinterface_handler_test/in_topic");
@@ -43,7 +43,7 @@ TEST(RosinterfaceHandler, AtLaunchSubscriber) {
 
 TEST(RosinterfaceHandler, AtLaunchPublisher) {
     IfType testInterface(ros::NodeHandle("~"));
-    ASSERT_NO_THROW(testInterface.fromParamServer());
+    ASSERT_NO_THROW(testInterface.fromParamServer()); // NOLINT(cppcoreguidelines-avoid-goto)
 
     ASSERT_EQ(testInterface.publisher_wo_default.getTopic(), "/test/rosinterface_handler_test/out_topic");
     ASSERT_EQ(testInterface.publisher_public_wo_default.getTopic(), "/test/out_topic");

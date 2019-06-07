@@ -8,11 +8,11 @@
 
 /// \brief Helper function to test for std::vector
 template <typename T>
-using is_vector = std::is_same<T, std::vector<typename T::value_type, typename T::allocator_type>>;
+using IsVector = std::is_same<T, std::vector<typename T::value_type, typename T::allocator_type>>;
 
 /// \brief Helper function to test for std::map
 template <typename T>
-using is_map = std::is_same<
+using IsMap = std::is_same<
     T, std::map<typename T::key_type, typename T::mapped_type, typename T::key_compare, typename T::allocator_type>>;
 
 /// \brief Outstream helper for std:vector
@@ -30,7 +30,7 @@ std::ostream& operator<<(std::ostream& out, const std::vector<T>& v) {
 template <typename T1, typename T2>
 std::ostream& operator<<(std::ostream& stream, const std::map<T1, T2>& map) {
     stream << '{';
-    for (typename std::map<T1, T2>::const_iterator it = map.begin(); it != map.end(); ++it) {
+    for (auto it = map.begin(); it != map.end(); ++it) {
         stream << (*it).first << " --> " << (*it).second << ", ";
     }
     stream << '}';
@@ -42,31 +42,32 @@ namespace rosinterface_handler {
 /// \brief Sets the logger level according to a standardized parameter name 'verbosity'.
 ///
 /// \param nodeHandle The ROS node handle to search for the parameter 'verbosity'.
-inline void setLoggerLevel(const ros::NodeHandle& nodeHandle, const std::string& verbosity_param = "verbosity") {
+// NOLINTNEXTLINE
+inline void setLoggerLevel(const ros::NodeHandle& nodeHandle, const std::string& verbosityParam = "verbosity") {
 
     std::string verbosity;
-    if (!nodeHandle.getParam(verbosity_param, verbosity)) {
+    if (!nodeHandle.getParam(verbosityParam, verbosity)) {
         verbosity = "warning";
     }
 
-    ros::console::Level level_ros;
-    bool valid_verbosity{true};
+    auto levelRos = ros::console::levels::Info;
+    auto validVerbosity = true;
     if (verbosity == "debug") {
-        level_ros = ros::console::levels::Debug;
+        levelRos = ros::console::levels::Debug;
     } else if (verbosity == "info") {
-        level_ros = ros::console::levels::Info;
+        levelRos = ros::console::levels::Info;
     } else if (verbosity == "warning" || verbosity == "warn") {
-        level_ros = ros::console::levels::Warn;
+        levelRos = ros::console::levels::Warn;
     } else if (verbosity == "error") {
-        level_ros = ros::console::levels::Error;
+        levelRos = ros::console::levels::Error;
     } else if (verbosity == "fatal") {
-        level_ros = ros::console::levels::Fatal;
+        levelRos = ros::console::levels::Fatal;
     } else {
         ROS_WARN_STREAM("Invalid verbosity level specified: " << verbosity << "! Falling back to INFO.");
-        valid_verbosity = false;
+        validVerbosity = false;
     }
-    if (valid_verbosity) {
-        if (ros::console::set_logger_level(ROSCONSOLE_DEFAULT_NAME, level_ros)) {
+    if (validVerbosity) {
+        if (ros::console::set_logger_level(ROSCONSOLE_DEFAULT_NAME, levelRos)) {
             ros::console::notifyLoggerLevelsChanged();
             ROS_DEBUG_STREAM("Verbosity set to " << verbosity);
         }
@@ -78,22 +79,22 @@ inline void showNodeInfo() {
 
     using namespace ros::this_node;
 
-    std::vector<std::string> subscribed_topics, advertised_topics;
-    getSubscribedTopics(subscribed_topics);
-    getAdvertisedTopics(advertised_topics);
+    std::vector<std::string> subscribedTopics, advertisedTopics;
+    getSubscribedTopics(subscribedTopics);
+    getAdvertisedTopics(advertisedTopics);
 
-    std::ostringstream msg_subscr, msg_advert;
-    for (auto const& t : subscribed_topics) {
-        msg_subscr << t << std::endl;
+    std::ostringstream msgSubscr, msgAdvert;
+    for (auto const& t : subscribedTopics) {
+        msgSubscr << t << std::endl;
     }
-    for (auto const& t : advertised_topics) {
-        msg_advert << t << std::endl;
+    for (auto const& t : advertisedTopics) {
+        msgAdvert << t << std::endl;
     }
 
     ROS_INFO_STREAM("Started '" << getName() << "' in namespace '" << getNamespace() << "'." << std::endl
                                 << "Subscribed topics: " << std::endl
-                                << msg_subscr.str() << "Advertised topics: " << std::endl
-                                << msg_advert.str());
+                                << msgSubscr.str() << "Advertised topics: " << std::endl
+                                << msgAdvert.str());
 }
 
 /// \brief Retrieve node name
@@ -102,8 +103,7 @@ inline void showNodeInfo() {
 /// ros::NodeHandle("~") ).
 /// @return node name
 inline std::string getNodeName(const ros::NodeHandle& privateNodeHandle) {
-    std::string name_space = privateNodeHandle.getNamespace();
-    std::stringstream tempString(name_space);
+    std::stringstream tempString(privateNodeHandle.getNamespace());
     std::string name;
     while (std::getline(tempString, name, '/')) {
         ;
@@ -117,9 +117,9 @@ inline std::string getNodeName(const ros::NodeHandle& privateNodeHandle) {
 /// ros::NodeHandle("~") ).
 /// @return parent namespace or "/"
 inline std::string getParentNamespace(const ros::NodeHandle& nodeHandle) {
-    std::string name_space = nodeHandle.getNamespace();
-    std::string parent_name_space = name_space.substr(0, name_space.find_last_of("/"));
-    return parent_name_space.empty() ? "/" : parent_name_space;
+    auto& nameSpace = nodeHandle.getNamespace();
+    std::string parentNameSpace = nameSpace.substr(0, nameSpace.find_last_of('/'));
+    return parentNameSpace.empty() ? "/" : parentNameSpace;
 }
 
 /// \brief Retrieve the topic to subscribe to (aware of global topic names)
@@ -127,15 +127,15 @@ inline std::string getParentNamespace(const ros::NodeHandle& nodeHandle) {
 /// @param name_space Parent namespace (with trailing "/")
 /// @param topic Global or local topic
 /// @return name_space + topic or topic if topic is global
-inline std::string getTopic(const std::string& name_space, const std::string& topic) {
+inline std::string getTopic(const std::string& nameSpace, const std::string& topic) {
     if (topic.empty() || topic[0] == '/') {
         return topic;
     }
-    return name_space + topic;
+    return nameSpace + topic;
 }
 
 /// \brief ExitFunction for rosinterface_handler
-inline void exit(const std::string msg = "Runtime Error in rosinterface handler.") {
+inline void exit(const std::string& msg = "Runtime Error in rosinterface handler.") {
     // std::exit(EXIT_FAILURE);
     throw std::runtime_error(msg);
 }
@@ -154,6 +154,7 @@ inline void setParam(const std::string key, T val) {
 /// \param key Parameter name
 /// \param val Parameter value
 template <typename T>
+// NOLINTNEXTLINE(readability-function-size)
 inline bool getParamImpl(const std::string key, T& val) {
     if (!ros::param::has(key)) {
         return false;
@@ -171,6 +172,7 @@ inline bool getParamImpl(const std::string key, T& val) {
 /// \param key Parameter name
 /// \param val Parameter value
 template <typename T>
+// NOLINTNEXTLINE(readability-function-size)
 inline bool getParam(const std::string key, T& val) {
     if (!getParamImpl(key, val)) {
         ROS_ERROR_STREAM("Parameter '" << key << "' is not defined.");
@@ -188,6 +190,7 @@ inline bool getParam(const std::string key, T& val) {
 /// \param val Parameter value
 /// \param defaultValue Parameter default value
 template <typename T>
+// NOLINTNEXTLINE(readability-function-size)
 inline bool getParam(const std::string key, T& val, const T& defaultValue) {
     if (!getParamImpl(key, val)) {
         val = defaultValue;
@@ -201,7 +204,8 @@ inline bool getParam(const std::string key, T& val, const T& defaultValue) {
 }
 
 /// \brief Tests that parameter is not set on the parameter server
-inline bool testConstParam(const std::string key) {
+// NOLINTNEXTLINE(readability-function-size)
+inline bool testConstParam(const std::string& key) {
     if (ros::param::has(key)) {
         ROS_WARN_STREAM("Parameter " << key
                                      << "' was set on the parameter server eventhough it was defined to be constant.");
@@ -217,6 +221,7 @@ inline bool testConstParam(const std::string key) {
 /// \param val Parameter value
 /// \param min Lower Threshold
 template <typename T>
+// NOLINTNEXTLINE(readability-function-size)
 inline void testMin(const std::string key, T& val, T min = std::numeric_limits<T>::min()) {
     if (val < min) {
         ROS_WARN_STREAM("Value of " << val << " for " << key
@@ -232,8 +237,9 @@ inline void testMin(const std::string key, T& val, T min = std::numeric_limits<T
 /// \param min Lower Threshold
 template <typename T>
 inline void testMin(const std::string key, std::vector<T>& val, T min = std::numeric_limits<T>::min()) {
-    for (auto& v : val)
+    for (auto& v : val) {
         testMin(key, v, min);
+    }
 }
 
 /// \brief Limit parameter to lower bound if parameter is a map.
@@ -243,8 +249,9 @@ inline void testMin(const std::string key, std::vector<T>& val, T min = std::num
 /// \param min Lower Threshold
 template <typename K, typename T>
 inline void testMin(const std::string key, std::map<K, T>& val, T min = std::numeric_limits<T>::min()) {
-    for (auto& v : val)
+    for (auto& v : val) {
         testMin(key, v.second, min);
+    }
 }
 
 /// \brief Limit parameter to upper bound if parameter is a scalar.
@@ -253,6 +260,7 @@ inline void testMin(const std::string key, std::map<K, T>& val, T min = std::num
 /// \param val Parameter value
 /// \param min Lower Threshold
 template <typename T>
+// NOLINTNEXTLINE(readability-function-size)
 inline void testMax(const std::string key, T& val, T max = std::numeric_limits<T>::max()) {
     if (val > max) {
         ROS_WARN_STREAM("Value of " << val << " for " << key
@@ -268,8 +276,9 @@ inline void testMax(const std::string key, T& val, T max = std::numeric_limits<T
 /// \param min Lower Threshold
 template <typename T>
 inline void testMax(const std::string key, std::vector<T>& val, T max = std::numeric_limits<T>::max()) {
-    for (auto& v : val)
+    for (auto& v : val) {
         testMax(key, v, max);
+    }
 }
 
 /// \brief Limit parameter to upper bound if parameter is a map.
@@ -279,8 +288,9 @@ inline void testMax(const std::string key, std::vector<T>& val, T max = std::num
 /// \param min Lower Threshold
 template <typename K, typename T>
 inline void testMax(const std::string key, std::map<K, T>& val, T max = std::numeric_limits<T>::max()) {
-    for (auto& v : val)
+    for (auto& v : val) {
         testMax(key, v.second, max);
+    }
 }
 
 } // namespace rosinterface_handler

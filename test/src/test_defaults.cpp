@@ -1,12 +1,12 @@
 #include <gtest/gtest.h>
 #include <rosinterface_handler/DefaultsInterface.h>
 
-typedef rosinterface_handler::DefaultsInterface IfType;
-typedef rosinterface_handler::DefaultsConfig ConfigType;
+using IfType = rosinterface_handler::DefaultsInterface;
+using ConfigType = rosinterface_handler::DefaultsConfig;
 
-TEST(RosinterfaceHandler, DefaultParams) {
+TEST(RosinterfaceHandler, DefaultParams) { // NOLINT(readability-function-size)
     IfType testInterface(ros::NodeHandle("~"));
-    ASSERT_NO_THROW(testInterface.fromParamServer());
+    ASSERT_NO_THROW(testInterface.fromParamServer()); // NOLINT(cppcoreguidelines-avoid-goto)
 
     ASSERT_EQ("info", testInterface.verbosity_param_w_default);
 
@@ -29,7 +29,7 @@ TEST(RosinterfaceHandler, DefaultParams) {
 
 TEST(RosinterfaceHandler, DefaultSubscriber) {
     IfType testInterface(ros::NodeHandle("~"));
-    ASSERT_NO_THROW(testInterface.fromParamServer());
+    ASSERT_NO_THROW(testInterface.fromParamServer()); // NOLINT(cppcoreguidelines-avoid-goto)
 
     ASSERT_TRUE(!!testInterface.subscriber_w_default);
     ASSERT_EQ(testInterface.subscriber_w_default->getTopic(), "/test/rosinterface_handler_test/in_topic");
@@ -43,17 +43,17 @@ TEST(RosinterfaceHandler, DefaultSubscriber) {
 
 TEST(RosinterfaceHandler, DefaultPublisher) {
     IfType testInterface(ros::NodeHandle("~"));
-    ASSERT_NO_THROW(testInterface.fromParamServer());
+    ASSERT_NO_THROW(testInterface.fromParamServer()); // NOLINT(cppcoreguidelines-avoid-goto)
 
     ASSERT_EQ(testInterface.publisher_w_default.getTopic(), "/test/rosinterface_handler_test/out_topic");
     ASSERT_EQ(testInterface.publisher_public_w_default.getTopic(), "/test/out_topic");
     ASSERT_EQ(testInterface.publisher_global_w_default.getTopic(), "/out_topic");
 }
 
-TEST(RosinterfaceHandler, DefaultsOnParamServer) {
+TEST(RosinterfaceHandler, DefaultsOnParamServer) { // NOLINT(readability-function-size)
     ros::NodeHandle nh("~");
     IfType testInterface(nh);
-    ASSERT_NO_THROW(testInterface.fromParamServer());
+    ASSERT_NO_THROW(testInterface.fromParamServer()); // NOLINT(cppcoreguidelines-avoid-goto)
 
     // values should now be set on parameter server
     {
@@ -62,66 +62,66 @@ TEST(RosinterfaceHandler, DefaultsOnParamServer) {
         EXPECT_EQ(verbosity, testInterface.verbosity_param_w_default);
     }
     {
-        int int_interface;
-        ASSERT_TRUE(nh.getParam("int_param_w_default", int_interface));
-        ASSERT_EQ(int_interface, testInterface.int_param_w_default);
+        int intInterface;
+        ASSERT_TRUE(nh.getParam("int_param_w_default", intInterface));
+        ASSERT_EQ(intInterface, testInterface.int_param_w_default);
     }
     {
-        double double_interface;
-        ASSERT_TRUE(nh.getParam("double_param_w_default", double_interface));
-        EXPECT_EQ(double_interface, testInterface.double_param_w_default);
+        double doubleInterface;
+        ASSERT_TRUE(nh.getParam("double_param_w_default", doubleInterface));
+        EXPECT_EQ(doubleInterface, testInterface.double_param_w_default);
     }
     {
-        bool bool_interface;
-        ASSERT_TRUE(nh.getParam("bool_param_w_default", bool_interface));
-        EXPECT_EQ(bool_interface, testInterface.bool_param_w_default);
+        bool boolInterface;
+        ASSERT_TRUE(nh.getParam("bool_param_w_default", boolInterface));
+        EXPECT_EQ(boolInterface, testInterface.bool_param_w_default);
     }
     {
-        std::string string_interface;
-        ASSERT_TRUE(nh.getParam("str_param_w_default", string_interface));
-        EXPECT_EQ(string_interface, testInterface.str_param_w_default);
+        std::string stringInterface;
+        ASSERT_TRUE(nh.getParam("str_param_w_default", stringInterface));
+        EXPECT_EQ(stringInterface, testInterface.str_param_w_default);
     }
     {
-        std::vector<int> vector_int_interface;
-        ASSERT_TRUE(nh.getParam("vector_int_param_w_default", vector_int_interface));
-        EXPECT_EQ(vector_int_interface, testInterface.vector_int_param_w_default);
+        std::vector<int> vectorIntInterface;
+        ASSERT_TRUE(nh.getParam("vector_int_param_w_default", vectorIntInterface));
+        EXPECT_EQ(vectorIntInterface, testInterface.vector_int_param_w_default);
     }
     {
-        std::vector<double> vector_double_interface;
-        ASSERT_TRUE(nh.getParam("vector_double_param_w_default", vector_double_interface));
-        EXPECT_EQ(vector_double_interface, testInterface.vector_double_param_w_default);
+        std::vector<double> vectorDoubleInterface;
+        ASSERT_TRUE(nh.getParam("vector_double_param_w_default", vectorDoubleInterface));
+        EXPECT_EQ(vectorDoubleInterface, testInterface.vector_double_param_w_default);
     }
     {
-        std::vector<bool> vector_bool_interface;
-        ASSERT_TRUE(nh.getParam("vector_bool_param_w_default", vector_bool_interface));
-        EXPECT_EQ(vector_bool_interface, testInterface.vector_bool_param_w_default);
+        std::vector<bool> vectorBoolInterface;
+        ASSERT_TRUE(nh.getParam("vector_bool_param_w_default", vectorBoolInterface));
+        EXPECT_EQ(vectorBoolInterface, testInterface.vector_bool_param_w_default);
     }
     {
-        std::vector<std::string> vector_string_interface;
-        ASSERT_TRUE(nh.getParam("vector_string_param_w_default", vector_string_interface));
-        EXPECT_EQ(vector_string_interface, testInterface.vector_string_param_w_default);
+        std::vector<std::string> vectorStringInterface;
+        ASSERT_TRUE(nh.getParam("vector_string_param_w_default", vectorStringInterface));
+        EXPECT_EQ(vectorStringInterface, testInterface.vector_string_param_w_default);
     }
     {
-        std::map<std::string, std::string> map_param_w_default;
-        ASSERT_TRUE(nh.getParam("map_param_w_default", map_param_w_default));
-        EXPECT_EQ(map_param_w_default, testInterface.map_param_w_default);
+        std::map<std::string, std::string> mapParamWDefault;
+        ASSERT_TRUE(nh.getParam("map_param_w_default", mapParamWDefault));
+        EXPECT_EQ(mapParamWDefault, testInterface.map_param_w_default);
     }
     {
-        int enum_int_interface;
-        ASSERT_TRUE(nh.getParam("enum_int_param_w_default", enum_int_interface));
-        EXPECT_EQ(enum_int_interface, testInterface.enum_int_param_w_default);
+        int enumIntInterface;
+        ASSERT_TRUE(nh.getParam("enum_int_param_w_default", enumIntInterface));
+        EXPECT_EQ(enumIntInterface, testInterface.enum_int_param_w_default);
     }
     {
-        std::string enum_str_interface;
-        ASSERT_TRUE(nh.getParam("enum_str_param_w_default", enum_str_interface));
-        EXPECT_EQ(enum_str_interface, testInterface.enum_str_param_w_default);
+        std::string enumStrInterface;
+        ASSERT_TRUE(nh.getParam("enum_str_param_w_default", enumStrInterface));
+        EXPECT_EQ(enumStrInterface, testInterface.enum_str_param_w_default);
     }
 }
 
-TEST(RosinterfaceHandler, SetParamOnServer) {
+TEST(RosinterfaceHandler, SetParamOnServer) { // NOLINT(readability-function-size)
     ros::NodeHandle nh("~");
     IfType testInterface(nh);
-    ASSERT_NO_THROW(testInterface.fromParamServer());
+    ASSERT_NO_THROW(testInterface.fromParamServer()); // NOLINT(cppcoreguidelines-avoid-goto)
 
     testInterface.verbosity_param_w_default = "warning";
     testInterface.int_param_w_default = 2;
@@ -145,66 +145,66 @@ TEST(RosinterfaceHandler, SetParamOnServer) {
         EXPECT_EQ(verbosity, testInterface.verbosity_param_w_default);
     }
     {
-        int int_interface;
-        ASSERT_TRUE(nh.getParam("int_param_w_default", int_interface));
-        ASSERT_EQ(int_interface, testInterface.int_param_w_default);
+        int intInterface;
+        ASSERT_TRUE(nh.getParam("int_param_w_default", intInterface));
+        ASSERT_EQ(intInterface, testInterface.int_param_w_default);
     }
     {
-        double double_interface;
-        ASSERT_TRUE(nh.getParam("double_param_w_default", double_interface));
-        EXPECT_EQ(double_interface, testInterface.double_param_w_default);
+        double doubleInterface;
+        ASSERT_TRUE(nh.getParam("double_param_w_default", doubleInterface));
+        EXPECT_EQ(doubleInterface, testInterface.double_param_w_default);
     }
     {
-        bool bool_interface;
-        ASSERT_TRUE(nh.getParam("bool_param_w_default", bool_interface));
-        EXPECT_EQ(bool_interface, testInterface.bool_param_w_default);
+        bool boolInterface;
+        ASSERT_TRUE(nh.getParam("bool_param_w_default", boolInterface));
+        EXPECT_EQ(boolInterface, testInterface.bool_param_w_default);
     }
     {
-        std::string string_interface;
-        ASSERT_TRUE(nh.getParam("str_param_w_default", string_interface));
-        EXPECT_EQ(string_interface, testInterface.str_param_w_default);
+        std::string stringInterface;
+        ASSERT_TRUE(nh.getParam("str_param_w_default", stringInterface));
+        EXPECT_EQ(stringInterface, testInterface.str_param_w_default);
     }
     {
-        std::vector<int> vector_int_interface;
-        ASSERT_TRUE(nh.getParam("vector_int_param_w_default", vector_int_interface));
-        EXPECT_EQ(vector_int_interface, testInterface.vector_int_param_w_default);
+        std::vector<int> vectorIntInterface;
+        ASSERT_TRUE(nh.getParam("vector_int_param_w_default", vectorIntInterface));
+        EXPECT_EQ(vectorIntInterface, testInterface.vector_int_param_w_default);
     }
     {
-        std::vector<double> vector_double_interface;
-        ASSERT_TRUE(nh.getParam("vector_double_param_w_default", vector_double_interface));
-        EXPECT_EQ(vector_double_interface, testInterface.vector_double_param_w_default);
+        std::vector<double> vectorDoubleInterface;
+        ASSERT_TRUE(nh.getParam("vector_double_param_w_default", vectorDoubleInterface));
+        EXPECT_EQ(vectorDoubleInterface, testInterface.vector_double_param_w_default);
     }
     {
-        std::vector<bool> vector_bool_interface;
-        ASSERT_TRUE(nh.getParam("vector_bool_param_w_default", vector_bool_interface));
-        EXPECT_EQ(vector_bool_interface, testInterface.vector_bool_param_w_default);
+        std::vector<bool> vectorBoolInterface;
+        ASSERT_TRUE(nh.getParam("vector_bool_param_w_default", vectorBoolInterface));
+        EXPECT_EQ(vectorBoolInterface, testInterface.vector_bool_param_w_default);
     }
     {
-        std::vector<std::string> vector_string_interface;
-        ASSERT_TRUE(nh.getParam("vector_string_param_w_default", vector_string_interface));
-        EXPECT_EQ(vector_string_interface, testInterface.vector_string_param_w_default);
+        std::vector<std::string> vectorStringInterface;
+        ASSERT_TRUE(nh.getParam("vector_string_param_w_default", vectorStringInterface));
+        EXPECT_EQ(vectorStringInterface, testInterface.vector_string_param_w_default);
     }
     {
-        std::map<std::string, std::string> map_param_w_default;
-        ASSERT_TRUE(nh.getParam("map_param_w_default", map_param_w_default));
-        EXPECT_EQ(map_param_w_default, testInterface.map_param_w_default);
+        std::map<std::string, std::string> mapParamWDefault;
+        ASSERT_TRUE(nh.getParam("map_param_w_default", mapParamWDefault));
+        EXPECT_EQ(mapParamWDefault, testInterface.map_param_w_default);
     }
     {
-        int enum_int_interface;
-        ASSERT_TRUE(nh.getParam("enum_int_param_w_default", enum_int_interface));
-        EXPECT_EQ(enum_int_interface, testInterface.enum_int_param_w_default);
+        int enumIntInterface;
+        ASSERT_TRUE(nh.getParam("enum_int_param_w_default", enumIntInterface));
+        EXPECT_EQ(enumIntInterface, testInterface.enum_int_param_w_default);
     }
     {
-        std::string enum_str_interface;
-        ASSERT_TRUE(nh.getParam("enum_str_param_w_default", enum_str_interface));
-        EXPECT_EQ(enum_str_interface, testInterface.enum_str_param_w_default);
+        std::string enumStrInterface;
+        ASSERT_TRUE(nh.getParam("enum_str_param_w_default", enumStrInterface));
+        EXPECT_EQ(enumStrInterface, testInterface.enum_str_param_w_default);
     }
 }
 
-TEST(RosinterfaceHandler, FromDynamicReconfigure) {
+TEST(RosinterfaceHandler, FromDynamicReconfigure) { // NOLINT(readability-function-size)
     ros::NodeHandle nh("~");
     IfType testInterface(nh);
-    ASSERT_NO_THROW(testInterface.fromParamServer());
+    ASSERT_NO_THROW(testInterface.fromParamServer()); // NOLINT(cppcoreguidelines-avoid-goto)
     testInterface.updater.force_update();
 
     ConfigType config;

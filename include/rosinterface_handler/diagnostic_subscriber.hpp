@@ -13,8 +13,12 @@ public:
     TopicDiagnosticWrapper(std::string name, diagnostic_updater::Updater& diag,
                            const diagnostic_updater::FrequencyStatusParam& freq,
                            const diagnostic_updater::TimeStampStatusParam& stamp)
-            : updater_{diag}, diag_(name, diag, freq, stamp) {
+            : updater_{diag}, diag_(std::move(name), diag, freq, stamp) {
     }
+    TopicDiagnosticWrapper(TopicDiagnosticWrapper&& rhs) noexcept = delete;
+    TopicDiagnosticWrapper& operator=(TopicDiagnosticWrapper&& rhs) noexcept = delete;
+    TopicDiagnosticWrapper(const TopicDiagnosticWrapper& rhs) = delete;
+    TopicDiagnosticWrapper& operator=(const TopicDiagnosticWrapper& rhs) = delete;
 
     ~TopicDiagnosticWrapper() {
         updater_.removeByName(diag_.getName()); // this is the line we actually need..
@@ -46,7 +50,7 @@ class DiagnosedSubscriber : public message_filters::Subscriber<MsgT> {
     using MsgPtrT = boost::shared_ptr<const MsgT>;
 
 public:
-    DiagnosedSubscriber(diagnostic_updater::Updater& updater) : updater_{updater} {
+    explicit DiagnosedSubscriber(diagnostic_updater::Updater& updater) : updater_{updater} {
         SubscriberT::registerCallback([this](const MsgPtrT& msg) { this->onMessage(msg); });
     }
 
@@ -60,10 +64,10 @@ public:
         return *this;
     }
 
-    void subscribe(ros::NodeHandle& nh, const std::string& topic, uint32_t queue_size,
-                   const ros::TransportHints& transport_hints = ros::TransportHints(),
-                   ros::CallbackQueueInterface* callback_queue = 0) override {
-        SubscriberT::subscribe(nh, topic, queue_size, transport_hints, callback_queue);
+    void subscribe(ros::NodeHandle& nh, const std::string& topic, uint32_t queueSize,
+                   const ros::TransportHints& transportHints = ros::TransportHints(),
+                   ros::CallbackQueueInterface* callbackQueue = nullptr) override {
+        SubscriberT::subscribe(nh, topic, queueSize, transportHints, callbackQueue);
         initDiagnostic(topic);
     }
 
@@ -81,6 +85,7 @@ private:
     void onMessage(const MsgPtrT& msg) {
         diagnostic_->tick(msg->header.stamp);
     }
+
     void initDiagnostic(const std::string& name) {
         diagnostic_.reset();
         if (name.empty()) {
@@ -107,11 +112,12 @@ class DiagnosedPublisher {
     using PublisherPtr = std::shared_ptr<Publisher>;
 
 public:
-    DiagnosedPublisher(diagnostic_updater::Updater& updater) : updater_{&updater} {
+    explicit DiagnosedPublisher(diagnostic_updater::Updater& updater) : updater_{&updater} {
     }
 
-    void operator=(const ros::Publisher& publisher) {
+    DiagnosedPublisher& operator=(const ros::Publisher& publisher) {
         init(publisher);
+        return *this;
     }
 
     void publish(const boost::shared_ptr<const MsgT>& message) {
