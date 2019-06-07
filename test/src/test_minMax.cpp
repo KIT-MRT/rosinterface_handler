@@ -1,11 +1,12 @@
 #include <gtest/gtest.h>
 #include <rosinterface_handler/MinMaxInterface.h>
 
-typedef rosinterface_handler::MinMaxInterface IfType;
-typedef rosinterface_handler::MinMaxConfig ConfigType;
+using IfType = rosinterface_handler::MinMaxInterface;
+using ConfigType = rosinterface_handler::MinMaxConfig;
 
 TEST(RosinterfaceHandler, MinMax) {
     IfType testInterface(ros::NodeHandle("~"));
+    // NOLINTNEXTLINE(cppcoreguidelines-avoid-goto)
     ASSERT_NO_THROW(testInterface.fromParamServer());
 
     ASSERT_EQ(2, testInterface.int_param_w_minmax);

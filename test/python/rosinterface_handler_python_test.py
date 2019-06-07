@@ -1,9 +1,9 @@
 #!/usr/bin/env python
 
-PKG = 'rosinterface_handler'
-import unittest
-import rospy
 import tests
+import rospy
+import unittest
+PKG = 'rosinterface_handler'
 
 if __name__ == '__main__':
     import rostest

@@ -4,11 +4,8 @@
 
 class DummyUpdater : public diagnostic_updater::Updater {
 public:
-    virtual ~DummyUpdater() {
-    }
-
-    void force_update() {
-        status_vec.clear();
+    void forceUpdate() {
+        statusVec.clear();
         for (auto& task : getTasks()) {
             diagnostic_updater::DiagnosticStatusWrapper status;
 
@@ -18,10 +15,10 @@ public:
             status.hardware_id = "none";
 
             task.run(status);
-            status_vec.push_back(status);
+            statusVec.push_back(status);
         }
     }
-    std::vector<diagnostic_msgs::DiagnosticStatus> status_vec;
+    std::vector<diagnostic_msgs::DiagnosticStatus> statusVec;
 };
 
 using DiagPub = rosinterface_handler::DiagnosedPublisher<geometry_msgs::PointStamped>;
@@ -29,7 +26,7 @@ using DiagSub = rosinterface_handler::DiagnosedSubscriber<geometry_msgs::PointSt
 class TestDiagnosedPubSub : public testing::Test {
 protected:
     void SetUp() override {
-        updater.status_vec.clear();
+        updater.statusVec.clear();
         pub = nh.advertise<geometry_msgs::PointStamped>("test_topic", 5);
         sub.subscribe(nh, "test_topic", 5);
         pub.minFrequency(10).maxTimeDelay(1);
@@ -54,9 +51,9 @@ TEST_F(TestDiagnosedPubSub, publishAndReceiveOK) {
     while (messageCounter < 10) {
         ros::spinOnce();
     }
-    updater.force_update();
-    ASSERT_GE(4, updater.status_vec.size());
-    for (auto& status : updater.status_vec) {
+    updater.forceUpdate();
+    ASSERT_GE(4, updater.statusVec.size());
+    for (auto& status : updater.statusVec) {
         EXPECT_EQ(diagnostic_msgs::DiagnosticStatus::OK, status.level);
     }
 }
@@ -72,9 +69,9 @@ TEST_F(TestDiagnosedPubSub, publishAndReceiveFail) {
     while (messageCounter < 10) {
         ros::spinOnce();
     }
-    updater.force_update();
-    ASSERT_LE(2, updater.status_vec.size());
-    for (auto& status : updater.status_vec) {
+    updater.forceUpdate();
+    ASSERT_LE(2, updater.statusVec.size());
+    for (auto& status : updater.statusVec) {
         EXPECT_EQ(diagnostic_msgs::DiagnosticStatus::ERROR, status.level);
     }
 }
@@ -92,9 +89,9 @@ TEST_F(TestDiagnosedPubSub, overrideTopic) {
     while (messageCounter < 10) {
         ros::spinOnce();
     }
-    updater.force_update();
-    ASSERT_LE(2, updater.status_vec.size());
-    for (auto& status : updater.status_vec) {
+    updater.forceUpdate();
+    ASSERT_LE(2, updater.statusVec.size());
+    for (auto& status : updater.statusVec) {
         EXPECT_EQ(diagnostic_msgs::DiagnosticStatus::OK, status.level);
     }
 }
@@ -111,6 +108,6 @@ TEST_F(TestDiagnosedPubSub, assign) {
     while (messageCounter < 10) {
         ros::spinOnce();
     }
-    updater.force_update();
-    ASSERT_LE(1, updater.status_vec.size());
+    updater.forceUpdate();
+    ASSERT_LE(1, updater.statusVec.size());
 }
