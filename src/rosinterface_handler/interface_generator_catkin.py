@@ -32,6 +32,7 @@ import sys
 import os
 import re
 
+
 def eprint(*args, **kwargs):
     print("************************************************", file=sys.stderr, **kwargs)
     print("Error when setting up parameter '{}':".format(args[0]), file=sys.stderr, **kwargs)
@@ -121,7 +122,6 @@ class InterfaceGenerator(object):
             eprint("If you specify a tf listener, the tf buffer can not be empty!")
         self.tf = {"buffer_name": buffer_name, "listener_name": listener_name, "broadcaster_name": broadcaster_name}
 
-
     def add_group(self, name):
         """
         Add a new group in the dynamic reconfigure selection
@@ -153,7 +153,7 @@ class InterfaceGenerator(object):
             default = 0
         elif paramtype == 'int':
             default = entry_strings.index(default)
-        elif not default in entry_strings:
+        elif default not in entry_strings:
             eprint("add_enum: Default value not found in entry_strings!")
 
         self.add(name=name, paramtype=paramtype, description=description, edit_method=name, default=default,
@@ -212,8 +212,15 @@ class InterfaceGenerator(object):
                 min_frequency_param = name + '_min_frequency'
             if not max_delay_param:
                 max_delay_param = name + '_max_delay'
-            self.add(name=min_frequency_param, paramtype='double', description='Minimal message frequency for ' + description,
-                     default=min_frequency, configurable=configurable, global_scope=False, constant=constant)
+            self.add(
+                name=min_frequency_param,
+                paramtype='double',
+                description='Minimal message frequency for ' +
+                description,
+                default=min_frequency,
+                configurable=configurable,
+                global_scope=False,
+                constant=constant)
             self.add(name=max_delay_param, paramtype='double', description='Maximal delay for ' + description,
                      default=max_delay, configurable=configurable, global_scope=False, constant=constant)
 
@@ -241,10 +248,25 @@ class InterfaceGenerator(object):
         }
         self.subscribers.append(newparam)
 
-    def add_publisher(self, name, message_type, description, default_topic=None, default_queue_size=5, topic_param=None,
-                      queue_size_param=None, header=None, module=None, configurable=False, scope="private",
-                      constant=False, diagnosed=False, min_frequency=0., min_frequency_param=None, max_delay=float('inf'),
-                      max_delay_param=None):
+    def add_publisher(
+            self,
+            name,
+            message_type,
+            description,
+            default_topic=None,
+            default_queue_size=5,
+            topic_param=None,
+            queue_size_param=None,
+            header=None,
+            module=None,
+            configurable=False,
+            scope="private",
+            constant=False,
+            diagnosed=False,
+            min_frequency=0.,
+            min_frequency_param=None,
+            max_delay=float('inf'),
+            max_delay_param=None):
         """
         Adds a publisher to your parameter struct and a parameter for its topic and queue size. Don't forget to add a
         dependency to message_filter and the package for the message used to your package.xml!
@@ -288,8 +310,15 @@ class InterfaceGenerator(object):
                 min_frequency_param = name + '_min_frequency'
             if not max_delay_param:
                 max_delay_param = name + '_max_delay'
-            self.add(name=min_frequency_param, paramtype='double', description='Minimal message frequency for ' + description,
-                     default=min_frequency, configurable=configurable, global_scope=False, constant=constant)
+            self.add(
+                name=min_frequency_param,
+                paramtype='double',
+                description='Minimal message frequency for ' +
+                description,
+                default=min_frequency,
+                configurable=configurable,
+                global_scope=False,
+                constant=constant)
             self.add(name=max_delay_param, paramtype='double', description='Maximal delay for ' + description,
                      default=max_delay, configurable=configurable, global_scope=False, constant=constant)
 
@@ -315,7 +344,6 @@ class InterfaceGenerator(object):
             'max_delay_param': max_delay_param
         }
         self.publishers.append(newparam)
-
 
     def add(self, name, paramtype, description, level=0, edit_method='""', default=None, min=None, max=None,
             configurable=False, global_scope=False, constant=False):
@@ -409,7 +437,7 @@ class InterfaceGenerator(object):
             eprint(param['name'], "The name of field does not follow the ROS naming conventions, "
                                   "see http://wiki.ros.org/ROS/Patterns/Conventions")
         if param['configurable'] and (
-                            param['global_scope'] or param['is_vector'] or param['is_map'] or param['constant']):
+                param['global_scope'] or param['is_vector'] or param['is_map'] or param['constant']):
             eprint(param['name'],
                    "Global parameters, vectors, maps and constant params can not be declared configurable! ")
         if param['global_scope'] and param['default'] is not None:
@@ -490,7 +518,7 @@ class InterfaceGenerator(object):
         """
         value = param[field]
         if param['type'] == 'double' and param[field] == float('inf'):
-            value = '1e+308' # dynamic reconfigure does not supprt if, but this should be sufficient.
+            value = '1e+308'  # dynamic reconfigure does not supprt if, but this should be sufficient.
         if param['type'] == 'double' and param[field] == float('-inf'):
             value = '-1e+308'
         if param['type'] == 'std::string':
@@ -654,7 +682,6 @@ class InterfaceGenerator(object):
                 includes.append('#include <tf2_ros/transform_broadcaster.h>')
                 param_entries.append('tf2_ros::TransformBroadcaster {};'.format(broadcaster))
 
-
         for subscriber in subscribers:
             name = subscriber['name']
             type = subscriber['type']
@@ -668,7 +695,7 @@ class InterfaceGenerator(object):
             else:
                 type_slash = type.replace("::", "/")
                 include = "#include <{}.h>".format(type_slash)
-            if not include in includes:
+            if include not in includes:
                 includes.append(include)
 
             # add subscriber entry
@@ -685,7 +712,7 @@ class InterfaceGenerator(object):
 
             # add initialisation
             subscribers_init.append(Template(',\n    $name{std::make_shared<${diag}Subscriber<$type>>(${init})}')
-                                   .substitute(name=name, diag=diag, type=type, init=init))
+                                    .substitute(name=name, diag=diag, type=type, init=init))
 
             # add subscribe for parameter server
             topic_param = subscriber['topic_param']
@@ -708,20 +735,29 @@ class InterfaceGenerator(object):
             if diagnosed:
                 sub_adv_from_server.append(Template('    $name->minFrequency($minFParam).maxTimeDelay($maxTParam);')
                                            .substitute(name=name, minFParam=min_freq_param, maxTParam=max_delay_param))
-            sub_adv_from_server.append(Template('    $name->subscribe(privateNodeHandle_, '
-                                                'rosinterface_handler::getTopic($namespace, $topic), uint32_t($queue)$noDelay);')
-                                       .substitute(name=name, topic=topic_param,queue=queue_size_param,
-                                                   noDelay=no_delay, namespace=name_space))
+            sub_adv_from_server.append(
+                Template(
+                    '    $name->subscribe(privateNodeHandle_, '
+                    'rosinterface_handler::getTopic($namespace, $topic), uint32_t($queue)$noDelay);') .substitute(
+                    name=name,
+                    topic=topic_param,
+                    queue=queue_size_param,
+                    noDelay=no_delay,
+                    namespace=name_space))
             if subscriber['configurable']:
                 if diagnosed:
-                    sub_adv_from_config.append(Template('    $name->minFrequency(config.$minFParam)'
-                                                        '.maxTimeDelay(config.$maxTParam);')
-                                               .substitute(name=name, minFParam=min_freq_param, maxTParam=max_delay_param))
+                    sub_adv_from_config.append(
+                        Template(
+                            '    $name->minFrequency(config.$minFParam)'
+                            '.maxTimeDelay(config.$maxTParam);') .substitute(
+                            name=name,
+                            minFParam=min_freq_param,
+                            maxTParam=max_delay_param))
                 sub_adv_from_config.append(Template('    if($topic != config.$topic || $queue != config.$queue) {\n'
                                                     '      $name->subscribe(privateNodeHandle_, '
                                                     'rosinterface_handler::getTopic($namespace, config.$topic), '
                                                     'uint32_t(config.$queue)$noDelay);\n'
-                                                    '    }').substitute(name=name,topic=topic_param,
+                                                    '    }').substitute(name=name, topic=topic_param,
                                                                         queue=queue_size_param, noDelay=no_delay,
                                                                         namespace=name_space))
 
@@ -738,7 +774,7 @@ class InterfaceGenerator(object):
             else:
                 type_slash = type.replace("::", "/")
                 include = "#include <{}.h>".format(type_slash)
-            if not include in includes:
+            if include not in includes:
                 includes.append(include)
 
             # add publisher entry
@@ -775,9 +811,13 @@ class InterfaceGenerator(object):
                                                    namespace=name_space))
             if publisher['configurable']:
                 if diagnosed:
-                    sub_adv_from_config.append(Template('    $name.minFrequency(config.$minFParam)'
-                                                        '.maxTimeDelay(config.$maxTParam);')
-                                               .substitute(name=name, minFParam=min_freq_param, maxTParam=max_delay_param))
+                    sub_adv_from_config.append(
+                        Template(
+                            '    $name.minFrequency(config.$minFParam)'
+                            '.maxTimeDelay(config.$maxTParam);') .substitute(
+                            name=name,
+                            minFParam=min_freq_param,
+                            maxTParam=max_delay_param))
                 sub_adv_from_config.append(Template('    if($topic != config.$topic || $queue != config.$queue) {\n'
                                                     '      $name = privateNodeHandle_.advertise<$type>('
                                                     'rosinterface_handler::getTopic($namespace, config.$topic), '
@@ -791,7 +831,6 @@ class InterfaceGenerator(object):
         sub_adv_from_server = "\n".join(sub_adv_from_server)
         sub_adv_from_config = "\n".join(sub_adv_from_config)
         subscribers_init = "".join(subscribers_init)
-
 
         params = self._get_parameters()
 
@@ -826,14 +865,17 @@ class InterfaceGenerator(object):
                                               '*/').substitute(type=param['type'], name=name,
                                                                description=param['description'],
                                                                default=self._get_cvalue(param, "default")))
-                from_server.append(Template('    rosinterface_handler::testConstParam($paramname);').substitute(paramname=full_name))
+                from_server.append(
+                    Template('    rosinterface_handler::testConstParam($paramname);').substitute(
+                        paramname=full_name))
             else:
                 param_entries.append(Template('  ${type} ${name}; /*!< ${description} */').substitute(
                     type=param['type'], name=name, description=param['description']))
                 from_server.append(Template('    success &= rosinterface_handler::getParam($paramname, $name$default);').substitute(
                     paramname=full_name, name=name, default=default, description=param['description']))
                 to_server.append(
-                    Template('    rosinterface_handler::setParam(${paramname},${name});').substitute(paramname=full_name, name=name))
+                    Template('    rosinterface_handler::setParam(${paramname},${name});').substitute(
+                        paramname=full_name, name=name))
 
             # Test for configurable params
             if param['configurable']:
@@ -847,11 +889,13 @@ class InterfaceGenerator(object):
             else:
                 ttype = param['type']
             if param['min'] is not None:
-                test_limits.append(Template('    rosinterface_handler::testMin<$type>($paramname, $name, $min);').substitute(
-                    paramname=full_name, name=name, min=param['min'], type=ttype))
+                test_limits.append(
+                    Template('    rosinterface_handler::testMin<$type>($paramname, $name, $min);').substitute(
+                        paramname=full_name, name=name, min=param['min'], type=ttype))
             if param['max'] is not None:
-                test_limits.append(Template('    rosinterface_handler::testMax<$type>($paramname, $name, $max);').substitute(
-                    paramname=full_name, name=name, max=param['max'], type=ttype))
+                test_limits.append(
+                    Template('    rosinterface_handler::testMax<$type>($paramname, $name, $max);').substitute(
+                        paramname=full_name, name=name, max=param['max'], type=ttype))
 
             # Add debug output
             string_representation.append(Template('      << "\t" << p.$namespace << "$name:" << p.$name << '
@@ -859,13 +903,16 @@ class InterfaceGenerator(object):
 
             # handle verbosity param
             if self.verbosity == name:
-                from_server.append(Template('    rosinterface_handler::setLoggerLevel(privateNodeHandle_, "$verbosity");').substitute(
-                    verbosity=self.verbosity))
+                from_server.append(
+                    Template('    rosinterface_handler::setLoggerLevel(privateNodeHandle_, "$verbosity");').substitute(
+                        verbosity=self.verbosity))
                 if param['configurable']:
-                    verb_check = Template('    if(config.$verbosity != this->$verbosity) {\n'
-                                          '        rosinterface_handler::setParam(privateNamespace_ + "$verbosity", config.$verbosity);\n'
-                                          '        rosinterface_handler::setLoggerLevel(privateNodeHandle_, "$verbosity");\n'
-                                          '    }').substitute(verbosity=self.verbosity)
+                    verb_check = Template(
+                        '    if(config.$verbosity != this->$verbosity) {\n'
+                        '        rosinterface_handler::setParam(privateNamespace_ + "$verbosity", config.$verbosity);\n'
+                        '        rosinterface_handler::setLoggerLevel(privateNodeHandle_, "$verbosity");\n'
+                        '    }').substitute(
+                        verbosity=self.verbosity)
                     from_config.insert(0, verb_check)
 
         param_entries = "\n".join(param_entries)
@@ -914,7 +961,7 @@ class InterfaceGenerator(object):
         else:
             verbosityParam = None
 
-        #generate import statements
+        # generate import statements
         imports = set()
         for subscriber in self._get_subscribers():
             imports.add("import {}".format(subscriber['import']))
@@ -1042,7 +1089,7 @@ class InterfaceGenerator(object):
                 enum_val = enum['values'].index(value) if paramtype == 'int' else "'" + value + "'"
                 param_entries.append(
                     Template("    gen.const(name='$name', type='$type', value=$value, descr='$descr'),")
-                        .substitute(name=value, type=paramtype, value=enum_val, descr=""))
+                    .substitute(name=value, type=paramtype, value=enum_val, descr=""))
             param_entries.append(Template("    ], '$description')").substitute(description=enum["description"]))
 
         for param in dynamic_params:

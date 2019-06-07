@@ -158,7 +158,7 @@ private:
         auto publisherPtr =
             new Publisher(publisher, *updater_, diagnostic_updater::FrequencyStatusParam(&minFreq_, &maxFreq_, 0.),
                           diagnostic_updater::TimeStampStatusParam(0., maxTimeDelay_));
-        auto deleter = [ updater = updater_, name = publisherPtr->getName() ](Publisher * pub) {
+        auto deleter = [updater = updater_, name = publisherPtr->getName()](Publisher* pub) {
             updater->removeByName(name);
             delete pub;
         };

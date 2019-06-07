@@ -126,4 +126,3 @@ class TestDefaults(unittest.TestCase):
         self.assertEqual(interface.publisher_w_default.name, "/out_topic")
         self.assertEqual(interface.publisher_public_w_default.name, "/out_topic")
         self.assertEqual(interface.publisher_global_w_default.name, "/out_topic")
-
