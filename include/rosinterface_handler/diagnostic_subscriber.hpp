@@ -42,15 +42,17 @@ private:
 };
 
 //! Like a message_filters::Subscriber, but also manages diagnostics.
-template <typename MsgT>
-class DiagnosedSubscriber : public message_filters::Subscriber<MsgT> {
+template <typename MsgT, typename SubscriberBase = message_filters::Subscriber<MsgT>>
+class DiagnosedSubscriber : public SubscriberBase {
     static_assert(ros::message_traits::HasHeader<MsgT>::value,
                   "DiagnosedSubscriber can only be used on messgaes with a header!");
-    using SubscriberT = message_filters::Subscriber<MsgT>;
+    using SubscriberT = SubscriberBase;
     using MsgPtrT = boost::shared_ptr<const MsgT>;
 
 public:
-    explicit DiagnosedSubscriber(diagnostic_updater::Updater& updater) : updater_{updater} {
+    template <typename... Args>
+    explicit DiagnosedSubscriber(diagnostic_updater::Updater& updater, Args... args)
+            : SubscriberBase(std::forward<Args>(args)...), updater_{updater} {
         SubscriberT::registerCallback([this](const MsgPtrT& msg) { this->onMessage(msg); });
     }
 
