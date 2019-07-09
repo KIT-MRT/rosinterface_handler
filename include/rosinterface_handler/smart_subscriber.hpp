@@ -1,5 +1,7 @@
 #pragma once
 #include <cstdlib>
+#include <mutex>
+#include <thread>
 #include <message_filters/subscriber.h>
 #include <message_filters/synchronizer.h>
 #include <ros/callback_queue.h>
@@ -8,6 +10,28 @@
 #include <ros/topic_manager.h>
 
 namespace rosinterface_handler {
+namespace detail {
+template <typename T>
+struct Dereference {
+    static inline constexpr decltype(auto) get(const T& t) {
+        return t;
+    }
+};
+
+template <typename T>
+struct Dereference<T*> {
+    static inline constexpr decltype(auto) get(const T*& t) {
+        return *t;
+    }
+};
+
+template <typename T>
+struct Dereference<std::shared_ptr<T>> {
+    static constexpr decltype(auto) get(const std::shared_ptr<T>& t) {
+        return *t;
+    }
+};
+} // namespace detail
 /**
  * @brief Subscriber that only actually subscribes to a topic if someone subscribes to a publisher
  * This is useful to avoid overhead for computing results that no one actually cares for.
@@ -27,7 +51,8 @@ namespace rosinterface_handler {
  * // subscribe in your main() or nodelet
  * ros::NodeHandle nh;
  * ros::Publisher myPub = nh.advertise<std_msgs::Header>("/output_topic", 5);
- * utils_ros::SmartSubscriber<std_msgs::Header> subscriber(nh, "/header_topic", 5, myPub);
+ * utils_ros::SmartSubscriber<std_msgs::Header> subscriber(myPub);
+ * subscriber.subscribe(nh, "/header_topic", 5);
  * subscriber.addCallback(messageCallback);
  * @endcode
  */
@@ -37,17 +62,7 @@ public:
     using Publishers = std::vector<ros::Publisher>;
 
     template <typename... PublishersT>
-    explicit SmartSubscriber(const ros::Publisher& publisher, const PublishersT&... trackedPublishers)
-            : SmartSubscriber{Publishers{publisher, trackedPublishers...}} {
-    }
-
-    /**
-     * @brief Default constuctor.
-     * @param trackedPublishers publishers to check for subscriptions
-     * Use the functions subscribe(), registerCallback() and addPublisher() to make this a full subscriber.
-     */
-    explicit SmartSubscriber(const Publishers& trackedPublishers = Publishers())
-            : trackedPublishers_{trackedPublishers} {
+    explicit SmartSubscriber(const PublishersT&... trackedPublishers) {
         // check for always-on-mode
         const auto smart_subscribe = std::getenv("NO_SMART_SUBSCRIBE");
         try {
@@ -56,61 +71,23 @@ public:
             }
         } catch (const std::invalid_argument&) {
         }
-
-        // register suscribtion callbacks
         ros::SubscriberStatusCallback cb = boost::bind(&SmartSubscriber::subscribeCallback, this);
-
         callback_ =
             boost::make_shared<ros::SubscriberCallbacks>(cb, cb, ros::VoidConstPtr(), ros::getGlobalCallbackQueue());
-        for (const auto& publisher : trackedPublishers_) {
-            auto pub = ros::TopicManager::instance()->lookupPublication(publisher.getTopic());
-            if (!pub)
-                continue;
-            pub->addCallbacks(callback_);
-        }
-    }
 
-    /**
-     * @brief Constructs a subscriber that monitors a single publisher for subscriptions
-     * @param nh Node handle for subscribing
-     * @param topic Topic to subscribe to
-     * @param queue_size queue size of topic
-     * @param trackedPublisher publisher to check for subscriptions
-     * @param transport_hints Transport hints to pass along
-     */
-    SmartSubscriber(ros::NodeHandle& nh, const std::string& topic, uint32_t queue_size,
-                    ros::Publisher& trackedPublisher,
-                    const ros::TransportHints& transport_hints = ros::TransportHints())
-            : SmartSubscriber(nh, topic, queue_size, Publishers{trackedPublisher}, transport_hints) {
-    }
-
-    /**
-     * @brief Constructs a subscriber that monitors a single topic
-     * @param nh Node handle for subscribing
-     * @param topic Topic to subscribe to
-     * @param queue_size queue size of topic
-     * @param trackedPublisher publisher to check for subscriptions
-     * @param transport_hints Transport hints to pass along
-     */
-    SmartSubscriber(ros::NodeHandle& nh, const std::string& topic, uint32_t queue_size,
-                    const Publishers& trackedPublishers,
-                    const ros::TransportHints& transport_hints = ros::TransportHints())
-            : SmartSubscriber(trackedPublishers) {
-        // call parent's subscribe
-        this->subscribe(nh, topic, queue_size, transport_hints, nullptr);
-
-        // monitor subscriber
-        subscribeCallback();
+        publisherInfo_.reserve(sizeof...(trackedPublishers));
+        using Workaround = int[];
+        Workaround{(addPublisher(trackedPublishers), 0)...};
     }
 
     ~SmartSubscriber() {
-        for (const auto& publisher : trackedPublishers_) {
-            auto pub = ros::TopicManager::instance()->lookupPublication(publisher.getTopic());
-            // publisher might already be removed from topic manager
-            if (!pub)
-                continue;
-            pub->removeCallbacks(callback_);
+        // void the callback
+        std::lock_guard<std::mutex> m(callbackLock_);
+        for (auto& pub : publisherInfo_) {
+            removeCallback(pub.topic);
         }
+        callback_->disconnect_ = +[](const ros::SingleSubscriberPublisher&) {};
+        callback_->connect_ = +[](const ros::SingleSubscriberPublisher&) {};
     }
 
     /**
@@ -126,7 +103,7 @@ public:
      */
     void subscribe(ros::NodeHandle& nh, const std::string& topic, uint32_t queue_size,
                    const ros::TransportHints& transport_hints = ros::TransportHints(),
-                   ros::CallbackQueueInterface* callback_queue = 0) {
+                   ros::CallbackQueueInterface* callback_queue = nullptr) override {
         message_filters::Subscriber<Message>::subscribe(nh, topic, queue_size, transport_hints, callback_queue);
         subscribeCallback();
     }
@@ -134,47 +111,18 @@ public:
     using message_filters::Subscriber<Message>::subscribe;
 
     /**
-     * @brief Convenience function to add new publishers to monitor
-     * @param publishers publisher to look after
-     */
-    void addPublishers(const Publishers& publishers) {
-        for (const auto& pub : publishers) {
-            addPublisher(pub);
-        }
-    }
-
-    /**
      * @brief Adds a new publisher to monitor
      * @param publisher to look after
-     * Does nothing if pulisher is not valid
+     * Requires that the publisher has "getTopic" and a "getNumSubscribers" function.
+     * The SmartSubscriber does *not* manage the publisher and keeps a reference to it. If it goes out of scope, there
+     * will be trouble.
      */
-    void addPublisher(ros::Publisher publisher) {
-        auto pub = ros::TopicManager::instance()->lookupPublication(publisher.getTopic());
-        // might not be subscribed
-        if (!pub)
-            return;
-        pub->addCallbacks(callback_);
-        trackedPublishers_.push_back(publisher);
-
-        // check for subscribe
-        subscribeCallback();
-    }
-
-    /**
-     * @brief adds a non-default publisher (like image_transport's one)
-     * @param publisher publisher to add
-     * This has some limitations:
-     * 1: Make sure this publisher has been created by passing the subscribeCallback() of this object to the advertise
-     * function
-     * both as connect and as disconnect callback
-     * 2: Unlike normal publishers, this publisher cannot be removed from tracking
-     * 3: The Publisher must be copy-constructible and have a function "uint32_t getNumSubscribers()"
-     */
-    template <class Publisher>
-    void addCustomPublisher(const Publisher& publisher) {
-        auto new_pub = std::make_shared<Publisher>(publisher);
-        trackedCustomPublishers_.push_back(new_pub);
-        getNumSubscriberFcns_.push_back(std::bind(&Publisher::getNumSubscribers, new_pub));
+    template <typename Publisher>
+    void addPublisher(const Publisher& publisher) {
+        publisherInfo_.push_back({[&]() { return detail::Dereference<Publisher>::get(publisher).getTopic(); },
+                                  [&]() { return detail::Dereference<Publisher>::get(publisher).getNumSubscribers(); },
+                                  detail::Dereference<Publisher>::get(publisher).getTopic()});
+        addCallback(publisherInfo_.back().topic);
 
         // check for subscribe
         subscribeCallback();
@@ -185,18 +133,31 @@ public:
      * Does nothing if the publisher does not exist.
      * @return true if publisher existed and was removed
      */
-    bool removePublisher(std::string topic) {
+    bool removePublisher(const std::string& topic) {
         // remove from vector
-        auto found = std::find_if(trackedPublishers_.begin(), trackedPublishers_.end(),
-                                  [topic](const ros::Publisher& pub) { return topic == pub.getTopic(); });
-        if (found == trackedPublishers_.end())
+        auto found = std::find_if(publisherInfo_.begin(), publisherInfo_.end(),
+                                  [&](const auto& pubInfo) { return topic == pubInfo.getTopic(); });
+        if (found == publisherInfo_.end()) {
             return false;
-        trackedPublishers_.erase(found);
-        auto pub = ros::TopicManager::instance()->lookupPublication(topic);
-        if (!pub)
-            return true;
-        pub->removeCallbacks(callback_);
+        }
+        publisherInfo_.erase(found);
+        removeCallback(topic);
         return true;
+    }
+
+    /**
+     * @brief updates the topics of the tracked subscribers
+     * This can be necessary if these have changed through a reconfigure request
+     */
+    void updateTopics() {
+        for (auto& publisher : publisherInfo_) {
+            const auto currTopic = publisher.getTopic();
+            if (currTopic != publisher.topic) {
+                addCallback(currTopic);
+                removeCallback(publisher.topic);
+                publisher.topic = currTopic;
+            }
+        }
     }
 
     /**
@@ -204,7 +165,7 @@ public:
      * @return true if subscribed
      */
     bool isSubscribed() const {
-        return (void*)this->getSubscriber();
+        return bool(this->getSubscriber());
     }
 
     /**
@@ -240,10 +201,10 @@ public:
      * (like image transport)
      */
     void subscribeCallback() {
+        std::lock_guard<std::mutex> m(callbackLock_);
         const auto subscribed = isSubscribed();
-        bool subscribe = !smart() || std::any_of(trackedPublishers_.begin(), trackedPublishers_.end(), [](auto& p) {
-            return p.getNumSubscribers() > 0;
-        }) || std::any_of(getNumSubscriberFcns_.begin(), getNumSubscriberFcns_.end(), [](auto& f) { return f() > 0; });
+        bool subscribe = !smart() || std::any_of(publisherInfo_.begin(), publisherInfo_.end(),
+                                                 [](auto& p) { return p.getNumSubscriber() > 0; });
 
         if (subscribe && !subscribed) {
             ROS_DEBUG_STREAM("Got new subscribers. Subscribing to " << this->getSubscriber().getTopic());
@@ -256,10 +217,32 @@ public:
     }
 
 private:
-    std::vector<ros::Publisher> trackedPublishers_;
-    std::vector<std::shared_ptr<void>> trackedCustomPublishers_;
-    std::vector<std::function<uint32_t()>> getNumSubscriberFcns_;
+    void addCallback(const std::string& topic) {
+        auto pub = ros::TopicManager::instance()->lookupPublication(publisherInfo_.back().topic);
+        if (!!pub) {
+            pub->addCallbacks(callback_);
+        } else {
+        }
+    }
+
+    void removeCallback(const std::string& topic) {
+        auto pub = ros::TopicManager::instance()->lookupPublication(publisherInfo_.back().topic);
+        if (!!pub) {
+            pub->removeCallbacks(callback_);
+        }
+    }
+
+    struct PublisherInfo {
+        std::function<std::string()> getTopic;
+        std::function<uint32_t()> getNumSubscriber;
+        std::string topic;
+    };
+    std::vector<PublisherInfo> publisherInfo_;
     ros::SubscriberCallbacksPtr callback_;
+    std::mutex callbackLock_{};
     bool smart_{true};
 };
+
+template <class Message>
+using SmartSubscriberPtr = std::shared_ptr<SmartSubscriber<Message>>;
 } // namespace rosinterface_handler

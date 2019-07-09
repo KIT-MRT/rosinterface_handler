@@ -44,10 +44,10 @@ struct ${ClassName}Interface {
   using SubscriberPtr = std::shared_ptr<Subscriber<T>>;
 #endif
 #ifdef IF_HANDLER_DIAGNOSTICS_INCLUDED
-  template<typename T>
-  using DiagSubscriber = rosinterface_handler::DiagnosedSubscriber<T>;
-  template<typename T>
-  using DiagSubscriberPtr = std::shared_ptr<DiagSubscriber<T>>;
+  template<typename T, typename BaseT = message_filters::Subscriber<T>>
+  using DiagSubscriber = rosinterface_handler::DiagnosedSubscriber<T, BaseT>;
+  template<typename T, typename BaseT = message_filters::Subscriber<T>>
+  using DiagSubscriberPtr = std::shared_ptr<DiagSubscriber<T, BaseT>>;
   template<typename T>
   using DiagPublisher = rosinterface_handler::DiagnosedPublisher<T>;
 #endif

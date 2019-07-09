@@ -45,13 +45,13 @@ private:
 template <typename MsgT, typename SubscriberBase = message_filters::Subscriber<MsgT>>
 class DiagnosedSubscriber : public SubscriberBase {
     static_assert(ros::message_traits::HasHeader<MsgT>::value,
-                  "DiagnosedSubscriber can only be used on messgaes with a header!");
+                  "DiagnosedSubscriber can only be used on messages with a header!");
     using SubscriberT = SubscriberBase;
     using MsgPtrT = boost::shared_ptr<const MsgT>;
 
 public:
     template <typename... Args>
-    explicit DiagnosedSubscriber(diagnostic_updater::Updater& updater, Args... args)
+    explicit DiagnosedSubscriber(diagnostic_updater::Updater& updater, Args&&... args)
             : SubscriberBase(std::forward<Args>(args)...), updater_{updater} {
         SubscriberT::registerCallback([this](const MsgPtrT& msg) { this->onMessage(msg); });
     }
@@ -156,6 +156,10 @@ public:
 
     std::string getTopic() const {
         return publisher().getTopic();
+    }
+
+    uint32_t getNumSubscribers() const {
+        return !publisher_ ? uint32_t() : publisher_->getPublisher().getNumSubscribers();
     }
 
 private:

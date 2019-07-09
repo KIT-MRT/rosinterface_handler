@@ -167,7 +167,7 @@ class InterfaceGenerator(object):
     def add_subscriber(self, name, message_type, description, default_topic=None, default_queue_size=5, no_delay=False,
                        topic_param=None, queue_size_param=None, header=None, module=None, configurable=False,
                        scope='private', constant=False, diagnosed=False, min_frequency=0., min_frequency_param=None,
-                       max_delay=float('inf'), max_delay_param=None):
+                       max_delay=float('inf'), max_delay_param=None, watch=[]):
         """
         Adds a subscriber to your parameter struct and a parameter for its topic and queue size. Don't forget to add a
         dependency to message_filter and the package for the message used to your package.xml!
@@ -193,6 +193,9 @@ class InterfaceGenerator(object):
         :param min_frequency_param: (optional) Sets the parameter for the minimum frequency. Defaults to <name>_min_frequency
         :param max_delay: (optional) Sets the default maximal header delay for the topics in seconds.
         :param max_delay_param: (optional) Parameter for the maximal delay. Defaults to <name>_max_delay.
+        :param watch: (optional) a list of connected publishers added with add_publisher. If it is nonempty,
+           the subscriber will be a "smart_subscriber" meaning he will not execute callbacks if no one subscribed to the
+           publishers.
         :return: None
         """
         # add subscriber topic and queue size as param
@@ -204,6 +207,9 @@ class InterfaceGenerator(object):
                  default=default_topic, configurable=configurable, global_scope=False, constant=constant)
         self.add(name=queue_size_param, paramtype='int', description='Queue size for ' + description, min=0,
                  default=default_queue_size, configurable=configurable, global_scope=False, constant=constant)
+        for publisher in watch:
+            if not "name" in publisher:
+                eprint("Invalid input passed as 'watch' to add_subscriber. Expected a list of publisher objects!")
 
         if diagnosed:
             if not self._get_root().diagnostics_enabled:
@@ -230,6 +236,8 @@ class InterfaceGenerator(object):
         if not module:
             module = ".".join(normalized_message_type.split('::')[0:-1]) + '.msg'
 
+        watch = [publisher["name"] for publisher in watch]
+
         # add a subscriber object
         newparam = {
             'name': name,
@@ -243,6 +251,7 @@ class InterfaceGenerator(object):
             'description': description,
             'scope': scope.lower(),
             'diagnosed': diagnosed,
+            'watch': watch,
             'min_frequency_param': min_frequency_param,
             'max_delay_param': max_delay_param
         }
@@ -291,7 +300,7 @@ class InterfaceGenerator(object):
         :param min_frequency_param: (optional) Sets the parameter for the minimum frequency. Defaults to <name>_min_frequency
         :param max_delay: (optional) Sets the default maximal header delay for the topics in seconds.
         :param max_delay_param: (optional) Parameter for the maximal delay. Defaults to <name>_max_delay.
-        :return: None
+        :return: a configuration dict for the created publisher
         """
         # add publisher topic and queue size as param
         if not topic_param:
@@ -344,6 +353,7 @@ class InterfaceGenerator(object):
             'max_delay_param': max_delay_param
         }
         self.publishers.append(newparam)
+        return newparam
 
     def add(self, name, paramtype, description, level=0, edit_method='""', default=None, min=None, max=None,
             configurable=False, global_scope=False, constant=False):
@@ -661,6 +671,9 @@ class InterfaceGenerator(object):
         else:
             include_error = ""
 
+        if any(subscriber["watch"] for subscriber in subscribers):
+            includes.append('#include <rosinterface_handler/smart_subscriber.hpp>')
+
         if self.diagnostics_enabled:
             param_entries.append('diagnostic_updater::Updater updater;')
             subscribers_init.append(',\n    updater{ros::NodeHandle(), private_node_handle, "/"+nodeName_}')
@@ -688,6 +701,7 @@ class InterfaceGenerator(object):
             header = subscriber['header']
             description = subscriber['description']
             diagnosed = subscriber['diagnosed']
+            watch = subscriber['watch']
 
             # add include entry
             if header:
@@ -699,20 +713,28 @@ class InterfaceGenerator(object):
                 includes.append(include)
 
             # add subscriber entry
-            if diagnosed:
-                diag = "Diag"
+            if diagnosed and watch:
+                subscriber_t = 'DiagSubscriber$ptr<$type, rosinterface_handler::SmartSubscriber<$type>>'
+                init = "updater, " + ", ".join(watch)
+            elif watch:
+                subscriber_t = 'rosinterface_handler::SmartSubscriber$ptr<$type>'
+                init = ", ".join(watch)
+            elif diagnosed:
+                subscriber_t = 'DiagSubscriber$ptr<$type>'
                 init = "updater"
             else:
-                diag = ""
+                subscriber_t = "Subscriber$ptr<$type>"
                 init = ""
+            subscriber_type = Template(subscriber_t).substitute(type=type, ptr="")
+            subscriber_ptr = Template(subscriber_t).substitute(type=type, ptr="Ptr")
 
-            subscriber_entries.append(Template('  ${diag}SubscriberPtr<${type}> ${name}; /*!< $description '
-                                               '*/').substitute(diag=diag, type=type,
-                                                                name=name, description=description))
+            subscriber_entries.append(Template('  $subscriber ${name}; /*!< $description '
+                                               '*/').substitute(name=name, description=description,
+                                               subscriber=subscriber_ptr))
 
             # add initialisation
-            subscribers_init.append(Template(',\n    $name{std::make_shared<${diag}Subscriber<$type>>(${init})}')
-                                    .substitute(name=name, diag=diag, type=type, init=init))
+            subscribers_init.append(Template(',\n    $name{std::make_shared<$subscriber>(${init})}')
+                                    .substitute(name=name, subscriber=subscriber_type, init=init))
 
             # add subscribe for parameter server
             topic_param = subscriber['topic_param']
@@ -760,6 +782,8 @@ class InterfaceGenerator(object):
                                                     '    }').substitute(name=name, topic=topic_param,
                                                                         queue=queue_size_param, noDelay=no_delay,
                                                                         namespace=name_space))
+                if watch:
+                    from_config.append(Template('    $name->updateTopics();\n').substitute(name=name))
 
         for publisher in publishers:
             name = publisher['name']
