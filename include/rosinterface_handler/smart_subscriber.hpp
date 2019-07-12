@@ -125,7 +125,9 @@ public:
         addCallback(publisherInfo_.back().topic);
 
         // check for subscribe
-        subscribeCallback();
+        if (!this->getTopic().empty()) {
+            subscribeCallback();
+        }
     }
 
     /**
@@ -153,11 +155,13 @@ public:
         for (auto& publisher : publisherInfo_) {
             const auto currTopic = publisher.getTopic();
             if (currTopic != publisher.topic) {
+                ROS_DEBUG_STREAM("Publication moved from " << publisher.topic << " to " << currTopic);
                 addCallback(currTopic);
                 removeCallback(publisher.topic);
                 publisher.topic = currTopic;
             }
         }
+        subscribeCallback();
     }
 
     /**
@@ -168,10 +172,31 @@ public:
         return bool(this->getSubscriber());
     }
 
+    //! Since this subscriber subscribes automatically, it can not be disabled using unsubscribe(). This function
+    //! disables him so that the message callback will no longer be called, no matter how many subscribers there are.
+    void disable() {
+        disabled_ = true;
+        if (isSubscribed()) {
+            this->unsubscribe();
+        }
+    }
+
+    //! Puts a disabled subscriber back into normal mode.
+    void enable() {
+        disabled_ = false;
+        subscribeCallback();
+    }
+
+    //! Returns whether this subscriber has been disabled via disable()
+    bool isDisabled() const {
+        return disabled_;
+    }
+
     /**
      * @brief returns whether this subscriber is currently in smart mode
      * @return true if in smart mode
      * If the subscriber is not in smart mode, it will behave like a normal ros publisher and will always be subscribed
+     * unless isDisabled is true.
      */
     bool smart() const {
         return smart_;
@@ -201,6 +226,9 @@ public:
      * (like image transport)
      */
     void subscribeCallback() {
+        if (disabled_) {
+            return;
+        }
         std::lock_guard<std::mutex> m(callbackLock_);
         const auto subscribed = isSubscribed();
         bool subscribe = !smart() || std::any_of(publisherInfo_.begin(), publisherInfo_.end(),
@@ -217,16 +245,21 @@ public:
     }
 
 private:
+    // NOLINTNEXTLINE(readability-function-size)
     void addCallback(const std::string& topic) {
-        auto pub = ros::TopicManager::instance()->lookupPublication(publisherInfo_.back().topic);
+        if (topic.empty()) {
+            return;
+        }
+        auto pub = ros::TopicManager::instance()->lookupPublication(topic);
         if (!!pub) {
             pub->addCallbacks(callback_);
         } else {
+            ROS_DEBUG_STREAM("Publication not found for topic " << topic);
         }
     }
 
     void removeCallback(const std::string& topic) {
-        auto pub = ros::TopicManager::instance()->lookupPublication(publisherInfo_.back().topic);
+        auto pub = ros::TopicManager::instance()->lookupPublication(topic);
         if (!!pub) {
             pub->removeCallbacks(callback_);
         }
@@ -241,6 +274,7 @@ private:
     ros::SubscriberCallbacksPtr callback_;
     std::mutex callbackLock_{};
     bool smart_{true};
+    bool disabled_{false};
 };
 
 template <class Message>

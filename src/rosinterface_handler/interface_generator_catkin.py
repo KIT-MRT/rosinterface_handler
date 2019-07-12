@@ -783,7 +783,8 @@ class InterfaceGenerator(object):
                                                                         queue=queue_size_param, noDelay=no_delay,
                                                                         namespace=name_space))
                 if watch:
-                    from_config.append(Template('    $name->updateTopics();\n').substitute(name=name))
+                    from_config.append(Template('    $name->updateTopics();').substitute(name=name))
+                    test_limits.append(from_config[-1])
 
         for publisher in publishers:
             name = publisher['name']
