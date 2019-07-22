@@ -109,7 +109,7 @@ $string_representation;
   }
 
   /// \brief returns the name of the node (works in nodelets, too)
-  const std::string& nodeName() {
+  const std::string& nodeName() const {
       return nodeName_;
   }
 private:
