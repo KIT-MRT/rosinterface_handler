@@ -112,6 +112,36 @@ $string_representation;
   const std::string& nodeName() const {
       return nodeName_;
   }
+
+  /// \brief logs to the debug output. Works also within nodelets. Output is throttled.
+  // NOLINTNEXTLINE(readability-function-size)
+  inline void logDebug(const std::string& msg) const {
+      ROS_DEBUG_STREAM_NAMED(nodeName(), msg);
+  }
+
+  /// \brief logs to the debug output. Works also within nodelets. Output is throttled.
+  // NOLINTNEXTLINE(readability-function-size)
+  inline void logInfo(const std::string& msg) const {
+      ROS_INFO_STREAM_THROTTLE_NAMED(5, nodeName(), msg);
+  }
+
+  /// \brief logs to the debug output. Works also within nodelets. Output is throttled.
+  // NOLINTNEXTLINE(readability-function-size)
+  inline void logWarn(const std::string& msg) const {
+      ROS_WARN_STREAM_THROTTLE_NAMED(5, nodeName(), msg);
+  }
+
+  /// \brief logs to the error output. Works also within nodelets. Output is throttled.
+  // NOLINTNEXTLINE(readability-function-size)
+  inline void logError(const std::string& msg) const {
+      ROS_ERROR_STREAM_THROTTLE_NAMED(5, nodeName(), msg);
+  }
+
+  /// \brief logs to the error output. Works also within nodelets. Not throttled! Dont call this in loops!
+  // NOLINTNEXTLINE(readability-function-size)
+  inline void logErrorDirect(const std::string& msg) const {
+      ROS_ERROR_STREAM_NAMED(nodeName(), msg);
+  }
 private:
   const std::string globalNamespace_;
   const std::string publicNamespace_;
