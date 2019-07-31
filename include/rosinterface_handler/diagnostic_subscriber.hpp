@@ -51,6 +51,7 @@ class DiagnosedSubscriber : public SubscriberBase {
 
 public:
     template <typename... Args>
+    // NOLINTNEXTLINE(readability-identifier-naming)
     explicit DiagnosedSubscriber(diagnostic_updater::Updater& updater, Args&&... args)
             : SubscriberBase(std::forward<Args>(args)...), updater_{updater} {
         SubscriberT::registerCallback([this](const MsgPtrT& msg) { this->onMessage(msg); });

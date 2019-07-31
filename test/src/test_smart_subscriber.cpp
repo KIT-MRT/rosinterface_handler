@@ -5,7 +5,7 @@
 #include <std_msgs/Int32.h>
 #include "rosinterface_handler/smart_subscriber.hpp"
 
-typedef std_msgs::Int32 Msg;
+using Msg = std_msgs::Int32;
 class TestNode {
 public:
     TestNode() {
@@ -16,19 +16,19 @@ public:
         smartSub.addPublisher(pub);
         smartSub.registerCallback(boost::bind(&TestNode::smartMsgCallback, this, _1));
     }
-    int msg_count{0};
-    int smart_msg_count{0};
+    int msgCount{0};
+    int smartMsgCount{0};
     ros::Publisher pub;
     ros::Subscriber sub;
     rosinterface_handler::SmartSubscriber<std_msgs::Int32> smartSub;
 
 private:
     void msgCallback(const Msg::ConstPtr& msg) {
-        msg_count++;
+        msgCount++;
         pub.publish(msg);
     }
     void smartMsgCallback(const Msg::ConstPtr& /*msg*/) {
-        smart_msg_count++;
+        smartMsgCount++;
     }
 };
 void intCb(const std_msgs::Int32& /*msg*/) {
@@ -46,15 +46,15 @@ public:
         smartSub.addPublisher(pub);
         smartSub.registerCallback(boost::bind(&ImageNode::imgCallback, this, _1));
     }
-    int msg_count{0};
-    int smart_msg_count{0};
+    int msgCount{0};
+    int smartMsgCount{0};
     image_transport::ImageTransport transport;
     image_transport::Publisher pub;
     SmartSub smartSub;
 
 private:
     void imgCallback(const sensor_msgs::Image::ConstPtr& msg) {
-        msg_count++;
+        msgCount++;
         pub.publish(msg);
     }
 };
@@ -68,25 +68,25 @@ TEST(SmartSubscriber, subscribeTests) {
     ros::Subscriber listener = ros::NodeHandle().subscribe("/output", 5, intCb);
     // check we are subscribed
     std::this_thread::sleep_for(std::chrono::milliseconds(500));
-    node.msg_count = 0;
-    node.smart_msg_count = 0;
+    node.msgCount = 0;
+    node.smartMsgCount = 0;
     EXPECT_LT(0, node.pub.getNumSubscribers());
     EXPECT_TRUE(node.smartSub.isSubscribed());
 
     // test that we similar numbers of msgs than with a normal subscriber
     std::this_thread::sleep_for(std::chrono::milliseconds(500));
-    EXPECT_NEAR(node.msg_count, node.smart_msg_count, 5);
+    EXPECT_NEAR(node.msgCount, node.smartMsgCount, 5);
     EXPECT_TRUE(node.smartSub.isSubscribed());
-    EXPECT_GT(node.smart_msg_count, 0);
+    EXPECT_GT(node.smartMsgCount, 0);
     listener.shutdown();
     std::this_thread::sleep_for(std::chrono::milliseconds(500));
 
     // by now surely no one will listen
-    const int old_smart_msg_count = node.smart_msg_count;
+    const int oldSmartMsgCount = node.smartMsgCount;
 
     std::this_thread::sleep_for(std::chrono::milliseconds(500));
     EXPECT_FALSE(node.smartSub.isSubscribed());
-    EXPECT_NEAR(old_smart_msg_count, node.smart_msg_count, 2);
+    EXPECT_NEAR(oldSmartMsgCount, node.smartMsgCount, 2);
 }
 
 TEST(SmartSubscriber, basicTests) {

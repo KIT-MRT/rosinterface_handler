@@ -62,11 +62,12 @@ public:
     using Publishers = std::vector<ros::Publisher>;
 
     template <typename... PublishersT>
+    // NOLINTNEXTLINE(readability-identifier-naming)
     explicit SmartSubscriber(const PublishersT&... trackedPublishers) {
         // check for always-on-mode
-        const auto smart_subscribe = std::getenv("NO_SMART_SUBSCRIBE");
+        const auto smartSubscribe = std::getenv("NO_SMART_SUBSCRIBE");
         try {
-            if (smart_subscribe && std::stoi(smart_subscribe) > 0) {
+            if (smartSubscribe && std::stoi(smartSubscribe) > 0) {
                 setSmart(false);
             }
         } catch (const std::invalid_argument&) {
@@ -79,8 +80,12 @@ public:
         using Workaround = int[];
         Workaround{(addPublisher(trackedPublishers), 0)...};
     }
+    SmartSubscriber(SmartSubscriber&& rhs) noexcept = delete;
+    SmartSubscriber& operator=(SmartSubscriber&& rhs) noexcept = delete;
+    SmartSubscriber(const SmartSubscriber& rhs) = delete;
+    SmartSubscriber& operator=(const SmartSubscriber& rhs) = delete;
 
-    ~SmartSubscriber() {
+    ~SmartSubscriber() override {
         // void the callback
         std::lock_guard<std::mutex> m(callbackLock_);
         for (auto& pub : publisherInfo_) {
@@ -97,14 +102,14 @@ public:
      *
      * @param nh The ros::NodeHandle to use to subscribe.
      * @param topic The topic to subscribe to.
-     * @param queue_size The subscription queue size
-     * @param transport_hints The transport hints to pass along
-     * @param callback_queue The callback queue to pass along
+     * @param queueSize The subscription queue size
+     * @param transportHints The transport hints to pass along
+     * @param callbackQueue The callback queue to pass along
      */
-    void subscribe(ros::NodeHandle& nh, const std::string& topic, uint32_t queue_size,
-                   const ros::TransportHints& transport_hints = ros::TransportHints(),
-                   ros::CallbackQueueInterface* callback_queue = nullptr) override {
-        message_filters::Subscriber<Message>::subscribe(nh, topic, queue_size, transport_hints, callback_queue);
+    void subscribe(ros::NodeHandle& nh, const std::string& topic, uint32_t queueSize,
+                   const ros::TransportHints& transportHints = ros::TransportHints(),
+                   ros::CallbackQueueInterface* callbackQueue = nullptr) override {
+        message_filters::Subscriber<Message>::subscribe(nh, topic, queueSize, transportHints, callbackQueue);
         subscribeCallback();
     }
 
@@ -151,6 +156,7 @@ public:
      * @brief updates the topics of the tracked subscribers
      * This can be necessary if these have changed through a reconfigure request
      */
+    // NOLINTNEXTLINE(readability-function-size)
     void updateTopics() {
         for (auto& publisher : publisherInfo_) {
             const auto currTopic = publisher.getTopic();
@@ -225,6 +231,7 @@ public:
      * special publisher
      * (like image transport)
      */
+    // NOLINTNEXTLINE(readability-function-size)
     void subscribeCallback() {
         if (disabled_) {
             return;

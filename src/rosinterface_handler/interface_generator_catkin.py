@@ -208,7 +208,7 @@ class InterfaceGenerator(object):
         self.add(name=queue_size_param, paramtype='int', description='Queue size for ' + description, min=0,
                  default=default_queue_size, configurable=configurable, global_scope=False, constant=constant)
         for publisher in watch:
-            if not "name" in publisher:
+            if "name" not in publisher:
                 eprint("Invalid input passed as 'watch' to add_subscriber. Expected a list of publisher objects!")
 
         if diagnosed:
@@ -730,7 +730,7 @@ class InterfaceGenerator(object):
 
             subscriber_entries.append(Template('  $subscriber ${name}; /*!< $description '
                                                '*/').substitute(name=name, description=description,
-                                               subscriber=subscriber_ptr))
+                                                                subscriber=subscriber_ptr))
 
             # add initialisation
             subscribers_init.append(Template(',\n    $name{std::make_shared<$subscriber>(${init})}')
