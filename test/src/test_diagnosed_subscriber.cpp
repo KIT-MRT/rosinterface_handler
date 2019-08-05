@@ -1,6 +1,9 @@
 #include <geometry_msgs/PointStamped.h>
 #include <gtest/gtest.h>
 #include <rosinterface_handler/diagnostic_subscriber.hpp>
+#include <rosinterface_handler/smart_subscriber.hpp>
+
+using MsgT = geometry_msgs::PointStamped;
 
 class DummyUpdater : public diagnostic_updater::Updater {
 public:
@@ -21,13 +24,13 @@ public:
     std::vector<diagnostic_msgs::DiagnosticStatus> statusVec;
 };
 
-using DiagPub = rosinterface_handler::DiagnosedPublisher<geometry_msgs::PointStamped>;
-using DiagSub = rosinterface_handler::DiagnosedSubscriber<geometry_msgs::PointStamped>;
+using DiagPub = rosinterface_handler::DiagnosedPublisher<MsgT>;
+using DiagSub = rosinterface_handler::DiagnosedSubscriber<MsgT>;
 class TestDiagnosedPubSub : public testing::Test {
 protected:
     void SetUp() override {
         updater.statusVec.clear();
-        pub = nh.advertise<geometry_msgs::PointStamped>("test_topic", 5);
+        pub = nh.advertise<MsgT>("test_topic", 5);
         sub.subscribe(nh, "test_topic", 5);
         pub.minFrequency(10).maxTimeDelay(1);
         sub.minFrequency(10).maxTimeDelay(1);
@@ -43,7 +46,7 @@ protected:
 TEST_F(TestDiagnosedPubSub, publishAndReceiveOK) {
     auto onTimer = [this](ros::TimerEvent e) {
         this->messageCounter++;
-        auto msg = boost::make_shared<geometry_msgs::PointStamped>();
+        auto msg = boost::make_shared<MsgT>();
         msg->header.stamp = e.current_real;
         this->pub.publish(msg);
     };
@@ -61,7 +64,7 @@ TEST_F(TestDiagnosedPubSub, publishAndReceiveOK) {
 TEST_F(TestDiagnosedPubSub, publishAndReceiveFail) {
     auto onTimer = [this](ros::TimerEvent e) {
         this->messageCounter++;
-        auto msg = boost::make_shared<geometry_msgs::PointStamped>();
+        auto msg = boost::make_shared<MsgT>();
         msg->header.stamp = e.current_real - ros::Duration(1.5);
         this->pub.publish(msg);
     };
@@ -78,10 +81,10 @@ TEST_F(TestDiagnosedPubSub, publishAndReceiveFail) {
 
 TEST_F(TestDiagnosedPubSub, overrideTopic) {
     this->sub.subscribe(nh, "new_topic", 5);
-    this->pub = nh.advertise<geometry_msgs::PointStamped>("new_topic", 5);
+    this->pub = nh.advertise<MsgT>("new_topic", 5);
     auto onTimer = [this](ros::TimerEvent e) {
         this->messageCounter++;
-        auto msg = boost::make_shared<geometry_msgs::PointStamped>();
+        auto msg = boost::make_shared<MsgT>();
         msg->header.stamp = e.current_real;
         this->pub.publish(msg);
     };
@@ -100,7 +103,7 @@ TEST_F(TestDiagnosedPubSub, assign) {
     this->pub = DiagPub(updater);
     auto onTimer = [this](ros::TimerEvent e) {
         this->messageCounter++;
-        auto msg = boost::make_shared<geometry_msgs::PointStamped>();
+        auto msg = boost::make_shared<MsgT>();
         msg->header.stamp = e.current_real;
         this->pub.publish(msg);
     };
@@ -110,4 +113,20 @@ TEST_F(TestDiagnosedPubSub, assign) {
     }
     updater.forceUpdate();
     ASSERT_LE(1, updater.statusVec.size());
+}
+
+TEST(TestDiagnosedAndSmartCombined, constructAndSubscribe) {
+    ros::NodeHandle nh;
+    ros::Publisher thisPublisher = nh.advertise<MsgT>("sometopic", 5);
+    using Subscriber = rosinterface_handler::DiagnosedSubscriber<MsgT, rosinterface_handler::SmartSubscriber<MsgT>>;
+    DummyUpdater updater;
+    Subscriber s(updater, thisPublisher);
+    EXPECT_FALSE(s.isSubscribed());
+    s.subscribe(nh, "atopic", 5);
+    EXPECT_FALSE(s.isSubscribed());
+    ros::Subscriber otherSubscriber = nh.subscribe("sometopic", 5, +[](const MsgT::ConstPtr& msg) {});
+    ros::spinOnce();
+    ASSERT_GT(thisPublisher.getNumSubscribers(), 0);
+    s.subscribeCallback();
+    EXPECT_TRUE(s.isSubscribed());
 }
