@@ -39,11 +39,37 @@ std::ostream& operator<<(std::ostream& stream, const std::map<T1, T2>& map) {
 
 namespace rosinterface_handler {
 
+/// \brief Retrieve node name
+///
+/// @param privateNodeHandle The private ROS node handle (i.e.
+/// ros::NodeHandle("~") ).
+/// @return node name
+inline std::string getNodeName(const ros::NodeHandle& privateNodeHandle) {
+    std::stringstream tempString(privateNodeHandle.getNamespace());
+    std::string name;
+    while (std::getline(tempString, name, '/')) {
+        ;
+    }
+    return name;
+}
+
+/// \brief Retrieve the parent node handle from a node handle (or /)
+///
+/// @param privateNodeHandle Any ROS node handle (e.g.
+/// ros::NodeHandle("~") ).
+/// @return parent namespace or "/"
+inline std::string getParentNamespace(const ros::NodeHandle& nodeHandle) {
+    auto& nameSpace = nodeHandle.getNamespace();
+    std::string parentNameSpace = nameSpace.substr(0, nameSpace.find_last_of('/'));
+    return parentNameSpace.empty() ? "/" : parentNameSpace;
+}
+
 /// \brief Sets the logger level according to a standardized parameter name 'verbosity'.
 ///
 /// \param nodeHandle The ROS node handle to search for the parameter 'verbosity'.
 // NOLINTNEXTLINE
-inline void setLoggerLevel(const ros::NodeHandle& nodeHandle, const std::string& verbosityParam = "verbosity") {
+inline void setLoggerLevel(const ros::NodeHandle& nodeHandle, const std::string& verbosityParam = "verbosity",
+                           const std::string& loggerName = ROSCONSOLE_DEFAULT_NAME) {
 
     std::string verbosity;
     if (!nodeHandle.getParam(verbosityParam, verbosity)) {
@@ -67,9 +93,14 @@ inline void setLoggerLevel(const ros::NodeHandle& nodeHandle, const std::string&
         validVerbosity = false;
     }
     if (validVerbosity) {
-        if (ros::console::set_logger_level(ROSCONSOLE_DEFAULT_NAME, levelRos)) {
+        if (ros::console::set_logger_level(loggerName, levelRos)) {
             ros::console::notifyLoggerLevelsChanged();
             ROS_DEBUG_STREAM("Verbosity set to " << verbosity);
+        }
+        // If this is a node, additionally set the default logger, so that ROS_LOG works
+        if (loggerName != ROSCONSOLE_DEFAULT_NAME && getNodeName(ros::NodeHandle("~")) != loggerName &&
+            ros::console::set_logger_level(ROSCONSOLE_DEFAULT_NAME, levelRos)) {
+            ros::console::notifyLoggerLevelsChanged();
         }
     }
 }
@@ -95,31 +126,6 @@ inline void showNodeInfo() {
                                 << "Subscribed topics: " << std::endl
                                 << msgSubscr.str() << "Advertised topics: " << std::endl
                                 << msgAdvert.str());
-}
-
-/// \brief Retrieve node name
-///
-/// @param privateNodeHandle The private ROS node handle (i.e.
-/// ros::NodeHandle("~") ).
-/// @return node name
-inline std::string getNodeName(const ros::NodeHandle& privateNodeHandle) {
-    std::stringstream tempString(privateNodeHandle.getNamespace());
-    std::string name;
-    while (std::getline(tempString, name, '/')) {
-        ;
-    }
-    return name;
-}
-
-/// \brief Retrieve the parent node handle from a node handle (or /)
-///
-/// @param privateNodeHandle Any ROS node handle (e.g.
-/// ros::NodeHandle("~") ).
-/// @return parent namespace or "/"
-inline std::string getParentNamespace(const ros::NodeHandle& nodeHandle) {
-    auto& nameSpace = nodeHandle.getNamespace();
-    std::string parentNameSpace = nameSpace.substr(0, nameSpace.find_last_of('/'));
-    return parentNameSpace.empty() ? "/" : parentNameSpace;
 }
 
 /// \brief Retrieve the topic to subscribe to (aware of global topic names)
