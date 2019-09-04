@@ -14,6 +14,7 @@
 #include <memory>
 #include <ros/param.h>
 #include <ros/node_handle.h>
+#include <rosinterface_handler/console_bridge_compatibility.hpp>
 #include <rosinterface_handler/utilities.hpp>
 #ifdef MESSAGE_FILTERS_FOUND
 #include <message_filters/subscriber.h>
