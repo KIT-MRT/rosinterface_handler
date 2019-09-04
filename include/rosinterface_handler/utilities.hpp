@@ -6,6 +6,8 @@
 #include <ros/param.h>
 #include <ros/this_node.h>
 
+#include "console_bridge_compatibility.hpp"
+
 /// \brief Helper function to test for std::vector
 template <typename T>
 using IsVector = std::is_same<T, std::vector<typename T::value_type, typename T::allocator_type>>;
