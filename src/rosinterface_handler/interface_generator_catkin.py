@@ -31,6 +31,7 @@ from string import Template
 import sys
 import os
 import re
+import subprocess
 
 
 def eprint(*args, **kwargs):
@@ -636,6 +637,8 @@ class InterfaceGenerator(object):
         with open(cfg_file, 'w') as f:
             f.write(template)
         os.chmod(cfg_file, 509)  # entspricht 775 (octal)
+        # calling sync mitigate issues in docker (see https://github.com/moby/moby/issues/9547)
+        subprocess.check_call(["sync"])
 
     def _generatehpp(self):
         """
