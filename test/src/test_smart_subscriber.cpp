@@ -61,6 +61,15 @@ private:
 void cb(const sensor_msgs::Image& /*msg*/) {
 }
 
+template <typename Func>
+bool tryRepeatedly(Func&& f) {
+    int i = 0;
+    while (!f() && i++ < 20) {
+        std::this_thread::sleep_for(std::chrono::milliseconds(20));
+    }
+    return i <= 20;
+}
+
 TEST(SmartSubscriber, subscribeTests) {
     // subscribe to a topic twice (smart and non smart)
     // make sure the smart subscriber publishes no messages after rostopic echo stops listening
@@ -106,15 +115,18 @@ TEST(SmartSubscriber, nondefaultPublisher) {
     EXPECT_FALSE(node.smartSub.isSubscribed());
     ros::NodeHandle nh;
     // check we subscribe
+    auto testIsSubscribed = [&]() {
+        ros::spinOnce();
+        return node.smartSub.isSubscribed();
+    };
     {
         auto sub = nh.subscribe("/img_out", 5, cb);
-        std::this_thread::sleep_for(std::chrono::milliseconds(20));
-        ros::spinOnce();
-        EXPECT_TRUE(node.smartSub.isSubscribed());
+        // usually this works instantly but on high-load systems it may take longer
+        EXPECT_TRUE(tryRepeatedly(testIsSubscribed));
     }
     // check we are no longer subscribed
-    std::this_thread::sleep_for(std::chrono::milliseconds(20));
-    EXPECT_FALSE(node.smartSub.isSubscribed());
+    auto testNotSubscribed = [&]() { return !testIsSubscribed(); };
+    EXPECT_TRUE(tryRepeatedly(testNotSubscribed));
 
     // force subscription
     node.smartSub.setSmart(false);
