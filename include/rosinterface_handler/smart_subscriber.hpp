@@ -73,8 +73,7 @@ public:
         } catch (const std::invalid_argument&) {
         }
         ros::SubscriberStatusCallback cb = boost::bind(&SmartSubscriber::subscribeCallback, this);
-        callback_ =
-            boost::make_shared<ros::SubscriberCallbacks>(cb, cb, ros::VoidConstPtr(), ros::getGlobalCallbackQueue());
+        callback_ = boost::make_shared<ros::SubscriberCallbacks>(cb, cb, alivePtr_, ros::getGlobalCallbackQueue());
 
         publisherInfo_.reserve(sizeof...(trackedPublishers));
         using Workaround = int[];
@@ -84,16 +83,7 @@ public:
     SmartSubscriber& operator=(SmartSubscriber&& rhs) noexcept = delete;
     SmartSubscriber(const SmartSubscriber& rhs) = delete;
     SmartSubscriber& operator=(const SmartSubscriber& rhs) = delete;
-
-    ~SmartSubscriber() override {
-        // void the callback
-        std::lock_guard<std::mutex> m(callbackLock_);
-        for (auto& pub : publisherInfo_) {
-            removeCallback(pub.topic);
-        }
-        callback_->disconnect_ = +[](const ros::SingleSubscriberPublisher&) {};
-        callback_->connect_ = +[](const ros::SingleSubscriberPublisher&) {};
-    }
+    ~SmartSubscriber() override = default;
 
     /**
      * @brief Subscribe to a topic.
@@ -278,6 +268,7 @@ private:
         std::string topic;
     };
     std::vector<PublisherInfo> publisherInfo_;
+    boost::shared_ptr<bool> alivePtr_{boost::make_shared<bool>()};
     ros::SubscriberCallbacksPtr callback_;
     std::mutex callbackLock_{};
     bool smart_{true};
