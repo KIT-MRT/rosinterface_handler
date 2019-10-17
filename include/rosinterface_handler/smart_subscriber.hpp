@@ -73,8 +73,7 @@ public:
         } catch (const std::invalid_argument&) {
         }
         ros::SubscriberStatusCallback cb = boost::bind(&SmartSubscriber::subscribeCallback, this);
-        callback_ =
-            boost::make_shared<ros::SubscriberCallbacks>(cb, cb, ros::VoidConstPtr(), ros::getGlobalCallbackQueue());
+        callback_ = boost::make_shared<ros::SubscriberCallbacks>(cb, cb, alivePtr_, ros::getGlobalCallbackQueue());
 
         publisherInfo_.reserve(sizeof...(trackedPublishers));
         using Workaround = int[];
@@ -84,9 +83,9 @@ public:
     SmartSubscriber& operator=(SmartSubscriber&& rhs) noexcept = delete;
     SmartSubscriber(const SmartSubscriber& rhs) = delete;
     SmartSubscriber& operator=(const SmartSubscriber& rhs) = delete;
-
     ~SmartSubscriber() override {
         // void the callback
+        alivePtr_.reset(); // makes sure no callbacks are called while destructor is running
         std::lock_guard<std::mutex> m(callbackLock_);
         for (auto& pub : publisherInfo_) {
             removeCallback(pub.topic);
@@ -233,10 +232,10 @@ public:
      */
     // NOLINTNEXTLINE(readability-function-size)
     void subscribeCallback() {
-        if (disabled_) {
+        std::lock_guard<std::mutex> m(callbackLock_);
+        if (disabled_ || !alivePtr_) {
             return;
         }
-        std::lock_guard<std::mutex> m(callbackLock_);
         const auto subscribed = isSubscribed();
         bool subscribe = !smart() || std::any_of(publisherInfo_.begin(), publisherInfo_.end(),
                                                  [](auto& p) { return p.getNumSubscriber() > 0; });
@@ -278,6 +277,7 @@ private:
         std::string topic;
     };
     std::vector<PublisherInfo> publisherInfo_;
+    boost::shared_ptr<bool> alivePtr_{boost::make_shared<bool>()};
     ros::SubscriberCallbacksPtr callback_;
     std::mutex callbackLock_{};
     bool smart_{true};
