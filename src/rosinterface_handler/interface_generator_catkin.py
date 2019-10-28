@@ -678,7 +678,7 @@ class InterfaceGenerator(object):
             includes.append('#include <rosinterface_handler/smart_subscriber.hpp>')
 
         if self.diagnostics_enabled:
-            param_entries.append('diagnostic_updater::Updater updater;')
+            param_entries.append('  diagnostic_updater::Updater updater;')
             subscribers_init.append(',\n    updater{ros::NodeHandle(), private_node_handle, "/"+nodeName_}')
             includes.append('#include <rosinterface_handler/diagnostic_subscriber.hpp>')
             from_server.append('    updater.setHardwareID("none");')
@@ -1006,7 +1006,8 @@ class InterfaceGenerator(object):
                                                 subscriberDescription=subscriberDescription,
                                                 publisherDescription=publisherDescription,
                                                 verbosityParam=verbosityParam,
-                                                tfConfig=self.tf)
+                                                tfConfig=self.tf,
+                                                diagnosticsEnabled=self.diagnostics_enabled)
 
         py_file = os.path.join(self.py_gen_dir, "interface", self.classname + "Interface.py")
         try:
