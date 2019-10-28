@@ -239,7 +239,11 @@ class ${ClassName}Interface(dict):
 
     @staticmethod
     def get_type(config):
-        return eval(config['import'] + '.' + config['type'].split('::')[-1])
+        for import_cmd in config['import']:
+            try:
+                return eval(import_cmd + '.' + config['type'].split('::')[-1])
+            except:
+                pass
 
 
     @staticmethod

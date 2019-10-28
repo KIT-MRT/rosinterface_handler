@@ -181,8 +181,8 @@ class InterfaceGenerator(object):
         :param no_delay: (optional) Set the tcp_no_delay parameter for subscribing. Recommended for larger topics.
         :param topic_param: (optional) Name of the param configuring the topic. Will be "<name>_topic" if None.
         :param queue_size_param: (optional) Name of param configuring the queue size. Defaults to "<name>_queue_size".
-        :param header: (optional) Header name to include. Will be deduced for message type if None.
-        :param module: (optional) Module to import from (e.g. std_msgs.msg). Will be automatically deduced if None.
+        :param header: (optional) Header name (or a list of names) to include. Will be deduced for message type if None.
+        :param module: (optional) Module name (or a list of names) to import from (e.g. std_msgs.msg). Will be automatically deduced if None.
         :param configurable: (optional) Should the topic name and message queue size be dynamically configurable?
         :param scope: (optional) Either "global", "public" or "private". A "global" subscriber will subscribe to /topic,
         a "public" one to /namespace/topic and a "private" one to /namespace/node_name/topic.
@@ -236,6 +236,8 @@ class InterfaceGenerator(object):
 
         if not module:
             module = ".".join(normalized_message_type.split('::')[0:-1]) + '.msg'
+        if not header:
+            header = normalized_message_type.replace("::", "/") + ".h"
 
         watch = [publisher["name"] for publisher in watch]
 
@@ -243,8 +245,8 @@ class InterfaceGenerator(object):
         newparam = {
             'name': name,
             'type': normalized_message_type,
-            'header': header,
-            'import': module,
+            'header': header if isinstance(header, list) else [header],
+            'import': module if isinstance(module, list) else [module],
             'topic_param': topic_param,
             'queue_size_param': queue_size_param,
             'no_delay': no_delay,
@@ -288,8 +290,8 @@ class InterfaceGenerator(object):
         :param default_queue_size: (optional) Default queue size of the publisher.
         :param topic_param: (optional) Name of the param configuring the topic. Will be "<name>_topic" if None.
         :param queue_size_param: (optional) Name of param configuring the queue size. Defaults to "<name>_queue_size".
-        :param header: (optional) Header name to include. Will be deduced for message type if None.
-        :param module: (optional) Module to import from (e.g. std_msgs.msg). Will be automatically deduced if None.
+        :param header: (optional) Header name (or list of names) to include. Will be deduced for message type if None.
+        :param module: (optional) Module name (or list of names) to import from (e.g. std_msgs.msg). Will be automatically deduced if None.
         :param configurable: (optional) Should the topic name and message queue size be dynamically configurable?
         :param scope: (optional) Either "global", "public" or "private". A "global" subscriber will subscribe to /topic,
         a "public" one to /namespace/topic and a "private" one to /namespace/node_name/topic.
@@ -337,13 +339,15 @@ class InterfaceGenerator(object):
 
         if not module:
             module = ".".join(normalized_message_type.split('::')[0:-1]) + '.msg'
+        if not header:
+            header = normalized_message_type.replace("::", "/") + ".h"
 
         # add a publisher object
         newparam = {
             'name': name,
             'type': normalized_message_type,
-            'header': header,
-            'import': module,
+            'header': header if isinstance(header, list) else [header],
+            'import': module if isinstance(module, list) else [module],
             'topic_param': topic_param,
             'queue_size_param': queue_size_param,
             'configurable': configurable,
@@ -701,19 +705,16 @@ class InterfaceGenerator(object):
         for subscriber in subscribers:
             name = subscriber['name']
             type = subscriber['type']
-            header = subscriber['header']
+            headers = subscriber['header']
             description = subscriber['description']
             diagnosed = subscriber['diagnosed']
             watch = subscriber['watch']
 
             # add include entry
-            if header:
+            for header in headers:
                 include = "#include <{}>".format(header)
-            else:
-                type_slash = type.replace("::", "/")
-                include = "#include <{}.h>".format(type_slash)
-            if include not in includes:
-                includes.append(include)
+                if include not in includes:
+                    includes.append(include)
 
             # add subscriber entry
             if diagnosed and watch:
@@ -797,13 +798,10 @@ class InterfaceGenerator(object):
             diagnosed = publisher['diagnosed']
 
             # add include entry
-            if header:
+            for header in headers:
                 include = "#include <{}>".format(header)
-            else:
-                type_slash = type.replace("::", "/")
-                include = "#include <{}.h>".format(type_slash)
-            if include not in includes:
-                includes.append(include)
+                if include not in includes:
+                    includes.append(include)
 
             # add publisher entry
             if diagnosed:
@@ -991,9 +989,9 @@ class InterfaceGenerator(object):
         # generate import statements
         imports = set()
         for subscriber in self._get_subscribers():
-            imports.add("import {}".format(subscriber['import']))
+            imports.update("import {}".format(sub) for sub in subscriber['import'])
         for publisher in self._get_publishers():
-            imports.add("import {}".format(publisher['import']))
+            imports.update("import {}".format(pub) for pub in publisher['import'])
         imports = "\n".join(imports)
 
         # Read in template file
