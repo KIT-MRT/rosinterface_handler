@@ -793,7 +793,7 @@ class InterfaceGenerator(object):
         for publisher in publishers:
             name = publisher['name']
             type = publisher['type']
-            header = publisher['header']
+            headers = publisher['header']
             description = publisher['description']
             diagnosed = publisher['diagnosed']
 
