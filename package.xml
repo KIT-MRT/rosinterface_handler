@@ -1,5 +1,5 @@
 <?xml version="1.0"?>
-<package>
+<package format="2">
   <name>rosinterface_handler</name>
   <version>0.2.1</version>
   <description>An easy toolbox to generate interfaces from a node to the ROS world.</description>
@@ -10,7 +10,7 @@
   <url type="repository">https://github.com/cbandera/rosinterface_handler.git</url>
 
   <buildtool_depend>catkin</buildtool_depend>
-  <run_depend>catkin</run_depend>
+  <exec_depend>catkin</exec_depend>
   <build_depend>rostest</build_depend>
   <test_depend>roscpp</test_depend>
   <test_depend>dynamic_reconfigure</test_depend>
