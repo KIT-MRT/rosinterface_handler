@@ -151,7 +151,7 @@ class InterfaceGenerator(object):
 
         entry_strings = [str(e) for e in entry_strings]  # Make sure we only get strings
         if default is None:
-            default = 0
+            pass
         elif paramtype == 'int':
             default = entry_strings.index(default)
         elif default not in entry_strings:
