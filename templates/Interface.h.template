@@ -75,6 +75,7 @@ $test_limits
       rosinterface_handler::exit("RosinterfaceHandler: GetParam could net retrieve parameter.");
     }
     ROS_DEBUG_STREAM(*this);
+    rosinterface_handler::setLoggerLevel(privateNodeHandle_);
   }
 
   /// \brief Set parameters on ROS parameter server.
