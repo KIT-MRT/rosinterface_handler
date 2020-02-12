@@ -930,13 +930,13 @@ class InterfaceGenerator(object):
             # handle verbosity param
             if self.verbosity == name:
                 from_server.append(
-                    Template('    rosinterface_handler::setLoggerLevel(privateNodeHandle_, "$verbosity", nodeName());').substitute(
+                    Template('    rosinterface_handler::setLoggerLevel(privateNodeHandle_, "$verbosity", nodeNameWithNamespace());').substitute(
                         verbosity=self.verbosity))
                 if param['configurable']:
                     verb_check = Template(
                         '    if(config.$verbosity != this->$verbosity) {\n'
                         '        rosinterface_handler::setParam(privateNamespace_ + "$verbosity", config.$verbosity);\n'
-                        '        rosinterface_handler::setLoggerLevel(privateNodeHandle_, "$verbosity", nodeName());\n'
+                        '        rosinterface_handler::setLoggerLevel(privateNodeHandle_, "$verbosity", nodeNameWithNamespace());\n'
                         '    }').substitute(
                         verbosity=self.verbosity)
                     from_config.insert(0, verb_check)
