@@ -99,7 +99,7 @@ $fromConfig
   /// \brief Stream operator for printing parameter struct
   friend std::ostream& operator<<(std::ostream& os, const ${ClassName}Interface& p)
   {
-    os << "[" << p.nodeName_ << "]\nNode " << p.nodeName_ << " has the following parameters:\n"
+    os << "[" << p.nodeNameWithNamespace() << "]\nNode " << p.nodeNameWithNamespace() << " has the following parameters:\n"
 $string_representation;
     return os;
   }
@@ -114,34 +114,39 @@ $string_representation;
       return nodeName_;
   }
 
+  /// \brief returns the name of the node with its namespace (works in nodelets, too)
+  const std::string& nodeNameWithNamespace() const {
+      return privateNodeHandle_.getNamespace();
+  }
+
   /// \brief logs to the debug output. Works also within nodelets. Output is throttled.
   // NOLINTNEXTLINE(readability-function-size)
   inline void logDebug(const std::string& msg) const {
-      ROS_DEBUG_STREAM_NAMED(nodeName(), msg);
+      ROS_DEBUG_STREAM_NAMED(nodeNameWithNamespace(), msg);
   }
 
   /// \brief logs to the debug output. Works also within nodelets. Output is throttled.
   // NOLINTNEXTLINE(readability-function-size)
   inline void logInfo(const std::string& msg) const {
-      ROS_INFO_STREAM_THROTTLE_NAMED(5, nodeName(), msg);
+      ROS_INFO_STREAM_THROTTLE_NAMED(5, nodeNameWithNamespace(), msg);
   }
 
   /// \brief logs to the debug output. Works also within nodelets. Output is throttled.
   // NOLINTNEXTLINE(readability-function-size)
   inline void logWarn(const std::string& msg) const {
-      ROS_WARN_STREAM_THROTTLE_NAMED(5, nodeName(), msg);
+      ROS_WARN_STREAM_THROTTLE_NAMED(5, nodeNameWithNamespace(), msg);
   }
 
   /// \brief logs to the error output. Works also within nodelets. Output is throttled.
   // NOLINTNEXTLINE(readability-function-size)
   inline void logError(const std::string& msg) const {
-      ROS_ERROR_STREAM_THROTTLE_NAMED(5, nodeName(), msg);
+      ROS_ERROR_STREAM_THROTTLE_NAMED(5, nodeNameWithNamespace(), msg);
   }
 
   /// \brief logs to the error output. Works also within nodelets. Not throttled! Dont call this in loops!
   // NOLINTNEXTLINE(readability-function-size)
   inline void logErrorDirect(const std::string& msg) const {
-      ROS_ERROR_STREAM_NAMED(nodeName(), msg);
+      ROS_ERROR_STREAM_NAMED(nodeNameWithNamespace(), msg);
   }
 private:
   const std::string globalNamespace_;
