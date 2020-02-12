@@ -69,7 +69,7 @@ inline std::string getParentNamespace(const ros::NodeHandle& nodeHandle) {
 /// \param nodeHandle The ROS node handle to search for the parameter 'verbosity'.
 // NOLINTNEXTLINE
 inline void setLoggerLevel(const ros::NodeHandle& nodeHandle, const std::string& verbosityParam = "verbosity",
-                           const std::string& loggerName = ROSCONSOLE_DEFAULT_NAME) {
+                           const std::string& loggerName = "") {
 
     std::string verbosity;
     if (!nodeHandle.getParam(verbosityParam, verbosity)) {
@@ -93,14 +93,16 @@ inline void setLoggerLevel(const ros::NodeHandle& nodeHandle, const std::string&
         validVerbosity = false;
     }
     if (validVerbosity) {
-        if (ros::console::set_logger_level(loggerName, levelRos)) {
+        if (!loggerName.empty() &&
+            ros::console::set_logger_level(std::string(ROSCONSOLE_NAME_PREFIX) + "." + loggerName, levelRos)) {
             ros::console::notifyLoggerLevelsChanged();
-            ROS_DEBUG_STREAM("Verbosity set to " << verbosity);
+            ROS_DEBUG_STREAM_NAMED(loggerName, "Verbosity set to " << verbosity);
         }
         // If this is a node, additionally set the default logger, so that ROS_LOG works
-        if (loggerName != ROSCONSOLE_DEFAULT_NAME && getNodeName(ros::NodeHandle("~")) != loggerName &&
+        if ((loggerName.empty() || ros::NodeHandle("~").getNamespace() == loggerName) &&
             ros::console::set_logger_level(ROSCONSOLE_DEFAULT_NAME, levelRos)) {
             ros::console::notifyLoggerLevelsChanged();
+            ROS_DEBUG_STREAM("Verbosity set to " << verbosity);
         }
     }
 }
