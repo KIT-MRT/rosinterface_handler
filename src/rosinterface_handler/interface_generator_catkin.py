@@ -936,7 +936,7 @@ class InterfaceGenerator(object):
                     verb_check = Template(
                         '    if(config.$verbosity != this->$verbosity) {\n'
                         '        rosinterface_handler::setParam(privateNamespace_ + "$verbosity", config.$verbosity);\n'
-                        '        rosinterface_handler::setLoggerLevel(privateNodeHandle_, "$verbosity");\n'
+                        '        rosinterface_handler::setLoggerLevel(privateNodeHandle_, "$verbosity", nodeName());\n'
                         '    }').substitute(
                         verbosity=self.verbosity)
                     from_config.insert(0, verb_check)
