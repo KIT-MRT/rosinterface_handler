@@ -642,7 +642,7 @@ class InterfaceGenerator(object):
             f.write(template)
         os.chmod(cfg_file, 509)  # entspricht 775 (octal)
         # calling sync mitigate issues in docker (see https://github.com/moby/moby/issues/9547)
-        subprocess.check_call(["sync", cfg_file])
+        subprocess.check_call(["sync", "-f", cfg_file])
 
     def _generatehpp(self):
         """
