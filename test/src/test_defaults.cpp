@@ -1,5 +1,6 @@
 #include <gtest/gtest.h>
 #include <rosinterface_handler/DefaultsInterface.h>
+#include <rosinterface_handler/simple_node_status.hpp>
 
 using IfType = rosinterface_handler::DefaultsInterface;
 using ConfigType = rosinterface_handler::DefaultsConfig;
@@ -26,6 +27,12 @@ TEST(RosinterfaceHandler, DefaultParams) { // NOLINT(readability-function-size)
     ASSERT_EQ(1, testInterface.enum_int_param_w_default);
     ASSERT_EQ("One", testInterface.enum_str_param_w_default);
     testInterface.showNodeInfo();
+}
+
+TEST(RosinterfaceHandler, NodeStatus) {
+    IfType testInterface(ros::NodeHandle("~"));
+    testInterface.nodeStatus.set(rosinterface_handler::NodeStatus::ERROR, "Test error");
+    testInterface.nodeStatus.set(rosinterface_handler::NodeStatus::OK, "Initialized");
 }
 
 TEST(RosinterfaceHandler, DefaultSubscriber) {
