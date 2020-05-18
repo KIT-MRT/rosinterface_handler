@@ -15,6 +15,7 @@ publisher_description = $publisherDescription
 verbosity_param = $verbosityParam
 tf_config = $tfConfig
 with_diagnostics = $diagnosticsEnabled
+simplified_diagnostics = $simplifiedDiagnostics
 
 if subscriber_description:
     # only import if necessary
@@ -34,6 +35,28 @@ for subscriber in subscriber_description:
 for publisher in publisher_description:
     defaults[publisher['name']] = None
 
+class _SimplifiedNodeStatus:
+    def __init__(self, updater):
+        self._updater = updater
+        self._updater.add("status", self.get_status)
+        self._s = diagnostic_msgs.msg.DiagnosticStatus.STALE
+        self._msg = "Initializing"
+        self._timer = rospy.Timer(rospy.Duration(1.01), lambda event: self._updater.update(), oneshot=False)
+
+    def set(self, diagnostic_status, message):
+        """
+        Update the status of this node. To be called via the interface class as
+        Interface.node_status.set(DiagnosticStatus.OK, "Everything ok")
+        """
+        new_status = diagnostic_status != self._s and self._msg != message
+        self._s = diagnostic_status
+        self._msg = message
+        if new_status and self._s == diagnostic_msgs.msg.DiagnosticStatus.ERROR:
+            self._updater.force_update()
+
+    def get_status(self, status_wrapper):
+        status_wrapper.summary(self._s, self._msg)
+
 
 class ${ClassName}Interface(dict):
     def __init__(self):
@@ -45,6 +68,8 @@ class ${ClassName}Interface(dict):
             from diagnostic_updater import Updater
             self["updater"] = Updater()
             self["updater"].setHardwareID("none")
+            if simplified_diagnostics:
+                self["node_status"] = _SimplifiedNodeStatus(self["updater"])
 
     __getattr__ = dict.__getitem__
     __setattr__ = dict.__setitem__
