@@ -219,7 +219,14 @@ In the end, your interface object will have three more members: A tf_buffer, a t
 - **listener_name**: Optional: Name of the tf2_ros::TransformListener member in the interface object. Will not be created if `None`
 - **broadcaster_name**: Optional: Name of the tf2_ros::TransformBroadcaster member in the interface object. Will not be created if `None`
 
-### Diagnosed publishers
+### Diagnostics
+Diagnostics allow your to monitor the status of your node in the context of the whole system without spamming the console (e.g. via `rqt_robot_monitor`).
+
+This is enabled via `gen.add_diagnostic_updater(simplified_diagnostics=True)` and by adding `diagnostic_updater` as dependency to the package.xml.
+
+With `simplified_diagnostics` enabled, the node will autmatically share its current state. If it is *False*, you have to do that for yourself, but have the opportunity to implement a more fine granular status report.
+
+#### Diagnosed publishers/subsrcibers
 Diagnosed publisher/subscriber are created by passing `diagnosed=True` to the add_subscriber/publisher definition in the interface file.
 Before you do this, you must add a line `gen.add_diagnostic_updater()` to your file and not forget to add _diagnostic_updater_ as a dependency to your package.
 You can control the expected minimal frequency by setting the respective parameter. The delay of the messages can be monitored like this as well.

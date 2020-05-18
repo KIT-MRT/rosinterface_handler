@@ -56,6 +56,7 @@ class InterfaceGenerator(object):
         self.verbosity = None
         self.parent = parent
         self.diagnostics_enabled = False
+        self.simplified_diagnostics = False
         if group:
             self.group = group
         else:
@@ -63,8 +64,7 @@ class InterfaceGenerator(object):
         self.group_variable = "".join(filter(str.isalnum, self.group))
 
         if len(sys.argv) != 5:
-            eprint(
-                "InterfaceGenerator: Unexpected amount of args, did you try to call this directly? You shouldn't do this!")
+            eprint("InterfaceGenerator: Unexpected arguments, did you call this directly? You shouldn't do this!")
 
         self.dynconfpath = sys.argv[1]
         self.share_dir = sys.argv[2]
@@ -98,19 +98,23 @@ class InterfaceGenerator(object):
         else:
             self.add(name, description='Sets the verbosity for this node', paramtype='std::string', default=default)
 
-    def add_diagnostic_updater(self):
+    def add_diagnostic_updater(self, simplified_status=False):
         """
         Adds a diagnostic updater to the interface struct. Make sure your project depends on the diagnostic_updater
-        package. Must be called before adding any diagnostic-enabled publishers/subscribers
+        package. Must be called before adding any diagnostic-enabled publishers/subscribers.
+        Unless simplified_status is true, the node must ensure to regularly call interface.updater.update().
+        :param simplified_status: Enables simplified status updates,
+        e.g. interface.nodeStatus.set(NodeStatus::Error, "something is wrong");
         :return:
         """
         if self.parent:
-            eprint("You can not call add_diagnostic_updater on a group! Call it on the main parameter generator instead!")
+            eprint("You can't call add_diagnostic_updater on a group! Call it on the main parameter generator instead!")
         self.diagnostics_enabled = True
+        self.simplified_diagnostics = simplified_status
 
     def add_tf(self, buffer_name="tf_buffer", listener_name="tf_listener", broadcaster_name=None):
         """
-        Adds tf transformer/broadcaster as members to the interface object. Don't forget to depend your package on tf2_ros.
+        Adds tf transformer/broadcaster as members to the interface object. Don't forget to depend on tf2_ros.
         :param buffer_name: Name of the tf2_ros::Buffer member in the interface object
         :param listener_name: Name of the tf2_ros::TransformListener member in the interface object.
         Will not be created if none.
@@ -182,7 +186,8 @@ class InterfaceGenerator(object):
         :param topic_param: (optional) Name of the param configuring the topic. Will be "<name>_topic" if None.
         :param queue_size_param: (optional) Name of param configuring the queue size. Defaults to "<name>_queue_size".
         :param header: (optional) Header name (or a list of names) to include. Will be deduced for message type if None.
-        :param module: (optional) Module name (or a list of names) to import from (e.g. std_msgs.msg). Will be automatically deduced if None.
+        :param module: (optional) Module name (or a list of names) to import from (e.g. std_msgs.msg).
+        Will be automatically deduced if None.
         :param configurable: (optional) Should the topic name and message queue size be dynamically configurable?
         :param scope: (optional) Either "global", "public" or "private". A "global" subscriber will subscribe to /topic,
         a "public" one to /namespace/topic and a "private" one to /namespace/node_name/topic.
@@ -191,7 +196,8 @@ class InterfaceGenerator(object):
         :param diagnosed: (optional) Enables diagnostics for the subscriber. Can be configured with the params below.
         The message must have a header. Not yet supported for python.
         :param min_frequency: (optional) Sets the default minimum frequency for the subscriber
-        :param min_frequency_param: (optional) Sets the parameter for the minimum frequency. Defaults to <name>_min_frequency
+        :param min_frequency_param: (optional) Sets the parameter for the minimum frequency.
+        Defaults to <name>_min_frequency
         :param max_delay: (optional) Sets the default maximal header delay for the topics in seconds.
         :param max_delay_param: (optional) Parameter for the maximal delay. Defaults to <name>_max_delay.
         :param watch: (optional) a list of connected publishers added with add_publisher. If it is nonempty,
@@ -291,7 +297,8 @@ class InterfaceGenerator(object):
         :param topic_param: (optional) Name of the param configuring the topic. Will be "<name>_topic" if None.
         :param queue_size_param: (optional) Name of param configuring the queue size. Defaults to "<name>_queue_size".
         :param header: (optional) Header name (or list of names) to include. Will be deduced for message type if None.
-        :param module: (optional) Module name (or list of names) to import from (e.g. std_msgs.msg). Will be automatically deduced if None.
+        :param module: (optional) Module name (or list of names) to import from (e.g. std_msgs.msg).
+        Will be automatically deduced if None.
         :param configurable: (optional) Should the topic name and message queue size be dynamically configurable?
         :param scope: (optional) Either "global", "public" or "private". A "global" subscriber will subscribe to /topic,
         a "public" one to /namespace/topic and a "private" one to /namespace/node_name/topic.
@@ -300,7 +307,8 @@ class InterfaceGenerator(object):
         :param diagnosed: (optional) Enables diagnostics for the publisher. Can be configured with the params below.
         The message must have a header. Not yet supported for python.
         :param min_frequency: (optional) Sets the default minimum frequency for the publisher
-        :param min_frequency_param: (optional) Sets the parameter for the minimum frequency. Defaults to <name>_min_frequency
+        :param min_frequency_param: (optional) Sets the parameter for the minimum frequency.
+        Defaults to <name>_min_frequency
         :param max_delay: (optional) Sets the default maximal header delay for the topics in seconds.
         :param max_delay_param: (optional) Parameter for the maximal delay. Defaults to <name>_max_delay.
         :return: a configuration dict for the created publisher
@@ -685,10 +693,14 @@ class InterfaceGenerator(object):
             includes.append('#include <rosinterface_handler/smart_subscriber.hpp>')
 
         if self.diagnostics_enabled:
-            param_entries.append('  diagnostic_updater::Updater updater;')
-            subscribers_init.append(',\n    updater{ros::NodeHandle(), private_node_handle, "/"+nodeName_}')
+            param_entries.append('  diagnostic_updater::Updater updater; /*!< Manages diagnostics of this node */')
+            subscribers_init.append(',\n    updater{ros::NodeHandle(), private_node_handle, "/" + nodeName_}')
             includes.append('#include <rosinterface_handler/diagnostic_subscriber.hpp>')
             from_server.append('    updater.setHardwareID("none");')
+            if self.simplified_diagnostics:
+                param_entries.append('  SimpleNodeStatus nodeStatus; /*!< Reports the status of this node */')
+                subscribers_init.append(',\n    nodeStatus{nodeName_ + " status", private_node_handle, updater}')
+                includes.append('#include <rosinterface_handler/simple_node_status.hpp>')
 
         if self.tf:
             listener = self.tf["listener_name"]
@@ -696,14 +708,14 @@ class InterfaceGenerator(object):
             broadcaster = self.tf["broadcaster_name"]
             if buffer:
                 includes.append('#include <tf2_ros/buffer.h>')
-                param_entries.append('tf2_ros::Buffer {};'.format(buffer))
+                param_entries.append('  tf2_ros::Buffer {};'.format(buffer))
             if listener:
                 includes.append('#include <tf2_ros/transform_listener.h>')
-                param_entries.append('tf2_ros::TransformListener {};'.format(listener))
+                param_entries.append('  tf2_ros::TransformListener {};'.format(listener))
                 subscribers_init.append(',\n    {}{{{}}}'.format(listener, buffer))
             if broadcaster:
                 includes.append('#include <tf2_ros/transform_broadcaster.h>')
-                param_entries.append('tf2_ros::TransformBroadcaster {};'.format(broadcaster))
+                param_entries.append('  tf2_ros::TransformBroadcaster {};'.format(broadcaster))
 
         first = True
         for subscriber in subscribers:
@@ -748,7 +760,7 @@ class InterfaceGenerator(object):
             space = "" if first else '", " +'
             first = False
             print_subscribed.append(Template('      message += $space $name->getTopic();').substitute(name=name,
-                                                                                                     space=space))
+                                                                                                      space=space))
 
             # add subscribe for parameter server
             topic_param = subscriber['topic_param']
@@ -829,7 +841,7 @@ class InterfaceGenerator(object):
             space = "" if first else '", " +'
             first = False
             print_advertised.append(Template('      message += $space $name.getTopic();').substitute(name=name,
-                                                                                              space=space))
+                                                                                                     space=space))
 
             # add advertise for parameter server
             topic_param = publisher['topic_param']
@@ -916,8 +928,9 @@ class InterfaceGenerator(object):
             else:
                 param_entries.append(Template('  ${type} ${name}; /*!< ${description} */').substitute(
                     type=param['type'], name=name, description=param['description']))
-                from_server.append(Template('    success &= rosinterface_handler::getParam($paramname, $name$default);').substitute(
-                    paramname=full_name, name=name, default=default, description=param['description']))
+                from_server.append(Template('    success &= rosinterface_handler::getParam($paramname, $name$default);')
+                                   .substitute(paramname=full_name, name=name,
+                                               default=default, description=param['description']))
                 to_server.append(
                     Template('    rosinterface_handler::setParam(${paramname},${name});').substitute(
                         paramname=full_name, name=name))
@@ -948,8 +961,8 @@ class InterfaceGenerator(object):
 
             # handle verbosity param
             if self.verbosity == name:
-                from_server.append(
-                    Template('    rosinterface_handler::setLoggerLevel(privateNodeHandle_, "$verbosity", nodeNameWithNamespace());').substitute(
+                from_server.append(Template('    rosinterface_handler::setLoggerLevel(privateNodeHandle_, "$verbosity",'
+                                            ' nodeNameWithNamespace());').substitute(
                         verbosity=self.verbosity))
                 if param['configurable']:
                     verb_check = Template(
@@ -1001,6 +1014,9 @@ class InterfaceGenerator(object):
             imports.update("import {}".format(sub) for sub in subscriber['import'])
         for publisher in self._get_publishers():
             imports.update("import {}".format(pub) for pub in publisher['import'])
+        if self.simplified_diagnostics:
+            imports.add("import rospy")
+            imports.add("import diagnostic_msgs")
         imports = "\n".join(imports)
 
         # Read in template file
@@ -1014,7 +1030,8 @@ class InterfaceGenerator(object):
                                                 publisherDescription=publisherDescription,
                                                 verbosityParam=verbosityParam,
                                                 tfConfig=self.tf,
-                                                diagnosticsEnabled=self.diagnostics_enabled)
+                                                diagnosticsEnabled=self.diagnostics_enabled,
+                                                simplifiedDiagnostics=self.simplified_diagnostics)
 
         py_file = os.path.join(self.py_gen_dir, "interface", self.classname + "Interface.py")
         try:

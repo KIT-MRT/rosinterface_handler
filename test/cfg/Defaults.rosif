@@ -9,7 +9,7 @@ from rosinterface_handler.interface_generator_catkin import *
 gen = InterfaceGenerator()
 
 gen.add_verbosity_param("verbosity_param_w_default", configurable=False, default='info')
-gen.add_diagnostic_updater()
+gen.add_diagnostic_updater(simplified_status=True)
 gen.add_tf(buffer_name="tf_buffer", listener_name="tf_listener", broadcaster_name="tf_broadcaster")
 
 # Parameters with different types
