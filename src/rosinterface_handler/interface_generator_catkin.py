@@ -656,6 +656,7 @@ class InterfaceGenerator(object):
         with open(templatefile, 'r') as f:
             template = f.read()
 
+        substitutions = {"pkgname": self.pkgname, "ClassName": self.classname, "nodename": self.nodename}
         param_entries = []
         string_representation = []
         from_server = []
@@ -669,14 +670,16 @@ class InterfaceGenerator(object):
         subscriber_entries = []
         subscribers_init = []
         publisher_entries = []
+        print_subscribed = []
+        print_advertised = []
 
         subscribers = self._get_subscribers()
         publishers = self._get_publishers()
         if subscribers or publishers:
-            include_error = "#error message_filters was not found during compilation. " \
-                            "Please recompile with message_filters."
+            substitutions["includeError"] = "#error message_filters was not found during compilation. " \
+                                             "Please recompile with message_filters."
         else:
-            include_error = ""
+            substitutions["includeError"] = ""
 
         if any(subscriber["watch"] for subscriber in subscribers):
             includes.append('#include <rosinterface_handler/smart_subscriber.hpp>')
@@ -702,6 +705,7 @@ class InterfaceGenerator(object):
                 includes.append('#include <tf2_ros/transform_broadcaster.h>')
                 param_entries.append('tf2_ros::TransformBroadcaster {};'.format(broadcaster))
 
+        first = True
         for subscriber in subscribers:
             name = subscriber['name']
             type = subscriber['type']
@@ -739,6 +743,12 @@ class InterfaceGenerator(object):
             # add initialisation
             subscribers_init.append(Template(',\n    $name{std::make_shared<$subscriber>(${init})}')
                                     .substitute(name=name, subscriber=subscriber_type, init=init))
+
+            # add printing
+            space = "" if first else '", " +'
+            first = False
+            print_subscribed.append(Template('      message += $space $name->getTopic();').substitute(name=name,
+                                                                                                     space=space))
 
             # add subscribe for parameter server
             topic_param = subscriber['topic_param']
@@ -790,6 +800,7 @@ class InterfaceGenerator(object):
                     from_config.append(Template('    $name->updateTopics();').substitute(name=name))
                     test_limits.append(from_config[-1])
 
+        first = True
         for publisher in publishers:
             name = publisher['name']
             type = publisher['type']
@@ -813,6 +824,12 @@ class InterfaceGenerator(object):
 
             publisher_entries.append(Template('  $publisher ${name}$init; /*!< $description */').substitute(
                 publisher=publish, name=name, description=description, init=init))
+
+            # add printing
+            space = "" if first else '", " +'
+            first = False
+            print_advertised.append(Template('      message += $space $name.getTopic();').substitute(name=name,
+                                                                                              space=space))
 
             # add advertise for parameter server
             topic_param = publisher['topic_param']
@@ -851,12 +868,14 @@ class InterfaceGenerator(object):
                                                     '    }').substitute(name=name, type=type, topic=topic_param,
                                                                         queue=queue_size_param,
                                                                         namespace=name_space))
-        includes = "\n".join(includes)
-        subscriber_entries = "\n".join(subscriber_entries)
-        publisher_entries = "\n".join(publisher_entries)
-        sub_adv_from_server = "\n".join(sub_adv_from_server)
-        sub_adv_from_config = "\n".join(sub_adv_from_config)
-        subscribers_init = "".join(subscribers_init)
+        substitutions["includes"] = "\n".join(includes)
+        substitutions["subscribers"] = "\n".join(subscriber_entries)
+        substitutions["publishers"] = "\n".join(publisher_entries)
+        substitutions["subscribeAdvertiseFromParamServer"] = "\n".join(sub_adv_from_server)
+        substitutions["subscribeAdvertiseFromConfig"] = "\n".join(sub_adv_from_config)
+        substitutions["print_advertised"] = "\n".join(print_advertised)
+        substitutions["print_subscribed"] = "\n".join(print_subscribed)
+        substitutions["initSubscribers"] = "".join(subscribers_init)
 
         params = self._get_parameters()
 
@@ -941,24 +960,14 @@ class InterfaceGenerator(object):
                         verbosity=self.verbosity)
                     from_config.insert(0, verb_check)
 
-        param_entries = "\n".join(param_entries)
-        string_representation = "".join(string_representation)
-        non_default_params = "".join(non_default_params)
-        from_server = "\n".join(from_server)
-        to_server = "\n".join(to_server)
-        from_config = "\n".join(from_config)
-        test_limits = "\n".join(test_limits)
-        content = Template(template).substitute(pkgname=self.pkgname, ClassName=self.classname,
-                                                parameters=param_entries, fromConfig=from_config,
-                                                fromParamServer=from_server,
-                                                string_representation=string_representation,
-                                                non_default_params=non_default_params, nodename=self.nodename,
-                                                test_limits=test_limits, toParamServer=to_server,
-                                                includes=includes, includeError=include_error,
-                                                subscribeAdvertiseFromParamServer=sub_adv_from_server,
-                                                subscribeAdvertiseFromConfig=sub_adv_from_config,
-                                                subscribers=subscriber_entries, publishers=publisher_entries,
-                                                initSubscribers=subscribers_init)
+        substitutions["parameters"] = "\n".join(param_entries)
+        substitutions["string_representation"] = "".join(string_representation)
+        substitutions["non_default_params"] = "".join(non_default_params)
+        substitutions["fromParamServer"] = "\n".join(from_server)
+        substitutions["toParamServer"] = "\n".join(to_server)
+        substitutions["fromConfig"] = "\n".join(from_config)
+        substitutions["test_limits"] = "\n".join(test_limits)
+        content = Template(template).substitute(**substitutions)
 
         header_file = os.path.join(self.cpp_gen_dir, self.classname + "Interface.h")
         try:
