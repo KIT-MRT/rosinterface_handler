@@ -108,7 +108,8 @@ inline void setLoggerLevel(const ros::NodeHandle& nodeHandle, const std::string&
 }
 
 /// \brief Show summary about node containing name, namespace, subscribed and advertised topics.
-inline void showNodeInfo() {
+[[deprecated("It doesn't work well on nodelets. Use interfaceObject.showNodeInfo() instead!")]] inline void
+showNodeInfo() {
 
     using namespace ros::this_node;
 
