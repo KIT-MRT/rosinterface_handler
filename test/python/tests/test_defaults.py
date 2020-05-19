@@ -3,6 +3,7 @@ from rosinterface_handler.interface.DefaultsInterface import DefaultsInterface
 import rospy
 import diagnostic_updater
 
+
 class TestDefaults(unittest.TestCase):
     def test_defaults(self):
         """

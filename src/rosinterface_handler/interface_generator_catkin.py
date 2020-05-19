@@ -685,7 +685,7 @@ class InterfaceGenerator(object):
         publishers = self._get_publishers()
         if subscribers or publishers:
             substitutions["includeError"] = "#error message_filters was not found during compilation. " \
-                                             "Please recompile with message_filters."
+                "Please recompile with message_filters."
         else:
             substitutions["includeError"] = ""
 
@@ -698,7 +698,8 @@ class InterfaceGenerator(object):
             includes.append('#include <rosinterface_handler/diagnostic_subscriber.hpp>')
             from_server.append('    updater.setHardwareID("none");')
             if self.simplified_diagnostics:
-                param_entries.append('  rosinterface_handler::SimpleNodeStatus nodeStatus; /*!< Reports the status of this node */')
+                param_entries.append(
+                    '  rosinterface_handler::SimpleNodeStatus nodeStatus; /*!< Reports the status of this node */')
                 subscribers_init.append(',\n    nodeStatus{"status", private_node_handle, updater}')
                 includes.append('#include <rosinterface_handler/simple_node_status.hpp>')
 
@@ -963,7 +964,7 @@ class InterfaceGenerator(object):
             if self.verbosity == name:
                 from_server.append(Template('    rosinterface_handler::setLoggerLevel(privateNodeHandle_, "$verbosity",'
                                             ' nodeNameWithNamespace());').substitute(
-                        verbosity=self.verbosity))
+                    verbosity=self.verbosity))
                 if param['configurable']:
                     verb_check = Template(
                         '    if(config.$verbosity != this->$verbosity) {\n'
