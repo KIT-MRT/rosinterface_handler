@@ -65,18 +65,18 @@ public:
     // NOLINTNEXTLINE(readability-identifier-naming)
     explicit SmartSubscriber(const PublishersT&... trackedPublishers) {
         // check for always-on-mode
-        const auto smartSubscribe = std::getenv("NO_SMART_SUBSCRIBE");
+        const auto* smartSubscribe = std::getenv("NO_SMART_SUBSCRIBE");
         try {
             if (smartSubscribe && std::stoi(smartSubscribe) > 0) {
                 setSmart(false);
             }
         } catch (const std::invalid_argument&) {
         }
-        ros::SubscriberStatusCallback cb = boost::bind(&SmartSubscriber::subscribeCallback, this);
+        ros::SubscriberStatusCallback cb = [this](const ros::SingleSubscriberPublisher& /*s*/) { subscribeCallback(); };
         callback_ = boost::make_shared<ros::SubscriberCallbacks>(cb, cb, alivePtr_, ros::getGlobalCallbackQueue());
 
         publisherInfo_.reserve(sizeof...(trackedPublishers));
-        using Workaround = int[];
+        using Workaround = int[]; // NOLINT
         Workaround{(addPublisher(trackedPublishers), 0)...};
     }
     SmartSubscriber(SmartSubscriber&& rhs) noexcept = delete;
@@ -90,8 +90,8 @@ public:
         for (auto& pub : publisherInfo_) {
             removeCallback(pub.topic);
         }
-        callback_->disconnect_ = +[](const ros::SingleSubscriberPublisher&) {};
-        callback_->connect_ = +[](const ros::SingleSubscriberPublisher&) {};
+        callback_->disconnect_ = +[](const ros::SingleSubscriberPublisher& /*s*/) {};
+        callback_->connect_ = +[](const ros::SingleSubscriberPublisher& /*s*/) {};
     }
 
     /**
@@ -220,7 +220,7 @@ public:
      * @brief pass this callback to all non-standard publisher that you have
      * @return subscriber callback of this SmartSubscriber
      */
-    const ros::SubscriberCallbacksPtr callback() const {
+    const ros::SubscriberCallbacksPtr& callback() const {
         return callback_;
     }
 

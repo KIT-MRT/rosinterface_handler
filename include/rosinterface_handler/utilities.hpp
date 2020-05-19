@@ -59,7 +59,7 @@ inline std::string getNodeName(const ros::NodeHandle& privateNodeHandle) {
 /// ros::NodeHandle("~") ).
 /// @return parent namespace or "/"
 inline std::string getParentNamespace(const ros::NodeHandle& nodeHandle) {
-    auto& nameSpace = nodeHandle.getNamespace();
+    const auto& nameSpace = nodeHandle.getNamespace();
     std::string parentNameSpace = nameSpace.substr(0, nameSpace.find_last_of('/'));
     return parentNameSpace.empty() ? "/" : parentNameSpace;
 }
@@ -113,11 +113,13 @@ showNodeInfo() {
 
     using namespace ros::this_node;
 
-    std::vector<std::string> subscribedTopics, advertisedTopics;
+    std::vector<std::string> subscribedTopics;
+    std::vector<std::string> advertisedTopics;
     getSubscribedTopics(subscribedTopics);
     getAdvertisedTopics(advertisedTopics);
 
-    std::ostringstream msgSubscr, msgAdvert;
+    std::ostringstream msgSubscr;
+    std::ostringstream msgAdvert;
     for (auto const& t : subscribedTopics) {
         msgSubscr << t << std::endl;
     }
@@ -167,13 +169,13 @@ template <typename T>
 inline bool getParamImpl(const std::string key, T& val) {
     if (!ros::param::has(key)) {
         return false;
-    } else if (!ros::param::get(key, val)) {
+    }
+    if (!ros::param::get(key, val)) {
         ROS_ERROR_STREAM("Could not retrieve parameter'" << key << "'. Does it have a different type?");
         return false;
-    } else {
-        // Param was already retrieved with last if statement.
-        return true;
     }
+    // Param was already retrieved with last if statement.
+    return true;
 }
 
 /// \brief Get parameter from ROS parameter server or print error
@@ -186,10 +188,9 @@ inline bool getParam(const std::string key, T& val) {
     if (!getParamImpl(key, val)) {
         ROS_ERROR_STREAM("Parameter '" << key << "' is not defined.");
         return false;
-    } else {
-        // Param was already retrieved with last if statement.
-        return true;
     }
+    // Param was already retrieved with last if statement.
+    return true;
 }
 
 /// \brief Get parameter from ROS parameter server or use default value
@@ -206,10 +207,9 @@ inline bool getParam(const std::string key, T& val, const T& defaultValue) {
         ros::param::set(key, defaultValue);
         ROS_INFO_STREAM("Parameter '" << key << "' is not defined. Setting default value.");
         return true;
-    } else {
-        // Param was already retrieved with last if statement.
-        return true;
     }
+    // Param was already retrieved with last if statement.
+    return true;
 }
 
 /// \brief Tests that parameter is not set on the parameter server
@@ -219,9 +219,8 @@ inline bool testConstParam(const std::string& key) {
         ROS_WARN_STREAM("Parameter " << key
                                      << "' was set on the parameter server eventhough it was defined to be constant.");
         return false;
-    } else {
-        return true;
     }
+    return true;
 }
 
 /// \brief Limit parameter to lower bound if parameter is a scalar.
