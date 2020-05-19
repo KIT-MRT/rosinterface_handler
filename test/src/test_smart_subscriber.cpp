@@ -14,7 +14,7 @@ public:
         sub = nh.subscribe("/input", 5, &TestNode::msgCallback, this);
         smartSub.subscribe(nh, "/input", 5);
         smartSub.addPublisher(pub);
-        smartSub.registerCallback(boost::bind(&TestNode::smartMsgCallback, this, _1));
+        smartSub.registerCallback([this](auto&& msg) { smartMsgCallback(msg); });
     }
     int msgCount{0};
     int smartMsgCount{0};
@@ -39,12 +39,12 @@ class ImageNode {
 
 public:
     ImageNode() : transport(ros::NodeHandle()) {
-        image_transport::SubscriberStatusCallback cb = boost::bind(&SmartSub::subscribeCallback, &smartSub);
+        image_transport::SubscriberStatusCallback cb = [this](const auto& /*s*/) { smartSub.subscribeCallback(); };
         pub = transport.advertise("/img_out", 5, cb, cb);
         ros::NodeHandle nh;
         smartSub.subscribe(nh, "/img_in", 5);
         smartSub.addPublisher(pub);
-        smartSub.registerCallback(boost::bind(&ImageNode::imgCallback, this, _1));
+        smartSub.registerCallback([this](auto&& msg) { imgCallback(msg); });
     }
     int msgCount{0};
     int smartMsgCount{0};

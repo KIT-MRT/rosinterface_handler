@@ -1,6 +1,7 @@
 import unittest
 from rosinterface_handler.interface.DefaultsInterface import DefaultsInterface
 import rospy
+import diagnostic_updater
 
 
 class TestDefaults(unittest.TestCase):
@@ -27,6 +28,11 @@ class TestDefaults(unittest.TestCase):
         self.assertEqual(params.map_param_w_default, {"Hello": "World"})
         self.assertEqual(params.enum_int_param_w_default, 1)
         self.assertEqual(params.enum_str_param_w_default, "One")
+
+    def test_node_status(self):
+        params = DefaultsInterface()
+        params.node_status.set(diagnostic_updater.DiagnosticStatus.ERROR, "test error")
+        params.node_status.set(diagnostic_updater.DiagnosticStatus.OK, "ok")
 
     def test_defaults_subscriber(self):
         params = DefaultsInterface()
