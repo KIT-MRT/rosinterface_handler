@@ -31,7 +31,7 @@ class SimpleNodeStatus {
 public:
     SimpleNodeStatus(const std::string& statusDescription, const ros::NodeHandle& privNh,
                      diagnostic_updater::Updater& updater)
-            : updateStatus_{privNh.createTimer(ros::Duration(1.01), [&](const auto&) { updater_->update(); })},
+            : updateStatus_{privNh.createTimer(ros::Duration(1.01), [&](const auto& /*s*/) { updater_->update(); })},
               updater_{&updater} {
         updater_->add(statusDescription, [this](StatusWrapper& w) { this->getStatus(w); });
         updater_->force_update();

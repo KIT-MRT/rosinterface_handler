@@ -9,7 +9,7 @@ class DummyUpdater : public diagnostic_updater::Updater {
 public:
     void forceUpdate() {
         statusVec.clear();
-        for (auto& task : getTasks()) {
+        for (const auto& task : getTasks()) {
             diagnostic_updater::DiagnosticStatusWrapper status;
 
             status.name = task.getName();
@@ -36,6 +36,8 @@ protected:
         sub.minFrequency(10).maxTimeDelay(1);
         messageCounter = 0;
     }
+
+public:
     ros::NodeHandle nh;
     DummyUpdater updater;
     DiagPub pub{updater};
@@ -44,7 +46,7 @@ protected:
 };
 
 TEST_F(TestDiagnosedPubSub, publishAndReceiveOK) {
-    auto onTimer = [this](ros::TimerEvent e) {
+    auto onTimer = [this](const ros::TimerEvent& e) {
         this->messageCounter++;
         auto msg = boost::make_shared<MsgT>();
         msg->header.stamp = e.current_real;
@@ -62,7 +64,7 @@ TEST_F(TestDiagnosedPubSub, publishAndReceiveOK) {
 }
 
 TEST_F(TestDiagnosedPubSub, publishAndReceiveFail) {
-    auto onTimer = [this](ros::TimerEvent e) {
+    auto onTimer = [this](const ros::TimerEvent& e) {
         this->messageCounter++;
         auto msg = boost::make_shared<MsgT>();
         msg->header.stamp = e.current_real - ros::Duration(1.5);
@@ -82,7 +84,7 @@ TEST_F(TestDiagnosedPubSub, publishAndReceiveFail) {
 TEST_F(TestDiagnosedPubSub, overrideTopic) {
     this->sub.subscribe(nh, "new_topic", 5);
     this->pub = nh.advertise<MsgT>("new_topic", 5);
-    auto onTimer = [this](ros::TimerEvent e) {
+    auto onTimer = [this](const ros::TimerEvent& e) {
         this->messageCounter++;
         auto msg = boost::make_shared<MsgT>();
         msg->header.stamp = e.current_real;
@@ -101,7 +103,7 @@ TEST_F(TestDiagnosedPubSub, overrideTopic) {
 
 TEST_F(TestDiagnosedPubSub, assign) {
     this->pub = DiagPub(updater);
-    auto onTimer = [this](ros::TimerEvent e) {
+    auto onTimer = [this](const ros::TimerEvent& e) {
         this->messageCounter++;
         auto msg = boost::make_shared<MsgT>();
         msg->header.stamp = e.current_real;
