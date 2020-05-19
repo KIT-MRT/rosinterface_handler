@@ -97,7 +97,7 @@ No more action is required on them. However, the `updater` member inside your In
 that needs to be called regularly so that updates are published. Refer to the documentation of `diagnostic_updater` for more information.
 
 
-Calling the `update()` function is **not** necessary if you are the diagnostics with `simplified_status=True`. In that case, the
+Calling the `update()` function is **not** necessary if you are using diagnostics with `simplified_status=True`. In that case, the
 `nodeStatus` member of the Interface object will do the job for you.
 
 You are suppoed to use this member in order to share the current state of the node. This could look like this:

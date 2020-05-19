@@ -31,6 +31,7 @@ class SimpleNodeStatus {
 public:
     SimpleNodeStatus(const std::string& statusDescription, const ros::NodeHandle& privNh,
                      diagnostic_updater::Updater& updater)
+            // update() only has an effect every second, we need a slightly higher value to get a guaranteed update
             : updateStatus_{privNh.createTimer(ros::Duration(1.01), [&](const auto& /*s*/) { updater_->update(); })},
               updater_{&updater} {
         updater_->add(statusDescription, [this](StatusWrapper& w) { this->getStatus(w); });
