@@ -220,7 +220,7 @@ In the end, your interface object will have three more members: A tf_buffer, a t
 - **broadcaster_name**: Optional: Name of the tf2_ros::TransformBroadcaster member in the interface object. Will not be created if `None`
 
 ### Diagnostics
-Diagnostics allow your to monitor the status of your node in the context of the whole system without spamming the console (e.g. via `rqt_runtime_monitor`).
+Diagnostics allow you to monitor the status of your node in the context of the whole system without spamming the console (e.g. via `rqt_runtime_monitor`).
 
 This is enabled via `gen.add_diagnostic_updater(simplified_status=True)` and by adding `diagnostic_updater` as dependency to the package.xml.
 
