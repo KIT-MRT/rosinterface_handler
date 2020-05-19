@@ -1,4 +1,5 @@
 #pragma once
+#include <map>
 #include <mutex>
 #include <string>
 #include <diagnostic_updater/diagnostic_updater.h>
@@ -38,7 +39,7 @@ public:
         updater_->force_update();
     }
 
-    //! Leightweight way to set or report a new status
+    //! Leightweight way to set or report a new status. The status remains until overwritten by a new status.
     void set(NodeStatus s, const std::string& msg) {
         bool modified = false;
         {
@@ -53,14 +54,36 @@ public:
         }
     }
 
+    //! Add/overwrite extra information about the status in form of key/value pairs. The information will be shared
+    //! along with the overall node status. It remains until explicitly cleared or overwritten.
+    void info(const std::string& name, std::string message) {
+        std::lock_guard<std::mutex> g{statusMutex_};
+        extraInfo_[name] = std::move(message);
+    }
+
+    //! Clears previously set information. Returns true on success.
+    bool clearInfo(const std::string& name) {
+        std::lock_guard<std::mutex> g{statusMutex_};
+        auto it = extraInfo_.find(name);
+        if (it != extraInfo_.end()) {
+            extraInfo_.erase(it);
+            return true;
+        }
+        return false;
+    }
+
 private:
     void getStatus(StatusWrapper& w) const {
         std::lock_guard<std::mutex> g{statusMutex_};
         w.summary(static_cast<std::uint8_t>(status_.s), status_.msg);
+        for (const auto& info : extraInfo_) {
+            w.add(info.first, info.second);
+        }
     }
     ros::Timer updateStatus_;
     diagnostic_updater::Updater* updater_;
     mutable std::mutex statusMutex_;
     Status status_{NodeStatus::STALE, "Initializing"};
+    std::map<std::string, std::string> extraInfo_;
 };
 } // namespace rosinterface_handler
