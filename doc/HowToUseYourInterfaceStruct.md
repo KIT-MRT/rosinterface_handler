@@ -93,8 +93,18 @@ sync.registerCallback(boost::bind(&callback, _1, _2));
 
 ### Diagnosed publishers/subscribers
 Diagnosed publishers and subscribers work similar to the nomal publisher/subsribers and update their diagnostic status by themselves. 
-No more action is required on them. However, the `updater` member inside your Interface object has an `update()` function 
+No more action is required on them. However, the `updater` member inside your Interface object has an `update()` function
 that needs to be called regularly so that updates are published. Refer to the documentation of `diagnostic_updater` for more information.
+
+
+Calling the `update()` function is **not** necessary if you are using diagnostics with `simplified_status=True`. In that case, the
+`nodeStatus` member of the Interface object will do the job for you.
+
+You are suppoed to use this member in order to share the current state of the node. This could look like this:
+```c++
+interface_.nodeStatus.set(rosinterface_handler::NodeStatus::ERROR, "Something happened!");
+```
+Remember to also clear the error once your node has recovered by calling `set` with `NodeStatus::OK`.
 
 ## Python
 All your interface definitions are fully available in python nodes as well. Just import the interface file:

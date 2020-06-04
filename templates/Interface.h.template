@@ -148,6 +148,19 @@ $string_representation;
   inline void logErrorDirect(const std::string& msg) const {
       ROS_ERROR_STREAM_NAMED(nodeNameWithNamespace(), msg);
   }
+
+  /// \brief logs subscribed and advertised topics to the command line. Works also within nodelets.
+  // NOLINTNEXTLINE(readability-function-size)
+  void showNodeInfo() const {
+      std::string message = "Node '" + nodeName() + "' from package '$pkgname', type '$ClassName'"
+                                                    " in namespace '" + publicNamespace_ + "'.\nSubscribed to: [";
+$print_subscribed
+      message += "]\nAdvertising: [";
+$print_advertised
+      message += ']';
+      logInfo(message);
+  }
+
 private:
   const std::string globalNamespace_;
   const std::string publicNamespace_;
@@ -167,5 +180,4 @@ private:
 $non_default_params    );
   }
 };
-
 } // namespace ${pkgname}

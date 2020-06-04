@@ -1,5 +1,6 @@
 #include <gtest/gtest.h>
 #include <rosinterface_handler/DefaultsInterface.h>
+#include <rosinterface_handler/simple_node_status.hpp>
 
 using IfType = rosinterface_handler::DefaultsInterface;
 using ConfigType = rosinterface_handler::DefaultsConfig;
@@ -25,6 +26,13 @@ TEST(RosinterfaceHandler, DefaultParams) { // NOLINT(readability-function-size)
 
     ASSERT_EQ(1, testInterface.enum_int_param_w_default);
     ASSERT_EQ("One", testInterface.enum_str_param_w_default);
+    testInterface.showNodeInfo();
+}
+
+TEST(RosinterfaceHandler, NodeStatus) {
+    IfType testInterface(ros::NodeHandle("~"));
+    testInterface.nodeStatus.set(rosinterface_handler::NodeStatus::ERROR, "Test error");
+    testInterface.nodeStatus.set(rosinterface_handler::NodeStatus::OK, "Initialized");
 }
 
 TEST(RosinterfaceHandler, DefaultSubscriber) {
@@ -62,17 +70,17 @@ TEST(RosinterfaceHandler, DefaultsOnParamServer) { // NOLINT(readability-functio
         EXPECT_EQ(verbosity, testInterface.verbosity_param_w_default);
     }
     {
-        int intInterface;
+        int intInterface = 0;
         ASSERT_TRUE(nh.getParam("int_param_w_default", intInterface));
         ASSERT_EQ(intInterface, testInterface.int_param_w_default);
     }
     {
-        double doubleInterface;
+        double doubleInterface = 0;
         ASSERT_TRUE(nh.getParam("double_param_w_default", doubleInterface));
         EXPECT_EQ(doubleInterface, testInterface.double_param_w_default);
     }
     {
-        bool boolInterface;
+        bool boolInterface = false;
         ASSERT_TRUE(nh.getParam("bool_param_w_default", boolInterface));
         EXPECT_EQ(boolInterface, testInterface.bool_param_w_default);
     }
@@ -107,7 +115,7 @@ TEST(RosinterfaceHandler, DefaultsOnParamServer) { // NOLINT(readability-functio
         EXPECT_EQ(mapParamWDefault, testInterface.map_param_w_default);
     }
     {
-        int enumIntInterface;
+        int enumIntInterface = 0;
         ASSERT_TRUE(nh.getParam("enum_int_param_w_default", enumIntInterface));
         EXPECT_EQ(enumIntInterface, testInterface.enum_int_param_w_default);
     }
@@ -145,17 +153,17 @@ TEST(RosinterfaceHandler, SetParamOnServer) { // NOLINT(readability-function-siz
         EXPECT_EQ(verbosity, testInterface.verbosity_param_w_default);
     }
     {
-        int intInterface;
+        int intInterface = 0;
         ASSERT_TRUE(nh.getParam("int_param_w_default", intInterface));
         ASSERT_EQ(intInterface, testInterface.int_param_w_default);
     }
     {
-        double doubleInterface;
+        double doubleInterface = 0;
         ASSERT_TRUE(nh.getParam("double_param_w_default", doubleInterface));
         EXPECT_EQ(doubleInterface, testInterface.double_param_w_default);
     }
     {
-        bool boolInterface;
+        bool boolInterface = false;
         ASSERT_TRUE(nh.getParam("bool_param_w_default", boolInterface));
         EXPECT_EQ(boolInterface, testInterface.bool_param_w_default);
     }
@@ -190,7 +198,7 @@ TEST(RosinterfaceHandler, SetParamOnServer) { // NOLINT(readability-function-siz
         EXPECT_EQ(mapParamWDefault, testInterface.map_param_w_default);
     }
     {
-        int enumIntInterface;
+        int enumIntInterface = 0;
         ASSERT_TRUE(nh.getParam("enum_int_param_w_default", enumIntInterface));
         EXPECT_EQ(enumIntInterface, testInterface.enum_int_param_w_default);
     }

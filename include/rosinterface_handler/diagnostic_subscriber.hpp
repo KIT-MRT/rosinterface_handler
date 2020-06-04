@@ -95,9 +95,11 @@ private:
             return;
         }
         using namespace diagnostic_updater;
+        // we allow messages from the near future because rosbag play sometimes creates those
+        constexpr double MinTimeDelay = -0.01;
         diagnostic_ = std::make_unique<TopicDiagnosticWrapper>(name + " subscriber", updater_,
                                                                FrequencyStatusParam(&minFreq_, &maxFreq_, 0),
-                                                               TimeStampStatusParam(0., maxTimeDelay_));
+                                                               TimeStampStatusParam(MinTimeDelay, maxTimeDelay_));
     }
     double minFreq_{0.};
     double maxFreq_{std::numeric_limits<double>::infinity()};
