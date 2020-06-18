@@ -119,34 +119,39 @@ $string_representation;
       return privateNodeHandle_.getNamespace();
   }
 
-  /// \brief logs to the debug output. Works also within nodelets. Output is throttled.
+  /// \brief logs to the debug output. Works also within nodelets.
   // NOLINTNEXTLINE(readability-function-size)
-  inline void logDebug(const std::string& msg) const {
-      ROS_DEBUG_STREAM_NAMED(nodeNameWithNamespace(), msg);
+  template <typename Msg, typename... Msgs>
+  inline void logDebug(const Msg& msg, const Msgs&... msgs) const {
+      ROS_DEBUG_STREAM_NAMED(nodeNameWithNamespace(), rosinterface_handler::toString(msg, msgs...));
   }
 
   /// \brief logs to the debug output. Works also within nodelets. Output is throttled.
   // NOLINTNEXTLINE(readability-function-size)
-  inline void logInfo(const std::string& msg) const {
-      ROS_INFO_STREAM_THROTTLE_NAMED(5, nodeNameWithNamespace(), msg);
+  template <typename Msg, typename... Msgs>
+  inline void logInfo(const Msg& msg, const Msgs&... msgs) const {
+      ROS_INFO_STREAM_THROTTLE_NAMED(5, nodeNameWithNamespace(), rosinterface_handler::toString(msg, msgs...));
   }
 
   /// \brief logs to the debug output. Works also within nodelets. Output is throttled.
   // NOLINTNEXTLINE(readability-function-size)
-  inline void logWarn(const std::string& msg) const {
-      ROS_WARN_STREAM_THROTTLE_NAMED(5, nodeNameWithNamespace(), msg);
+  template <typename Msg, typename... Msgs>
+  inline void logWarn(const Msg& msg, const Msgs&... msgs) const {
+      ROS_WARN_STREAM_THROTTLE_NAMED(5, nodeNameWithNamespace(), rosinterface_handler::toString(msg, msgs...));
   }
 
   /// \brief logs to the error output. Works also within nodelets. Output is throttled.
   // NOLINTNEXTLINE(readability-function-size)
-  inline void logError(const std::string& msg) const {
-      ROS_ERROR_STREAM_THROTTLE_NAMED(5, nodeNameWithNamespace(), msg);
+  template <typename Msg, typename... Msgs>
+  inline void logError(const Msg& msg, const Msgs&... msgs) const {
+      ROS_ERROR_STREAM_THROTTLE_NAMED(5, nodeNameWithNamespace(), rosinterface_handler::toString(msg, msgs...));
   }
 
   /// \brief logs to the error output. Works also within nodelets. Not throttled! Dont call this in loops!
   // NOLINTNEXTLINE(readability-function-size)
-  inline void logErrorDirect(const std::string& msg) const {
-      ROS_ERROR_STREAM_NAMED(nodeNameWithNamespace(), msg);
+  template <typename Msg, typename... Msgs>
+  inline void logErrorDirect(const Msg& msg, const Msgs&... msgs) const {
+      ROS_ERROR_STREAM_NAMED(nodeNameWithNamespace(), rosinterface_handler::toString(msg, msgs...));
   }
 
   /// \brief logs subscribed and advertised topics to the command line. Works also within nodelets.

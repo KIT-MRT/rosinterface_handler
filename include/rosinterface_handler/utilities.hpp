@@ -301,4 +301,18 @@ inline void testMax(const std::string key, std::map<K, T>& val, T max = std::num
     }
 }
 
+/// \brief Convert at least one argument to a string
+/// \tparam Arg Type of required argument
+/// \tparam Args Type of additional arguments (optional)
+/// \param arg Required argument
+/// \param args Additional arguments (optional)
+/// \return
+template <typename Arg, typename... Args>
+inline std::string toString(const Arg& arg, const Args&... args) {
+    std::ostringstream oss;
+    oss << arg;
+    ((oss << args), ...);
+    return oss.str();
+}
+
 } // namespace rosinterface_handler
