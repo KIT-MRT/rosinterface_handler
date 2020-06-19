@@ -1,6 +1,7 @@
 #pragma once
 
 #include <limits>
+#include <sstream>
 #include <string>
 #include <ros/node_handle.h>
 #include <ros/param.h>
@@ -311,7 +312,7 @@ template <typename Arg, typename... Args>
 inline std::string toString(const Arg& arg, const Args&... args) {
     std::ostringstream oss;
     oss << arg;
-    ((oss << args), ...);
+    (oss << ... << args);
     return oss.str();
 }
 
