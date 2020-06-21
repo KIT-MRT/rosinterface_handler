@@ -309,11 +309,16 @@ inline void testMax(const std::string key, std::map<K, T>& val, T max = std::num
 /// \param args Additional arguments (optional)
 /// \return
 template <typename Arg, typename... Args>
-inline std::string toString(const Arg& arg, const Args&... args) {
+inline std::string asString(const Arg& arg, const Args&... args) {
     std::ostringstream oss;
     oss << arg;
     (oss << ... << args);
     return oss.str();
+}
+
+template <>
+inline std::string asString(const std::string& arg) {
+    return arg;
 }
 
 } // namespace rosinterface_handler

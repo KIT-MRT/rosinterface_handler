@@ -5,6 +5,8 @@
 #include <diagnostic_updater/diagnostic_updater.h>
 #include <ros/node_handle.h>
 
+#include "utilities.hpp"
+
 namespace rosinterface_handler {
 //! Mirrors diagnostic_updater::DiagnosticStatus, but with strong typing
 enum class NodeStatus : std::uint8_t {
@@ -39,12 +41,13 @@ public:
         updater_->force_update();
     }
 
-    //! Leightweight way to set or report a new status. The status remains until overwritten by a new status.
-    void set(NodeStatus s, const std::string& msg) {
+    //! Lightweight way to set or report a new status. The status remains until overwritten by a new status.
+    template <typename Arg, typename... Args>
+    void set(NodeStatus s, const Arg& arg, const Args&... args) {
         bool modified = false;
         {
             std::lock_guard<std::mutex> g{statusMutex_};
-            Status newStatus{s, msg};
+            Status newStatus{s, asString(arg, args...)};
             modified = status_ != newStatus;
             status_ = newStatus;
         }
@@ -56,9 +59,10 @@ public:
 
     //! Add/overwrite extra information about the status in form of key/value pairs. The information will be shared
     //! along with the overall node status. It remains until explicitly cleared or overwritten.
-    void info(const std::string& name, std::string message) {
+    template <typename Arg, typename... Args>
+    void info(const std::string& name, const Arg& arg, const Args&... args) {
         std::lock_guard<std::mutex> g{statusMutex_};
-        extraInfo_[name] = std::move(message);
+        extraInfo_[name] = asString(arg, args...);
     }
 
     //! Clears previously set information. Returns true on success.
