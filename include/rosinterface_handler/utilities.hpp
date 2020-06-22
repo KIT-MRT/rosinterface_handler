@@ -309,15 +309,18 @@ inline void testMax(const std::string key, std::map<K, T>& val, T max = std::num
 /// \param args Additional arguments (optional)
 /// \return
 template <typename Arg, typename... Args>
-inline std::string asString(const Arg& arg, const Args&... args) {
+inline std::string asString(Arg&& arg, Args&&... args) {
     std::ostringstream oss;
-    oss << arg;
-    (oss << ... << args);
+    oss << std::forward<Arg>(arg);
+    (oss << ... << std::forward<Args>(args));
     return oss.str();
 }
 
-template <>
-inline std::string asString(const std::string& arg) {
+inline std::string asString(std::string&& arg) {
+    return std::move(arg);
+}
+
+inline const std::string& asString(const std::string& arg) {
     return arg;
 }
 
