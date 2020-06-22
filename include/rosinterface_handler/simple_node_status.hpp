@@ -43,11 +43,11 @@ public:
 
     //! Lightweight way to set or report a new status. The status remains until overwritten by a new status.
     template <typename Arg, typename... Args>
-    void set(NodeStatus s, const Arg& arg, const Args&... args) {
+    void set(NodeStatus s, const Arg& arg, const Args&... Args_) {
         bool modified = false;
         {
             std::lock_guard<std::mutex> g{statusMutex_};
-            Status newStatus{s, asString(arg, args...)};
+            Status newStatus{s, asString(arg, Args_...)};
             modified = status_ != newStatus;
             status_ = newStatus;
         }
@@ -60,9 +60,9 @@ public:
     //! Add/overwrite extra information about the status in form of key/value pairs. The information will be shared
     //! along with the overall node status. It remains until explicitly cleared or overwritten.
     template <typename Arg, typename... Args>
-    void info(const std::string& name, const Arg& arg, const Args&... args) {
+    void info(const std::string& name, const Arg& arg, const Args&... Args_) {
         std::lock_guard<std::mutex> g{statusMutex_};
-        extraInfo_[name] = asString(arg, args...);
+        extraInfo_[name] = asString(arg, Args_...);
     }
 
     //! Clears previously set information. Returns true on success.
