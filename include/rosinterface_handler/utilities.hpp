@@ -1,6 +1,7 @@
 #pragma once
 
 #include <limits>
+#include <sstream>
 #include <string>
 #include <ros/node_handle.h>
 #include <ros/param.h>
@@ -299,6 +300,28 @@ inline void testMax(const std::string key, std::map<K, T>& val, T max = std::num
     for (auto& v : val) {
         testMax(key, v.second, max);
     }
+}
+
+/// \brief Convert at least one argument to a string
+/// \tparam Arg Type of required argument
+/// \tparam Args Type of additional arguments (optional)
+/// \param arg Required argument
+/// \param args Additional arguments (optional)
+/// \return
+template <typename Arg, typename... Args>
+inline std::string asString(Arg&& arg, Args&&... Args_) {
+    std::ostringstream oss;
+    oss << std::forward<Arg>(arg);
+    (oss << ... << std::forward<Args>(Args_));
+    return oss.str();
+}
+
+inline std::string asString(std::string&& arg) {
+    return std::move(arg);
+}
+
+inline const std::string& asString(const std::string& arg) {
+    return arg;
 }
 
 } // namespace rosinterface_handler
