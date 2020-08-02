@@ -114,7 +114,7 @@ class ${ClassName}Interface(dict):
         """
         Sets parameters with current values on the parameter server.
         """
-        for param_name, param_value in self.iteritems():
+        for param_name, param_value in self.items():
             config = next((item for item in param_description if item["name"] == param_name), None)
             if config and not config['constant']:
                 full_name = "/" + param_name if config['global_scope'] else "~" + param_name
@@ -152,7 +152,7 @@ class ${ClassName}Interface(dict):
             topic = self._get_topic(publisher['scope'], config[topic_param])
             if config[topic_param] != self[topic_param] or config[queue_param] != self[queue_param]:
                 self[name] = rospy.Publisher(topic, self.get_type(publisher), queue_size=config[queue_param])
-        for k, v in config.iteritems():
+        for k, v in config.items():
             # handle reserved name groups
             if k == "groups":
                 continue
