@@ -54,6 +54,7 @@ macro(generate_ros_interface_files)
             set(_cmd
                     ${CATKIN_ENV}
                     ${_CUSTOM_PYTHONPATH_ENV}
+                    ${PYTHON_EXECUTABLE}
                     ${_input}
                     ${ROSINTERFACE_HANDLER_ROOT_DIR}
                     ${CATKIN_DEVEL_PREFIX}/${CATKIN_PACKAGE_SHARE_DESTINATION}
