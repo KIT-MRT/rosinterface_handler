@@ -108,51 +108,106 @@ private:
     std::unique_ptr<TopicDiagnosticWrapper> diagnostic_;
 };
 
-//! Similar to diagnostic_updater::DiagnosedPublisher, but with less segfaults
+//! Similar to diagnostic_updater::DiagnosedPublisher, but with less segfaults and a simpler interface. Low frequency
+//! and delay are only treated as warnings/errors if there are actually subscribers on the advertised topic.
 template <typename MsgT>
 class DiagnosedPublisher {
     static_assert(ros::message_traits::HasHeader<MsgT>::value,
-                  "DiagnosedPublisher can only be used on messgaes with a header!");
+                  "DiagnosedPublisher can only be used on messages with a header!");
     using Publisher = diagnostic_updater::DiagnosedPublisher<const MsgT>;
-    using PublisherPtr = std::shared_ptr<Publisher>;
+    class PublisherData {
+    public:
+        PublisherData(diagnostic_updater::Updater& updater, const ros::Publisher& publisher, double minFreq,
+                      double maxTimeDelay)
+                : minFreq_{minFreq}, updater_{&updater},
+                  publisher_{publisher, updater, diagnostic_updater::FrequencyStatusParam(&minFreq_, &maxFreq_, 0.),
+                             diagnostic_updater::TimeStampStatusParam(0., maxTimeDelay)} {
+            // We want to control the result of the updater ourselves. Therefore we remove the callback registered by
+            // the Publisher and replace it with our own callback.
+            auto name = publisher_.getName();
+            updater.removeByName(name);
+            updater.add(name, [&](diagnostic_updater::DiagnosticStatusWrapper& msg) {
+                publisher_.run(msg);
+                if (getNumSubscribers() == 0) {
+                    msg.level = diagnostic_msgs::DiagnosticStatus::OK;
+                    msg.message = "No subscribers; " + msg.message;
+                }
+            });
+        }
+        ~PublisherData() {
+            updater_->removeByName(publisher_.getName());
+        }
+        PublisherData() noexcept = delete;
+        PublisherData(PublisherData&& rhs) noexcept = delete;
+        PublisherData& operator=(PublisherData&& rhs) noexcept = delete;
+        PublisherData(const PublisherData& rhs) = delete;
+        PublisherData& operator=(const PublisherData& rhs) = delete;
+
+        template <typename T>
+        void publish(const T& msg) {
+            publisher_.publish(msg);
+        }
+
+        uint32_t getNumSubscribers() const {
+            return publisher_.getPublisher().getNumSubscribers();
+        }
+        ros::Publisher publisher() const {
+            return publisher_.getPublisher();
+        }
+
+    private:
+        double minFreq_{0.};
+        double maxFreq_{1.e8};
+        diagnostic_updater::Updater* updater_{nullptr};
+        Publisher publisher_;
+    };
 
 public:
     explicit DiagnosedPublisher(diagnostic_updater::Updater& updater) : updater_{&updater} {
     }
+    DiagnosedPublisher() noexcept = default;
+    DiagnosedPublisher(DiagnosedPublisher&& rhs) noexcept = default;
+    DiagnosedPublisher& operator=(DiagnosedPublisher&& rhs) noexcept = default;
+    DiagnosedPublisher(const DiagnosedPublisher& rhs) = default;
+    DiagnosedPublisher& operator=(const DiagnosedPublisher& rhs) = default;
+    ~DiagnosedPublisher() noexcept = default;
 
     DiagnosedPublisher& operator=(const ros::Publisher& publisher) {
-        init(publisher);
+        reset(publisher);
         return *this;
     }
 
     void publish(const boost::shared_ptr<const MsgT>& message) {
-        if (!!publisher_) {
-            publisher_->publish(message);
+        if (!!publisherData_) {
+            publisherData_->publish(message);
         }
     }
 
     void publish(const MsgT& message) {
-        if (!!publisher_) {
-            publisher_->publish(message);
+        if (!!publisherData_) {
+            publisherData_->publish(message);
         }
     }
 
     DiagnosedPublisher& minFrequency(double minFrequency) {
-        this->minFreq_ = minFrequency;
+        minFreq_ = minFrequency;
+        if (!!publisherData_) {
+            reset(publisherData_->publisher());
+        }
         return *this;
     }
 
     DiagnosedPublisher& maxTimeDelay(double maxTimeDelay) {
-        this->maxTimeDelay_ = maxTimeDelay;
-        if (!!publisher_) {
-            init(publisher_->getPublisher());
+        maxTimeDelay_ = maxTimeDelay;
+        if (!!publisherData_) {
+            reset(publisherData_->publisher());
         }
         return *this;
     }
 
     ros::Publisher publisher() const {
-        if (!!publisher_) {
-            return publisher_->getPublisher();
+        if (!!publisherData_) {
+            return publisherData_->publisher();
         }
         return ros::Publisher();
     }
@@ -162,27 +217,16 @@ public:
     }
 
     uint32_t getNumSubscribers() const {
-        return !publisher_ ? uint32_t() : publisher_->getPublisher().getNumSubscribers();
+        return !publisherData_ ? uint32_t() : publisherData_->getNumSubscribers();
     }
 
 private:
-    void init(const ros::Publisher& publisher) {
-        if (!!publisher_) {
-            publisher_.reset();
-        }
-        auto publisherPtr =
-            new Publisher(publisher, *updater_, diagnostic_updater::FrequencyStatusParam(&minFreq_, &maxFreq_, 0.),
-                          diagnostic_updater::TimeStampStatusParam(0., maxTimeDelay_));
-        auto deleter = [updater = updater_, name = publisherPtr->getName()](Publisher* pub) {
-            updater->removeByName(name);
-            delete pub;
-        };
-        publisher_ = PublisherPtr(publisherPtr, deleter);
+    void reset(const ros::Publisher& publisher) {
+        publisherData_ = std::make_shared<PublisherData>(*updater_, publisher, minFreq_, maxTimeDelay_);
     }
-    diagnostic_updater::Updater* updater_{nullptr};
     double minFreq_{0.};
-    double maxFreq_{std::numeric_limits<double>::infinity()};
     double maxTimeDelay_{0.};
-    PublisherPtr publisher_;
+    diagnostic_updater::Updater* updater_{nullptr};
+    std::shared_ptr<PublisherData> publisherData_;
 };
 } // namespace rosinterface_handler

@@ -54,15 +54,14 @@ inline std::string getNodeName(const ros::NodeHandle& privateNodeHandle) {
     return name;
 }
 
-/// \brief Retrieve the parent node handle from a node handle (or /)
+/// \brief Retrieve the parent node handle from a node handle
 ///
 /// @param privateNodeHandle Any ROS node handle (e.g.
 /// ros::NodeHandle("~") ).
-/// @return parent namespace or "/"
+/// @return parent namespace (or empty, is there is no parent)
 inline std::string getParentNamespace(const ros::NodeHandle& nodeHandle) {
     const auto& nameSpace = nodeHandle.getNamespace();
-    std::string parentNameSpace = nameSpace.substr(0, nameSpace.find_last_of('/'));
-    return parentNameSpace.empty() ? "/" : parentNameSpace;
+    return nameSpace.substr(0, nameSpace.find_last_of('/'));
 }
 
 /// \brief Sets the logger level according to a standardized parameter name 'verbosity'.
