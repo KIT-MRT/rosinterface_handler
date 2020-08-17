@@ -126,7 +126,8 @@ TEST(TestDiagnosedAndSmartCombined, constructAndSubscribe) {
     EXPECT_FALSE(s.isSubscribed());
     s.subscribe(nh, "atopic", 5);
     EXPECT_FALSE(s.isSubscribed());
-    ros::Subscriber otherSubscriber = nh.subscribe("sometopic", 5, +[](const MsgT::ConstPtr& msg) {});
+    ros::Subscriber otherSubscriber = nh.subscribe(
+        "sometopic", 5, +[](const MsgT::ConstPtr& msg) {});
     ros::spinOnce();
     ASSERT_GT(thisPublisher.getNumSubscribers(), 0);
     s.subscribeCallback();
