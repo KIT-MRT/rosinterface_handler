@@ -5,7 +5,7 @@
   <description>An easy toolbox to generate interfaces from a node to the ROS world.</description>
   <license>BSD</license>
 
-  <maintainer email="poggenhans@fzi.de">Fabian Poggenhans</maintainer>
+  <maintainer email="fabian.poggenhans@kit.edu">Fabian Poggenhans</maintainer>
   <author email="cbandera@posteo.de">Claudio Bandera</author>
   <url type="repository">https://github.com/cbandera/rosinterface_handler.git</url>
 
