@@ -14,6 +14,9 @@ macro(generate_ros_interface_files)
     if(message_filters_FOUND_CATKIN_PROJECT)
         add_definitions(-DMESSAGE_FILTERS_FOUND)
     endif()
+    if(diagnostic_updater_FOUND_CATKIN_PROJECT)
+        add_definitions(-DDIAGNOSTIC_UPDATER_FOUND)
+    endif()
 
     set(_autogen "")
     foreach (_cfg ${CFG_FILES})
@@ -53,6 +56,7 @@ macro(generate_ros_interface_files)
             assert(CATKIN_ENV)
             set(_cmd
                     ${CATKIN_ENV}
+
                     ${_CUSTOM_PYTHONPATH_ENV}
                     ${PYTHON_EXECUTABLE}
                     ${_input}
