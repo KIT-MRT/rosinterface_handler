@@ -6,6 +6,7 @@
   <license>BSD</license>
 
   <maintainer email="poggenhans@fzi.de">Fabian Poggenhans</maintainer>
+  <maintainer email="kevin.roesch@kit.edu">Kevin Rösch</maintainer>
   <author email="cbandera@posteo.de">Claudio Bandera</author>
   <url type="repository">https://github.com/cbandera/rosinterface_handler.git</url>
 
