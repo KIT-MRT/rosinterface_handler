@@ -43,7 +43,7 @@ public:
 
     //! Lightweight way to set or report a new status. The status remains until overwritten by a new status.
     template <typename Arg, typename... Args>
-    void set(NodeStatus s, const Arg& arg, const Args&... Args_) {
+    void set(NodeStatus s, const Arg& arg, const Args&... Args_) { // NOLINT
         bool modified = false;
         {
             std::lock_guard<std::mutex> g{statusMutex_};
@@ -60,7 +60,7 @@ public:
     //! Add/overwrite extra information about the status in form of key/value pairs. The information will be shared
     //! along with the overall node status. It remains until explicitly cleared or overwritten.
     template <typename Arg, typename... Args>
-    void info(const std::string& name, const Arg& arg, const Args&... Args_) {
+    void info(const std::string& name, const Arg& arg, const Args&... Args_) { // NOLINT
         std::lock_guard<std::mutex> g{statusMutex_};
         extraInfo_[name] = asString(arg, Args_...);
     }
