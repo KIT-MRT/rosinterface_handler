@@ -684,14 +684,15 @@ class InterfaceGenerator(object):
         subscribers = self._get_subscribers()
         publishers = self._get_publishers()
         if subscribers or publishers:
-            substitutions["includeError"] = "#error message_filters was not found during compilation. " \
+            substitutions["includeMessageFiltersError"] = "#error message_filters was not found during compilation. " \
                 "Please recompile with message_filters."
         else:
-            substitutions["includeError"] = ""
+            substitutions["includeMessageFiltersError"] = ""
 
         if any(subscriber["watch"] for subscriber in subscribers):
             includes.append('#include <rosinterface_handler/smart_subscriber.hpp>')
 
+        substitutions["includeDiagnosticUpdaterError"] = ""
         if self.diagnostics_enabled:
             param_entries.append('  diagnostic_updater::Updater updater; /*!< Manages diagnostics of this node */')
             subscribers_init.append(',\n    updater{ros::NodeHandle(), private_node_handle, nodeNameWithNamespace()}')
@@ -702,6 +703,7 @@ class InterfaceGenerator(object):
                     '  rosinterface_handler::SimpleNodeStatus nodeStatus; /*!< Reports the status of this node */')
                 subscribers_init.append(',\n    nodeStatus{"status", private_node_handle, updater}')
                 includes.append('#include <rosinterface_handler/simple_node_status.hpp>')
+            substitutions["includeDiagnosticUpdaterError"] = "#error diagnostic_updater is missing as dependency."
 
         if self.tf:
             listener = self.tf["listener_name"]
