@@ -20,7 +20,10 @@
 #include <message_filters/subscriber.h>
 $includes
 #else
-$includeError
+$includeMessageFiltersError
+#endif
+#ifndef DIAGNOSTIC_UPDATER_FOUND
+$includeDiagnosticUpdaterError
 #endif
 #ifdef DYNAMIC_RECONFIGURE_FOUND
 #pragma GCC diagnostic push
@@ -30,7 +33,6 @@ $includeError
 #else
 struct ${ClassName}Config{};
 #endif
-
 
 namespace ${pkgname} {
 

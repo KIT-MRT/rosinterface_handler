@@ -7,4 +7,4 @@ include:
 deps:
 # we only test one single dependency. Otherwise this would test hundreds of packages.
   script:
-  - mrt ci test_deps -f --no-status -i example_package_ros_tool --only --release $CI_PROJECT_NAME
+  - mrt ci test-deps -f --no-status -i example_package_ros_tool --only --release $CI_PROJECT_NAME
