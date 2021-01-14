@@ -5,7 +5,7 @@ A unified parameter handler for nodes with automatic code generation.
 Save time on defining your parameters, publishers and subscribers. No more redundant code. Easy error checking. Make them dynamic with a single flag.
 
 - Maintainer status: maintained
-- Maintainer: Fabian Poggenhans <fabian.poggenhans@fzi.de>
+- Maintainer: Kevin Rösch <kevin.roesch@kit.edu>
 - Author: Claudio Bandera <cbandera@posteo.de>, Fabian Poggenhans <fabian.poggenhans@fzi.de>
 - License: BSD
 
