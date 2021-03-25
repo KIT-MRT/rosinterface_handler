@@ -160,6 +160,54 @@ inline void setParam(const std::string key, T val) {
     ros::param::set(key, val);
 }
 
+/// \brief Set parameter on ROS parameter server (Overload for long, since long cannot be saved to the parameterserver
+/// directly, but a workaround with strings is needed)
+inline void setParam(const std::string key, long int val) {
+    std::string valString = std::to_string(val) + std::string("L");
+    ros::param::set(key, valString);
+}
+
+/// \brief Get parameter from ROS parameter server
+///
+/// \param key Parameter name
+/// \param val Parameter value
+template <typename T>
+// NOLINTNEXTLINE(readability-function-size)
+inline bool getParamIncludingLong(const std::string key, T& val) {
+    return ros::param::get(key, val);
+}
+
+/// \brief Get parameter from ROS parameter server (Overload for long, since long cannot be stored in the
+/// parameterserver directly, but a workaround with strings is needed)
+// NOLINTNEXTLINE(readability-function-size)
+inline bool getParamIncludingLong(const std::string key, long int& val) {
+    int valInt;
+    if (ros::param::get(key, valInt)) {
+        val = valInt;
+        return true;
+    }
+
+    std::string valString;
+    if (!ros::param::get(key, valString)) {
+        ROS_ERROR_STREAM("Could not retrieve parameter'" << key << "'. Does it follow the long convention?");
+        return false;
+    }
+
+    try {
+        size_t pos = valString.find("L");
+        if (pos != std::string::npos) {
+            // If found then erase it
+            valString.erase(pos, 1);
+        }
+        val = std::stol(valString);
+    } catch (std::invalid_argument& e) {
+        ROS_ERROR_STREAM("Could not retrieve parameter'" << key
+                                                         << "'. Does it have a different type? Error: " << e.what());
+        return false;
+    }
+    return true;
+}
+
 /// \brief Get parameter from ROS parameter server quietly
 ///
 /// \param key Parameter name
@@ -170,7 +218,7 @@ inline bool getParamImpl(const std::string key, T& val) {
     if (!ros::param::has(key)) {
         return false;
     }
-    if (!ros::param::get(key, val)) {
+    if (!getParamIncludingLong(key, val)) {
         ROS_ERROR_STREAM("Could not retrieve parameter'" << key << "'. Does it have a different type?");
         return false;
     }
@@ -204,7 +252,7 @@ template <typename T>
 inline bool getParam(const std::string key, T& val, const T& defaultValue) {
     if (!getParamImpl(key, val)) {
         val = defaultValue;
-        ros::param::set(key, defaultValue);
+        setParam(key, defaultValue);
         ROS_INFO_STREAM("Parameter '" << key << "' is not defined. Setting default value.");
         return true;
     }

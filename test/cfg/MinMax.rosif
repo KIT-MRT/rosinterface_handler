@@ -11,6 +11,7 @@ gen = InterfaceGenerator()
 # Parameters with different types
 gen.add("int_param_w_minmax", paramtype="int", description="An Integer parameter", default=3, min=0, max=2)
 gen.add("double_param_w_minmax", paramtype="double",description="A double parameter", default=3.1, min=0., max=2.)
+# gen.add("long_param_w_minmax", paramtype="long", description="A long parameter", default=2147483648, min=-2147483649, max=2147483648)  # todo: workaround for minmax
 
 gen.add("vector_int_param_w_minmax", paramtype="std::vector<int>", description="A vector of int parameter", default=[-1,2,3], min=0, max=2)
 gen.add("vector_double_param_w_minmax", paramtype="std::vector<double>", description="A vector of double parameter", default=[-1.1, 1.2, 2.3], min=0., max=2.)

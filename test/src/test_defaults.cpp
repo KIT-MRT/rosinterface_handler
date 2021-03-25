@@ -15,6 +15,9 @@ TEST(RosinterfaceHandler, DefaultParams) { // NOLINT(readability-function-size)
     ASSERT_DOUBLE_EQ(1.1, testInterface.double_param_w_default);
     ASSERT_EQ("Hello World", testInterface.str_param_w_default);
     ASSERT_EQ(true, testInterface.bool_param_w_default);
+    ASSERT_EQ(1L, testInterface.long_param_w_default_int);
+    ASSERT_EQ(1L, testInterface.long_param_w_default_int_str);
+    ASSERT_EQ(2147483648L, testInterface.long_param_w_default_long_string);
 
     ASSERT_EQ(std::vector<int>({1, 2, 3}), testInterface.vector_int_param_w_default);
     ASSERT_EQ(std::vector<double>({1.1, 1.2, 1.3}), testInterface.vector_double_param_w_default);
@@ -83,6 +86,21 @@ TEST(RosinterfaceHandler, DefaultsOnParamServer) { // NOLINT(readability-functio
         bool boolInterface = false;
         ASSERT_TRUE(nh.getParam("bool_param_w_default", boolInterface));
         EXPECT_EQ(boolInterface, testInterface.bool_param_w_default);
+    }
+    {
+        long int longInterface = 0L;
+        ASSERT_TRUE(nh.getParam("bool_param_w_default", longInterface));
+        EXPECT_EQ(longInterface, testInterface.long_param_w_default_int);
+    }
+    {
+        long int longInterface = 0L;
+        ASSERT_TRUE(nh.getParam("long_param_w_default_int_str", longInterface));
+        EXPECT_EQ(longInterface, testInterface.long_param_w_default_int_str);
+    }
+    {
+        long int longInterface = 0L;
+        ASSERT_TRUE(nh.getParam("long_param_w_default_long_string", longInterface));
+        EXPECT_EQ(longInterface, testInterface.long_param_w_default_long_string);
     }
     {
         std::string stringInterface;
