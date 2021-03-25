@@ -87,21 +87,8 @@ TEST(RosinterfaceHandler, DefaultsOnParamServer) { // NOLINT(readability-functio
         ASSERT_TRUE(nh.getParam("bool_param_w_default", boolInterface));
         EXPECT_EQ(boolInterface, testInterface.bool_param_w_default);
     }
-    {
-        long int longInterface = 0L;
-        ASSERT_TRUE(nh.getParam("bool_param_w_default", longInterface));
-        EXPECT_EQ(longInterface, testInterface.long_param_w_default_int);
-    }
-    {
-        long int longInterface = 0L;
-        ASSERT_TRUE(nh.getParam("long_param_w_default_int_str", longInterface));
-        EXPECT_EQ(longInterface, testInterface.long_param_w_default_int_str);
-    }
-    {
-        long int longInterface = 0L;
-        ASSERT_TRUE(nh.getParam("long_param_w_default_long_string", longInterface));
-        EXPECT_EQ(longInterface, testInterface.long_param_w_default_long_string);
-    }
+    // this does not work for long, since
+    // conversion from ‘long int’ to ‘XmlRpc::XmlRpcValue’ is ambiguous
     {
         std::string stringInterface;
         ASSERT_TRUE(nh.getParam("str_param_w_default", stringInterface));
