@@ -88,7 +88,23 @@ TEST(RosinterfaceHandler, DefaultsOnParamServer) { // NOLINT(readability-functio
         EXPECT_EQ(boolInterface, testInterface.bool_param_w_default);
     }
     // this does not work for long, since
-    // conversion from ‘long int’ to ‘XmlRpc::XmlRpcValue’ is ambiguous
+    // on parameter server, long is stored as string with appended "L"
+    // workaround:
+    {
+        std::string stringInterface;
+        ASSERT_TRUE(nh.getParam("long_param_w_default_int", stringInterface));
+        EXPECT_EQ(stringInterface, "1L");
+    }
+    {
+        std::string stringInterface;
+        ASSERT_TRUE(nh.getParam("long_param_w_default_int_str", stringInterface));
+        EXPECT_EQ(stringInterface, "1L");
+    }
+    {
+        std::string stringInterface;
+        ASSERT_TRUE(nh.getParam("long_param_w_default_long_string", stringInterface));
+        EXPECT_EQ(stringInterface, "2147483648L");
+    }
     {
         std::string stringInterface;
         ASSERT_TRUE(nh.getParam("str_param_w_default", stringInterface));
@@ -141,6 +157,9 @@ TEST(RosinterfaceHandler, SetParamOnServer) { // NOLINT(readability-function-siz
     testInterface.double_param_w_default = 2.2;
     testInterface.str_param_w_default = "World Hello";
     testInterface.bool_param_w_default = false;
+    testInterface.long_param_w_default_int = 1L;
+    testInterface.long_param_w_default_int_str = 1L;
+    testInterface.long_param_w_default_long_string = 2147483648L;
     testInterface.vector_int_param_w_default = std::vector<int>{3, 2, 1};
     testInterface.vector_double_param_w_default = std::vector<double>{1.3, 1.2, 1.2};
     testInterface.vector_bool_param_w_default = std::vector<bool>{true, false};
@@ -171,6 +190,24 @@ TEST(RosinterfaceHandler, SetParamOnServer) { // NOLINT(readability-function-siz
         bool boolInterface = false;
         ASSERT_TRUE(nh.getParam("bool_param_w_default", boolInterface));
         EXPECT_EQ(boolInterface, testInterface.bool_param_w_default);
+    }
+    // this does not work for long, since
+    // on parameter server, long is stored as string with appended "L"
+    // workaround:
+    {
+        std::string stringInterface;
+        ASSERT_TRUE(nh.getParam("long_param_w_default_int", stringInterface));
+        EXPECT_EQ(stringInterface, "1L");
+    }
+    {
+        std::string stringInterface;
+        ASSERT_TRUE(nh.getParam("long_param_w_default_int_str", stringInterface));
+        EXPECT_EQ(stringInterface, "1L");
+    }
+    {
+        std::string stringInterface;
+        ASSERT_TRUE(nh.getParam("long_param_w_default_long_string", stringInterface));
+        EXPECT_EQ(stringInterface, "2147483648L");
     }
     {
         std::string stringInterface;
