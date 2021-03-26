@@ -18,7 +18,7 @@ gen.add("double_param_w_default", paramtype="double",description="A double param
 gen.add("str_param_w_default", paramtype="std::string", description="A string parameter", default="Hello World")
 gen.add("bool_param_w_default", paramtype="bool", description="A Boolean parameter", default=True)
 gen.add("long_param_w_default_int", paramtype="long", description="A long parameter", default=1)
-gen.add("long_param_w_default_int_str", paramtype="long", description="A long parameter", default="1")
+gen.add("long_param_w_default_int_str", paramtype="long", description="A long parameter", default="-1")
 # gen.add("long_param_w_default_long", paramtype="long", description="A long parameter", default=2147483648) # would fail due to xmlrpc lib
 gen.add("long_param_w_default_long_string", paramtype="long", description="A long parameter", default="2147483648L")
 

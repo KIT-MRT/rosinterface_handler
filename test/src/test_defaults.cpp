@@ -16,7 +16,7 @@ TEST(RosinterfaceHandler, DefaultParams) { // NOLINT(readability-function-size)
     ASSERT_EQ("Hello World", testInterface.str_param_w_default);
     ASSERT_EQ(true, testInterface.bool_param_w_default);
     ASSERT_EQ(1L, testInterface.long_param_w_default_int);
-    ASSERT_EQ(1L, testInterface.long_param_w_default_int_str);
+    ASSERT_EQ(-1L, testInterface.long_param_w_default_int_str);
     ASSERT_EQ(2147483648L, testInterface.long_param_w_default_long_string);
 
     ASSERT_EQ(std::vector<int>({1, 2, 3}), testInterface.vector_int_param_w_default);
@@ -98,7 +98,7 @@ TEST(RosinterfaceHandler, DefaultsOnParamServer) { // NOLINT(readability-functio
     {
         std::string stringInterface;
         ASSERT_TRUE(nh.getParam("long_param_w_default_int_str", stringInterface));
-        EXPECT_EQ(stringInterface, "1L");
+        EXPECT_EQ(stringInterface, "-1L");
     }
     {
         std::string stringInterface;
@@ -158,7 +158,7 @@ TEST(RosinterfaceHandler, SetParamOnServer) { // NOLINT(readability-function-siz
     testInterface.str_param_w_default = "World Hello";
     testInterface.bool_param_w_default = false;
     testInterface.long_param_w_default_int = 1L;
-    testInterface.long_param_w_default_int_str = 1L;
+    testInterface.long_param_w_default_int_str = -1L;
     testInterface.long_param_w_default_long_string = 2147483648L;
     testInterface.vector_int_param_w_default = std::vector<int>{3, 2, 1};
     testInterface.vector_double_param_w_default = std::vector<double>{1.3, 1.2, 1.2};
@@ -202,7 +202,7 @@ TEST(RosinterfaceHandler, SetParamOnServer) { // NOLINT(readability-function-siz
     {
         std::string stringInterface;
         ASSERT_TRUE(nh.getParam("long_param_w_default_int_str", stringInterface));
-        EXPECT_EQ(stringInterface, "1L");
+        EXPECT_EQ(stringInterface, "-1L");
     }
     {
         std::string stringInterface;
