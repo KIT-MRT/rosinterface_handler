@@ -156,13 +156,13 @@ inline void exit(const std::string& msg = "Runtime Error in rosinterface handler
 /// \param key Parameter name
 /// \param val Parameter value
 template <typename T>
-inline void setParam(const std::string key, T val) {
+inline void setParam(const std::string& key, T val) {
     ros::param::set(key, val);
 }
 
 /// \brief Set parameter on ROS parameter server (Overload for long, since long cannot be saved to the parameterserver
 /// directly, but a workaround with strings is needed)
-inline void setParam(const std::string key, long int val) {
+inline void setParam(const std::string& key, int64_t val) {
     std::string valString = std::to_string(val) + std::string("L");
     ros::param::set(key, valString);
 }
@@ -173,14 +173,14 @@ inline void setParam(const std::string key, long int val) {
 /// \param val Parameter value
 template <typename T>
 // NOLINTNEXTLINE(readability-function-size)
-inline bool getParamIncludingLong(const std::string key, T& val) {
+inline bool getParamIncludingLong(const std::string& key, T& val) {
     return ros::param::get(key, val);
 }
 
 /// \brief Get parameter from ROS parameter server (Overload for long, since long cannot be stored in the
 /// parameterserver directly, but a workaround with strings is needed)
 // NOLINTNEXTLINE(readability-function-size)
-inline bool getParamIncludingLong(const std::string key, long int& val) {
+inline bool getParamIncludingLong(const std::string& key, int64_t& val) {
     int valInt;
     if (ros::param::get(key, valInt)) {
         val = valInt;
@@ -194,7 +194,7 @@ inline bool getParamIncludingLong(const std::string key, long int& val) {
     }
 
     try {
-        size_t pos = valString.find("L");
+        size_t pos = valString.find('L');
         if (pos != std::string::npos) {
             // If found then erase it
             valString.erase(pos, 1);
@@ -249,7 +249,7 @@ inline bool getParam(const std::string key, T& val) {
 /// \param defaultValue Parameter default value
 template <typename T>
 // NOLINTNEXTLINE(readability-function-size)
-inline bool getParam(const std::string key, T& val, const T& defaultValue) {
+inline bool getParam(const std::string& key, T& val, const T& defaultValue) {
     if (!getParamImpl(key, val)) {
         val = defaultValue;
         setParam(key, defaultValue);
