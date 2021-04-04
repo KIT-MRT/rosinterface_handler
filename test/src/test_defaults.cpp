@@ -1,5 +1,5 @@
+#include <DefaultsInterface.h>
 #include <gtest/gtest.h>
-#include <rosinterface_handler/DefaultsInterface.h>
 #include <rosinterface_handler/simple_node_status.hpp>
 
 using IfType = rosinterface_handler::DefaultsInterface;
