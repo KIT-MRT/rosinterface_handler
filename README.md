@@ -24,6 +24,7 @@ The `rosinterface_handler` let's you:
 - make your parameters configurable with a single flag.
 - set default, min and max values
 - choose between global and private namespace
+- use parameters of type long
 - save a lot of time on specifying your parameters in several places.
 - ...in both C++ and Python
 
@@ -31,6 +32,7 @@ The `rosinterface_handler` let's you:
 See the Tutorials on
 - [How to write your first .rosif file](doc/HowToWriteYourFirstInterfaceFile.md)
 - [How to use your parameter struct](doc/HowToUseYourInterfaceStruct.md)
+- [How to use `long` parameters](doc/HowToUseLongParameters.md)
 
 ## Installation
 Download and build this package in your catkin workspace.

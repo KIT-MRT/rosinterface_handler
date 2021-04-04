@@ -1,5 +1,5 @@
+#include <MinMaxInterface.h>
 #include <gtest/gtest.h>
-#include <rosinterface_handler/MinMaxInterface.h>
 
 using IfType = rosinterface_handler::MinMaxInterface;
 using ConfigType = rosinterface_handler::MinMaxConfig;

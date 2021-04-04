@@ -1,5 +1,5 @@
+#include <DefaultsMissingInterface.h>
 #include <gtest/gtest.h>
-#include <rosinterface_handler/DefaultsMissingInterface.h>
 
 using IfType = rosinterface_handler::DefaultsMissingInterface;
 using ConfigType = rosinterface_handler::DefaultsMissingConfig;
