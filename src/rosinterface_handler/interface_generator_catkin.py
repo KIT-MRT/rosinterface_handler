@@ -460,9 +460,10 @@ class InterfaceGenerator(object):
             eprint(param['name'], "The name of field does not follow the ROS naming conventions, "
                                   "see http://wiki.ros.org/ROS/Patterns/Conventions")
         if param['configurable'] and (
-                param['global_scope'] or param['is_vector'] or param['is_map'] or param['constant']):
+            param['global_scope'] or param['is_vector'] or param['is_map'] or (
+                in_type is "long") or param['constant']):
             eprint(param['name'],
-                   "Global parameters, vectors, maps and constant params can not be declared configurable! ")
+                   "Global parameters, vectors, maps, long and constant params can not be declared configurable! ")
         if param['global_scope'] and param['default'] is not None:
             eprint(param['name'], "Default values for global parameters should not be specified in node! ")
         if param['constant'] and param['default'] is None:
