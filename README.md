@@ -24,7 +24,7 @@ The `rosinterface_handler` let's you:
 - make your parameters configurable with a single flag.
 - set default, min and max values
 - choose between global and private namespace
-- use parameters of type long
+- use parameters of type long (64 bit integers)
 - save a lot of time on specifying your parameters in several places.
 - ...in both C++ and Python
 

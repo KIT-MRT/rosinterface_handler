@@ -430,7 +430,7 @@ class InterfaceGenerator(object):
 
         in_type = param['type'].strip()
         if param['max'] is not None or param['min'] is not None:
-            if in_type in ["std::string", "bool", "long"]:
+            if in_type in ["std::string", "bool", "int64_t"]:
                 eprint(param['name'], "Max and min can not be specified for variable of type %s" % in_type)
 
         if in_type.startswith('std::vector'):
@@ -461,7 +461,7 @@ class InterfaceGenerator(object):
                                   "see http://wiki.ros.org/ROS/Patterns/Conventions")
         if param['configurable'] and (
             param['global_scope'] or param['is_vector'] or param['is_map'] or (
-                in_type is "long") or param['constant']):
+                in_type is "int64_t") or param['constant']):
             eprint(param['name'],
                    "Global parameters, vectors, maps, long and constant params can not be declared configurable! ")
         if param['global_scope'] and param['default'] is not None:
@@ -501,7 +501,7 @@ class InterfaceGenerator(object):
     @staticmethod
     def _pytype(drtype):
         """Convert C++ type to python type"""
-        return {'std::string': "str", 'int': "int", 'double': "double", 'bool': "bool", 'long': "long"}[drtype]
+        return {'std::string': "str", 'int': "int", 'double': "double", 'bool': "bool", 'int64_t': "int"}[drtype]
 
     @staticmethod
     def _test_primitive_type(name, drtype):
@@ -511,7 +511,7 @@ class InterfaceGenerator(object):
         :param drtype: Typestring
         :return:
         """
-        primitive_types = ['std::string', 'int', 'bool', 'float', 'double', 'long']
+        primitive_types = ['std::string', 'int', 'bool', 'float', 'double', 'int64_t']
         if drtype not in primitive_types:
             raise TypeError("'%s' has type %s, but allowed are: %s" % (name, drtype, primitive_types))
 

@@ -23,11 +23,11 @@ see
 We use the following workaround:
 - Add the substring `L` to the `long` parameter, making it a string (in case it is outside the valid integer range), e.g.
 ```python
-gen.add("long_param", paramtype="long", description="A long parameter", default="12345678910111213L")
+gen.add("long_param", paramtype="int64_t", description="A long parameter", default="12345678910111213L")
 # or
-gen.add("long_param", paramtype="long", description="A long parameter", default="1L")
+gen.add("long_param", paramtype="int64_t", description="A long parameter", default="1L")
 # or
-gen.add("long_param", paramtype="long", description="A long parameter", default=1)
+gen.add("long_param", paramtype="int64_t", description="A long parameter", default=1)
 ```
 
 - when setting it via an launchfile argument:
