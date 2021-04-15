@@ -16,7 +16,7 @@ TEST(RosinterfaceHandler, DefaultsAtLaunch) { // NOLINT(readability-function-siz
     ASSERT_EQ(true, testInterface.bool_param_wo_default);
     ASSERT_EQ(1L, testInterface.long_param_wo_default_int);
     ASSERT_EQ(1L, testInterface.long_param_wo_default_int_str);
-    ASSERT_EQ(2147483648L, testInterface.long_param_wo_default_long_str);
+    ASSERT_EQ(9223372036854775807L, testInterface.long_param_wo_default_long_str);
 
     ASSERT_EQ(std::vector<int>({1, 2, 3}), testInterface.vector_int_param_wo_default);
     ASSERT_EQ(std::vector<double>({1.1, 1.2, 1.3}), testInterface.vector_double_param_wo_default);

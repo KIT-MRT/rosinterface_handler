@@ -22,7 +22,7 @@ class TestDefaults(unittest.TestCase):
         self.assertEqual(params.bool_param_w_default, True)
         self.assertEqual(params.long_param_w_default_int, 1)
         self.assertEqual(params.long_param_w_default_int_str, -1)
-        self.assertEqual(params.long_param_w_default_long_string, 2147483648)
+        self.assertEqual(params.long_param_w_default_long_string, 9223372036854775807)
 
         self.assertEqual(params.vector_int_param_w_default, [1, 2, 3])
         self.assertEqual(params.vector_double_param_w_default, [1.1, 1.2, 1.3])
@@ -77,7 +77,7 @@ class TestDefaults(unittest.TestCase):
         params.bool_param_w_default = False
         params.long_param_w_default_int = 1
         params.long_param_w_default_int_str = -1
-        params.long_param_w_default_long_string = 2147483648
+        params.long_param_w_default_long_string = 9223372036854775807
         params.vector_int_param_w_default = [3, 2, 1]
         params.vector_double_param_w_default = [1.3, 1.2, 1.2]
         params.vector_bool_param_w_default = [True, False]
@@ -99,7 +99,7 @@ class TestDefaults(unittest.TestCase):
         # on parameter server, long is stored as string with appended "L"
         self.assertEqual("1L", rospy.get_param("~long_param_w_default_int"))
         self.assertEqual("-1L", rospy.get_param("~long_param_w_default_int_str"))
-        self.assertEqual("2147483648L", rospy.get_param("~long_param_w_default_long_string"))
+        self.assertEqual("9223372036854775807L", rospy.get_param("~long_param_w_default_long_string"))
 
         self.assertEqual(params.vector_int_param_w_default, rospy.get_param("~vector_int_param_w_default"))
         self.assertEqual(params.vector_double_param_w_default, rospy.get_param("~vector_double_param_w_default"))

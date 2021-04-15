@@ -14,7 +14,7 @@ class TestDefaultsAtLaunch(unittest.TestCase):
         self.assertEqual(params.bool_param_wo_default, True)
         self.assertEqual(params.long_param_wo_default_int, 1)
         self.assertEqual(params.long_param_wo_default_int_str, 1)
-        self.assertEqual(params.long_param_wo_default_long_str, 2147483648)
+        self.assertEqual(params.long_param_wo_default_long_str, 9223372036854775807)
 
         self.assertEqual(params.vector_int_param_wo_default, [1, 2, 3])
         self.assertEqual(params.vector_double_param_wo_default, [1.1, 1.2, 1.3])

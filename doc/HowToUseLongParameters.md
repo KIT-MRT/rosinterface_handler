@@ -5,7 +5,7 @@
 
 
 ## Problem
-`xmlrpclib.py` as used by `roslaunch` does not support type `long` (integers outside `(-2**31,2**31-1)`):
+`xmlrpclib.py` as used by `roslaunch` does not support type `long` (64 bit integers, i.e. in `(-2**63,2**63-1)` but outside `(-2**31,2**31-1)`):
 
 ```xml
 <arg name="long_param" value="12345678910111213" />
@@ -48,5 +48,5 @@ long_param: "1L"
 long_param: 1
 ```
 
-- For `long` parameters, a string is automatically cast to `long` when reading from the parameter server
+- For `long` parameters, a string is automatically cast to a 64bit integer when reading from the parameter server
 - Any `long` parameter is stored as `string` when writing to the parameter server
