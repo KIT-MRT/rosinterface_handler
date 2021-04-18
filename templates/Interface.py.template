@@ -118,8 +118,11 @@ class ${ClassName}Interface(dict):
             config = next((item for item in param_description if item["name"] == param_name), None)
             if config and not config['constant']:
                 full_name = "/" + param_name if config['global_scope'] else "~" + param_name
-                rospy.set_param(full_name, param_value)
-               
+                if config['type'] == 'int64_t':
+                    rospy.set_param(full_name, str(param_value)+"L")
+                else:
+                    rospy.set_param(full_name, param_value)
+
     def from_config(self, config):
         """
         Reads parameter from a dynamic_reconfigure config file.
@@ -189,6 +192,8 @@ class ${ClassName}Interface(dict):
                 return bool
             elif type_string == 'float' or type_string == 'double':
                 return float
+            elif type_string == 'int64_t':
+                return int
             else:
                 raise ValueError()
 
@@ -216,11 +221,15 @@ class ${ClassName}Interface(dict):
                 key_type = get_type(config_type[config_type.find("<")+1:config_type.find(",")])
                 val_type = get_type(config_type[config_type.find(",")+1:config_type.find(">")])
                 val = { key_type(key): val_type(v) for key, v in val.items() }
+            elif config['type'] == 'int64_t' and type(val) is str:
+                val = val.replace("L","",1)
+                val = int(val)
             else:
                 val = get_type(config['type'])(val)
         except ValueError:
             rospy.logerr(
-                "Parameter {} is set, but has a different type. Using default value instead.".format(param_name))
+                "Parameter {} is set, but has a different type ({} instead of {}). Using default value instead.".format(
+                    param_name, type(val), config['type']))
             val = config['default']
         # test bounds
         if config['min'] is not None:
