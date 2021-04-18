@@ -221,7 +221,7 @@ class ${ClassName}Interface(dict):
                 key_type = get_type(config_type[config_type.find("<")+1:config_type.find(",")])
                 val_type = get_type(config_type[config_type.find(",")+1:config_type.find(">")])
                 val = { key_type(key): val_type(v) for key, v in val.items() }
-            elif config['type'] == 'int64_t' and type(val) == str:
+            elif config['type'] == 'int64_t' and type(val) is str:
                 val = val.replace("L","",1)
                 val = int(val)
             else:
