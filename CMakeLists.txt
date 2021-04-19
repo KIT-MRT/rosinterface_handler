@@ -1,12 +1,10 @@
-cmake_minimum_required(VERSION 2.8.3)
+cmake_minimum_required(VERSION 3.5.0)
 project(rosinterface_handler)
 
 find_package(catkin REQUIRED)
 
 # export compile commands
-if(${CMAKE_VERSION} VERSION_GREATER "3.5.0")
-    set(CMAKE_EXPORT_COMPILE_COMMANDS YES)
-endif()
+set(CMAKE_EXPORT_COMPILE_COMMANDS YES)
 
 catkin_python_setup()
 
@@ -15,17 +13,9 @@ if (CATKIN_ENABLE_TESTING)
     find_package(catkin REQUIRED COMPONENTS dynamic_reconfigure diagnostic_updater rostest roscpp message_filters std_msgs)
     set(ROSINTERFACE_HANDLER_CMAKE_DIR ${CMAKE_CURRENT_LIST_DIR}/cmake)
     include(cmake/rosinterface_handler-macros.cmake)
-        file(GLOB PROJECT_TEST_FILES_INTERFACE RELATIVE "${CMAKE_CURRENT_LIST_DIR}" "test/cfg/*.rosif")
-        generate_ros_interface_files(${PROJECT_TEST_FILES_INTERFACE})
+    file(GLOB PROJECT_TEST_FILES_INTERFACE RELATIVE "${CMAKE_CURRENT_LIST_DIR}" "test/cfg/*.rosif")
+    generate_ros_interface_files(${PROJECT_TEST_FILES_INTERFACE})
 endif()
-
-# mark template files for IDEs
-file(GLOB TEMPLATE_FILES RELATIVE "${CMAKE_CURRENT_LIST_DIR}" "templates/*")
-add_custom_target(rosinterface_handler_templates SOURCES ${TEMPLATE_FILES})
-file(GLOB PYTEST_FILES RELATIVE "${CMAKE_CURRENT_LIST_DIR}" "test/python/tests/*")
-add_custom_target(rosinterface_handler_pytests SOURCES ${PYTEST_FILES})
-file(GLOB PY_FILES RELATIVE "${CMAKE_CURRENT_LIST_DIR}" "src/rosinterface_handler/*")
-add_custom_target(rosinterface_handler_py SOURCES ${PY_FILES})
 
 catkin_package(
         INCLUDE_DIRS include
@@ -54,14 +44,6 @@ install(PROGRAMS scripts/generate_yaml
 )
 
 if (CATKIN_ENABLE_TESTING)
-    include(CheckCXXCompilerFlag)
-    CHECK_CXX_COMPILER_FLAG("-std=c++14" Cpp14CompilerFlag)
-    if (${Cpp14CompilerFlag})
-           set(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} -std=c++14")
-    else()
-           message(FATAL_ERROR "Compiler does not have c++14 support.")
-    endif()
-
     file(GLOB PROJECT_TEST_FILES_SRC RELATIVE "${CMAKE_CURRENT_LIST_DIR}" "test/src/*.cpp")
     set(TEST_TARGET_NAME "rosinterface_handler_test")
     add_rostest_gtest(${TEST_TARGET_NAME} test/launch/rosinterface_handler.test ${PROJECT_TEST_FILES_SRC})
@@ -69,8 +51,11 @@ if (CATKIN_ENABLE_TESTING)
     find_package(tf2_ros REQUIRED)
     find_package(image_transport REQUIRED)
     target_link_libraries(${TEST_TARGET_NAME} ${catkin_LIBRARIES} ${tf2_ros_LIBRARIES} ${image_transport_LIBRARIES} gtest)
-    target_include_directories(${TEST_TARGET_NAME} PUBLIC include ${catkin_INCLUDE_DIRS} ${tf2_ros_INCLUDE_DIRS} ${image_transport_INCLUDE_DIRS})
+    target_include_directories(${TEST_TARGET_NAME} PUBLIC include)
+    target_include_directories(${TEST_TARGET_NAME} SYSTEM PUBLIC ${catkin_INCLUDE_DIRS} ${tf2_ros_INCLUDE_DIRS} ${image_transport_INCLUDE_DIRS})
+    # put dir of generated headers at the front. dynamic_reconfigure messes this up (see #173).
+    target_include_directories(${TEST_TARGET_NAME} SYSTEM BEFORE PUBLIC ${CATKIN_DEVEL_PREFIX}/${CATKIN_GLOBAL_INCLUDE_DESTINATION})
     add_dependencies(${TEST_TARGET_NAME} ${catkin_EXPORTED_TARGETS} ${${PROJECT_NAME}_EXPORTED_TARGETS})
-    set_property(TARGET ${TEST_TARGET_NAME} PROPERTY CXX_STANDARD 14)
+    set_property(TARGET ${TEST_TARGET_NAME} PROPERTY CXX_STANDARD 17)
     set_property(TARGET ${TEST_TARGET_NAME} PROPERTY CXX_STANDARD_REQUIRED ON)
 endif()
