@@ -461,7 +461,7 @@ class InterfaceGenerator(object):
                                   "see http://wiki.ros.org/ROS/Patterns/Conventions")
         if param['configurable'] and (
             param['global_scope'] or param['is_vector'] or param['is_map'] or (
-                in_type is "int64_t") or param['constant']):
+                in_type == "int64_t") or param['constant']):
             eprint(param['name'],
                    "Global parameters, vectors, maps, long and constant params can not be declared configurable! ")
         if param['global_scope'] and param['default'] is not None:
