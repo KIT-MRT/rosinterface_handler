@@ -790,8 +790,9 @@ class InterfaceGenerator(object):
             sub_adv_from_server.append(
                 Template(
                     '    $name->subscribe(privateNodeHandle_, '
-                    'rosinterface_handler::getTopic($namespace, $topic), uint32_t($queue)$noDelay);') .substitute(
+                    'topicService_.getTopic<$type>("$name", $namespace, $topic), uint32_t($queue)$noDelay);') .substitute(
                     name=name,
+                    type=type,
                     topic=topic_param,
                     queue=queue_size_param,
                     noDelay=no_delay,
@@ -806,10 +807,13 @@ class InterfaceGenerator(object):
                             minFParam=min_freq_param,
                             maxTParam=max_delay_param))
                 sub_adv_from_config.append(Template('    if($topic != config.$topic || $queue != config.$queue) {\n'
-                                                    '      $name->subscribe(privateNodeHandle_, '
-                                                    'rosinterface_handler::getTopic($namespace, config.$topic), '
-                                                    'uint32_t(config.$queue)$noDelay);\n'
-                                                    '    }').substitute(name=name, topic=topic_param,
+                                                    '      auto newTopic = topicService_.getTopic<$type>("$name", $namespace, config.$topic);\n'
+                                                    '      if (newTopic != config.$topic) {\n'
+                                                    '        logWarn("Dynamic reconfigure tried to change topic of $name to ", '
+                                                    'config.$topic, " but was overridden by topic server to: ", newTopic);\n'
+                                                    '      }\n'
+                                                    '      $name->subscribe(privateNodeHandle_, newTopic, uint32_t(config.$queue)$noDelay);\n'
+                                                    '    }').substitute(name=name, type=type, topic=topic_param,
                                                                         queue=queue_size_param, noDelay=no_delay,
                                                                         namespace=name_space))
                 if watch:
@@ -865,7 +869,7 @@ class InterfaceGenerator(object):
                 sub_adv_from_server.append(Template('    $name.minFrequency($minFParam).maxTimeDelay($maxTParam);')
                                            .substitute(name=name, minFParam=min_freq_param, maxTParam=max_delay_param))
             sub_adv_from_server.append(Template('    $name = privateNodeHandle_.advertise<$type>('
-                                                'rosinterface_handler::getTopic($namespace, $topic), $queue);')
+                                                'topicService_.getTopic<$type>("$name", $namespace, $topic), $queue);')
                                        .substitute(name=name, type=type, topic=topic_param, queue=queue_size_param,
                                                    namespace=name_space))
             if publisher['configurable']:
@@ -878,9 +882,12 @@ class InterfaceGenerator(object):
                             minFParam=min_freq_param,
                             maxTParam=max_delay_param))
                 sub_adv_from_config.append(Template('    if($topic != config.$topic || $queue != config.$queue) {\n'
-                                                    '      $name = privateNodeHandle_.advertise<$type>('
-                                                    'rosinterface_handler::getTopic($namespace, config.$topic), '
-                                                    'config.$queue);\n'
+                                                    '      auto newTopic = topicService_.getTopic<$type>("$name", $namespace, config.$topic);\n'
+                                                    '      if (newTopic != config.$topic) {\n'
+                                                    '        logWarn("Dynamic reconfigure tried to change topic of $name to ", '
+                                                    'config.$topic, " but was overridden by topic server to: ", newTopic);\n'
+                                                    '      }\n'
+                                                    '      $name = privateNodeHandle_.advertise<$type>(newTopic, config.$queue);\n'
                                                     '    }').substitute(name=name, type=type, topic=topic_param,
                                                                         queue=queue_size_param,
                                                                         namespace=name_space))
@@ -960,7 +967,7 @@ class InterfaceGenerator(object):
                         paramname=full_name, name=name, max=param['max'], type=ttype))
 
             # Add debug output
-            string_representation.append(Template('      << "\t" << p.$namespace << "$name:" << p.$name << '
+            string_representation.append(Template('      << "\t" << p.$namespace << "$name:" << rosinterface_handler::printHelper(p.$name) << '
                                                   '"\\n"\n').substitute(namespace=namespace, name=name))
 
             # handle verbosity param
