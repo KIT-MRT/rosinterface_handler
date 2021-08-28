@@ -1,7 +1,7 @@
 cmake_minimum_required(VERSION 3.5.0)
 project(rosinterface_handler)
 
-find_package(catkin REQUIRED)
+find_package(catkin REQUIRED COMPONENTS message_generation)
 
 # export compile commands
 set(CMAKE_EXPORT_COMPILE_COMMANDS YES)
@@ -16,6 +16,9 @@ if (CATKIN_ENABLE_TESTING)
     file(GLOB PROJECT_TEST_FILES_INTERFACE RELATIVE "${CMAKE_CURRENT_LIST_DIR}" "test/cfg/*.rosif")
     generate_ros_interface_files(${PROJECT_TEST_FILES_INTERFACE})
 endif()
+
+add_service_files(FILES GetTopic.srv)
+generate_messages(DEPENDENCIES std_msgs)
 
 catkin_package(
         INCLUDE_DIRS include
@@ -47,7 +50,9 @@ if (CATKIN_ENABLE_TESTING)
     file(GLOB PROJECT_TEST_FILES_SRC RELATIVE "${CMAKE_CURRENT_LIST_DIR}" "test/src/*.cpp")
     set(TEST_TARGET_NAME "rosinterface_handler_test")
     add_rostest_gtest(${TEST_TARGET_NAME} test/launch/rosinterface_handler.test ${PROJECT_TEST_FILES_SRC})
+    add_rostest(test/launch/rosinterface_handler_topic_server.test DEPENDENCIES ${TEST_TARGET_NAME})
     add_rostest(test/launch/rosinterface_handler_python.test DEPENDENCIES ${catkin_EXPORTED_TARGETS} ${${PROJECT_NAME}_EXPORTED_TARGETS})
+    add_rostest(test/launch/rosinterface_handler_topic_server_python.test DEPENDENCIES ${catkin_EXPORTED_TARGETS} ${${PROJECT_NAME}_EXPORTED_TARGETS})
     find_package(tf2_ros REQUIRED)
     find_package(image_transport REQUIRED)
     target_link_libraries(${TEST_TARGET_NAME} ${catkin_LIBRARIES} ${tf2_ros_LIBRARIES} ${image_transport_LIBRARIES} gtest)

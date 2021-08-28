@@ -1,0 +1,9 @@
+<?xml version="1.0"?>
+<launch>
+    <node name="advertise" pkg="rostopic" type="rostopic" args="pub -r 10 /input std_msgs/Int32 0"/>
+
+	<test test-name="rosinterface_handler_test" pkg="rosinterface_handler" type="rosinterface_handler_test" time-limit="60.0" ns="test">
+  		<rosparam command="load" file="$(find rosinterface_handler)/test/launch/params/test_launch_parameters.yaml" />
+	</test>
+	<include file="$(find rosinterface_handler)/test/launch/dummy_topic_server.launch"/>
+</launch>

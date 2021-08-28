@@ -1,0 +1,7 @@
+string node_name
+string topic_name
+string message_type
+string md5sum
+string proposed_topic
+---
+string topic

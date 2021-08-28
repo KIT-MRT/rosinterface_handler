@@ -39,13 +39,13 @@ class TestDefaults(unittest.TestCase):
 
     def test_defaults_subscriber(self):
         params = DefaultsInterface()
-        self.assertEqual(params.subscriber_w_default.sub.name, "/test/rosinterface_handler_python_test/in_topic")
+        self.assertEqual(params.subscriber_w_default.sub.name, rospy.get_name() + "/in_topic")
         self.assertEqual(params.subscriber_public_w_default.sub.name, "/test/in_topic")
         self.assertEqual(params.subscriber_global_w_default.sub.name, "/in_topic")
 
     def test_defaults_publisher(self):
         params = DefaultsInterface()
-        self.assertEqual(params.publisher_w_default.name, "/test/rosinterface_handler_python_test/out_topic")
+        self.assertEqual(params.publisher_w_default.name, rospy.get_name() + "/out_topic")
         self.assertEqual(params.publisher_public_w_default.name, "/test/out_topic")
         self.assertEqual(params.publisher_global_w_default.name, "/out_topic")
 

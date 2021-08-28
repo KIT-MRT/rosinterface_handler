@@ -1,0 +1,4 @@
+<launch>
+    <param name="topic_server" value="/topic_server"></param>
+    <node name="topic_server" pkg="rosinterface_handler" type="dummy_topic_server.py" output="screen"></node>
+</launch>
