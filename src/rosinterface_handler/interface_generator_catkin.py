@@ -790,7 +790,7 @@ class InterfaceGenerator(object):
             sub_adv_from_server.append(
                 Template(
                     '    $name->subscribe(privateNodeHandle_, '
-                    'topicService_.getTopic<$type>("$name", $namespace, $topic), uint32_t($queue)$noDelay);') .substitute(
+                    'topicService_.getTopic<$type>("$name", $namespace, $topic, false), uint32_t($queue)$noDelay);') .substitute(
                     name=name,
                     type=type,
                     topic=topic_param,
@@ -807,7 +807,7 @@ class InterfaceGenerator(object):
                             minFParam=min_freq_param,
                             maxTParam=max_delay_param))
                 sub_adv_from_config.append(Template('    if($topic != config.$topic || $queue != config.$queue) {\n'
-                                                    '      auto newTopic = topicService_.getTopic<$type>("$name", $namespace, config.$topic);\n'
+                                                    '      auto newTopic = topicService_.getTopic<$type>("$name", $namespace, config.$topic, false);\n'
                                                     '      if (newTopic != config.$topic) {\n'
                                                     '        logWarn("Dynamic reconfigure tried to change topic of $name to ", '
                                                     'config.$topic, " but was overridden by topic server to: ", newTopic);\n'
@@ -869,7 +869,7 @@ class InterfaceGenerator(object):
                 sub_adv_from_server.append(Template('    $name.minFrequency($minFParam).maxTimeDelay($maxTParam);')
                                            .substitute(name=name, minFParam=min_freq_param, maxTParam=max_delay_param))
             sub_adv_from_server.append(Template('    $name = privateNodeHandle_.advertise<$type>('
-                                                'topicService_.getTopic<$type>("$name", $namespace, $topic), $queue);')
+                                                'topicService_.getTopic<$type>("$name", $namespace, $topic, true), $queue);')
                                        .substitute(name=name, type=type, topic=topic_param, queue=queue_size_param,
                                                    namespace=name_space))
             if publisher['configurable']:
@@ -882,7 +882,7 @@ class InterfaceGenerator(object):
                             minFParam=min_freq_param,
                             maxTParam=max_delay_param))
                 sub_adv_from_config.append(Template('    if($topic != config.$topic || $queue != config.$queue) {\n'
-                                                    '      auto newTopic = topicService_.getTopic<$type>("$name", $namespace, config.$topic);\n'
+                                                    '      auto newTopic = topicService_.getTopic<$type>("$name", $namespace, config.$topic, true);\n'
                                                     '      if (newTopic != config.$topic) {\n'
                                                     '        logWarn("Dynamic reconfigure tried to change topic of $name to ", '
                                                     'config.$topic, " but was overridden by topic server to: ", newTopic);\n'

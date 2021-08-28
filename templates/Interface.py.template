@@ -101,7 +101,7 @@ class ${ClassName}Interface(dict):
 
         for subscriber in subscriber_description:
             name = subscriber['name']
-            topic = self._get_topic(subscriber, self[subscriber['topic_param']], self._topic_service)
+            topic = self._get_topic(subscriber, self[subscriber['topic_param']], self._topic_service, is_publisher=False)
 
             # rescue the callbacks if existing
             if name in self and self[name]:
@@ -115,7 +115,7 @@ class ${ClassName}Interface(dict):
             self[name].callbacks = callbacks
         for publisher in publisher_description:
             name = publisher['name']
-            topic = self._get_topic(publisher, self[publisher['topic_param']], self._topic_service)
+            topic = self._get_topic(publisher, self[publisher['topic_param']], self._topic_service, is_publisher=True)
             self[name] = rospy.Publisher(topic, self.get_type(publisher),
                                          queue_size=self[publisher['queue_size_param']])
 
@@ -148,7 +148,7 @@ class ${ClassName}Interface(dict):
             name = subscriber['name']
             queue_param = subscriber['queue_size_param']
             if config[topic_param] != self[topic_param] or config[queue_param] != self[queue_param]:
-                topic = self._get_topic(subscriber, config[topic_param], self._topic_service)
+                topic = self._get_topic(subscriber, config[topic_param], self._topic_service, is_publisher=False)
                 if self._topic_service and topic != config[topic_param]:
                     rospy.logwarn("Dynamic reconfigure tried to change topic of {} to {}, "
                                   "but was overridden by topic server to: {}".format(name, config[topic_param], topic))
@@ -164,7 +164,7 @@ class ${ClassName}Interface(dict):
             if not topic_param in config:
                 continue
             queue_param = publisher['queue_size_param']
-            topic = self._get_topic(publisher, config[topic_param], self._topic_service)
+            topic = self._get_topic(publisher, config[topic_param], self._topic_service, is_publisher=True)
             if config[topic_param] != self[topic_param] or config[queue_param] != self[queue_param]:
                 if self._topic_service and topic != config[topic_param]:
                     rospy.logwarn("Dynamic reconfigure tried to change topic of {} to {}, "
@@ -298,19 +298,21 @@ class ${ClassName}Interface(dict):
 
 
     @staticmethod
-    def _get_topic(message_descr, default_topic, topic_server):
+    def _get_topic(message_descr, default_topic, topic_server, is_publisher):
         scope = message_descr["scope"]
         if not default_topic.startswith('/') and scope != 'public':
             default_topic = "/" + default_topic if scope == 'global' else "~" + default_topic
         if topic_server:
             # make a request to the topic server.
-            # TODO: Test if this is efficient enough (otherwise use a persistent connection object)
-            from rosinterface_handler.srv import GetTopic
-            response = rospy.ServiceProxy(topic_server, GetTopic)(node_name=rospy.get_name(),
-                                                                  topic_name=message_descr["name"],
-                                                                  proposed_topic=default_topic,
-                                                                  message_type=message_descr["type"],
-                                                                  md5sum=${ClassName}Interface.get_type(message_descr)._md5sum)
+            from rosinterface_handler.srv import GetTopic, GetTopicRequest
+            response = rospy.ServiceProxy(topic_server, GetTopic)(
+                node_name=rospy.get_name(),
+                topic_name=message_descr["name"],
+                proposed_topic=default_topic,
+                message_type=message_descr["type"],
+                pub_sub=GetTopicRequest.publisher if is_publisher else GetTopicRequest.subscriber,
+                md5sum=${ClassName}Interface.get_type(message_descr)._md5sum,
+            )
             return response.topic
             # if the server responds with an empty string, he doesn't care about us and we use the default value
         return default_topic

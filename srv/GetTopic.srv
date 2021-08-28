@@ -1,7 +1,14 @@
-string node_name
-string topic_name
-string message_type
-string md5sum
-string proposed_topic
+# constants for pub_sub
+uint8 publisher=0
+uint8 subscriber=1
+
+# request
+uint8 pub_sub # whether the request is for a publisher or subscriber
+string node_name # fully qualified name of the node(let)
+string topic_name # name of the topic
+string message_type # type of the message to be send on the topic
+string md5sum # the hash of the message (different message types can have same hash, e.g. pointclouds)
+string proposed_topic # a proposal of the node for the topic
 ---
-string topic
+# response
+string topic # the topic chosen by the server

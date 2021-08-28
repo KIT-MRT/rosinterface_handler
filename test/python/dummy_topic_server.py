@@ -27,9 +27,10 @@ class TopicServer:
         :return: the topic
         :rtype: str
         """
+        pub_sub = "subscribe to" if request.pub_sub == request.subscriber else "publish"
         rospy.loginfo(
-            "Topic server request from {} for topic {}, type {}".format(
-                request.node_name, request.topic_name, request.message_type
+            "Topic server request from {} to {} for topic {}, type {}".format(
+                request.node_name, pub_sub, request.topic_name, request.message_type
             )
         )
         self.check_topic_type(request.proposed_topic, request.md5sum)

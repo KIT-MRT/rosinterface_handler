@@ -20,18 +20,19 @@ public:
     template <typename Logger>
     void waitAvailable(const Logger& logger) {
         if (topicService_.isValid()) {
-            logger.logDebug("Waiting for topic server service %s to be available...", topicService_.getService());
+            logger.logDebug("Waiting for topic server service ", topicService_.getService(), " to be available...");
             topicService_.waitForExistence();
             logger.logDebug("Topic server service now available");
         }
     }
 
     template <typename TopicType>
-    std::string getTopic(const char* topicName, const std::string& defaultNs, const std::string& defaultTopic) {
+    std::string getTopic(const char* topicName, const std::string& defaultNs, const std::string& defaultTopic,
+                         bool isPublisher) {
         auto topic = rosinterface_handler::getTopic(defaultNs, defaultTopic);
         if (topicService_.isValid()) {
             GetTopicResponse response;
-            auto request = prepareRequest<TopicType>(topicName, std::move(topic));
+            auto request = prepareRequest<TopicType>(topicName, std::move(topic), isPublisher);
             if (!topicService_.call(request, response)) {
                 rosinterface_handler::exit("Failed to communicate with topic server!");
             }
@@ -42,8 +43,9 @@ public:
 
 private:
     template <typename TopicType>
-    GetTopicRequest prepareRequest(const char* topicName, std::string defaultTopic) {
+    GetTopicRequest prepareRequest(const char* topicName, std::string defaultTopic, bool isPublisher) {
         GetTopicRequest request;
+        request.pub_sub = isPublisher ? request.publisher : request.subscriber;
         request.node_name = nodeName_;
         request.topic_name = topicName;
         request.proposed_topic = std::move(defaultTopic);
