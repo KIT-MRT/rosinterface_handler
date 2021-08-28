@@ -3,6 +3,7 @@
 import rospy
 from rosinterface_handler.srv import GetTopic, GetTopicRequest
 
+
 class TopicServer:
     def __init__(self):
         self.requsted_topics = {}
@@ -12,7 +13,6 @@ class TopicServer:
         if topic in self.requsted_topics:
             assert self.requsted_topics[topic] == hash
         self.requsted_topics[topic] = hash
-
 
     def get_topic(self, request):
         """
