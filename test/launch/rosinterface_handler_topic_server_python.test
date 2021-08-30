@@ -1,0 +1,8 @@
+<?xml version="1.0"?>
+<launch>
+	<test test-name="rosinterface_handler_topic_server_python_test" pkg="rosinterface_handler" type="rosinterface_handler_python_test.py" time-limit="10.0" ns="test">
+		<param name="verbosity" value="debug"/>
+  		<rosparam command="load" file="$(find rosinterface_handler)/test/launch/params/test_launch_parameters.yaml" />
+	</test>
+	<include file="$(find rosinterface_handler)/test/launch/dummy_topic_server.launch"/>
+</launch>

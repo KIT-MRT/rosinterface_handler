@@ -16,30 +16,7 @@ template <typename T>
 using IsMap = std::is_same<
     T, std::map<typename T::key_type, typename T::mapped_type, typename T::key_compare, typename T::allocator_type>>;
 
-/// \brief Outstream helper for std:vector
-template <typename T>
-std::ostream& operator<<(std::ostream& out, const std::vector<T>& v) {
-    if (!v.empty()) {
-        out << '[';
-        std::copy(v.begin(), v.end(), std::ostream_iterator<T>(out, ", "));
-        out << "\b\b]";
-    }
-    return out;
-}
-
-/// \brief Outstream helper for std:map
-template <typename T1, typename T2>
-std::ostream& operator<<(std::ostream& stream, const std::map<T1, T2>& map) {
-    stream << '{';
-    for (auto it = map.begin(); it != map.end(); ++it) {
-        stream << (*it).first << " --> " << (*it).second << ", ";
-    }
-    stream << '}';
-    return stream;
-}
-
 namespace rosinterface_handler {
-
 /// \brief Retrieve node name
 ///
 /// @param privateNodeHandle The private ROS node handle (i.e.
@@ -133,6 +110,12 @@ showNodeInfo() {
                                 << msgAdvert.str());
 }
 
+/// \brief ExitFunction for rosinterface_handler
+inline void exit(const std::string& msg = "Runtime Error in rosinterface handler.") {
+    // std::exit(EXIT_FAILURE);
+    throw std::runtime_error(msg);
+}
+
 /// \brief Retrieve the topic to subscribe to (aware of global topic names)
 ///
 /// @param name_space Parent namespace (with trailing "/")
@@ -143,12 +126,6 @@ inline std::string getTopic(const std::string& nameSpace, const std::string& top
         return topic;
     }
     return nameSpace + topic;
-}
-
-/// \brief ExitFunction for rosinterface_handler
-inline void exit(const std::string& msg = "Runtime Error in rosinterface handler.") {
-    // std::exit(EXIT_FAILURE);
-    throw std::runtime_error(msg);
 }
 
 /// \brief Set parameter on ROS parameter server
@@ -349,6 +326,50 @@ inline void testMax(const std::string key, std::map<K, T>& val, T max = std::num
     }
 }
 
+template <typename T>
+class PrintHelper {
+public:
+    PrintHelper(const T& valueToPrint) : valueToPrint_{valueToPrint} {
+    }
+    const T& value() const {
+        return valueToPrint_;
+    }
+
+private:
+    const T& valueToPrint_;
+};
+
+template <typename T>
+PrintHelper<T> printHelper(const T& v) {
+    return PrintHelper<T>(v);
+}
+
+template <typename T>
+inline std::ostream& operator<<(std::ostream& stream, const PrintHelper<T>& printHelper) {
+    return stream << printHelper.value();
+}
+
+template <typename T1, typename T2>
+inline std::ostream& operator<<(std::ostream& stream, const PrintHelper<std::map<T1, T2>>& printHelper) {
+    stream << '{';
+    for (auto it = printHelper.value().begin(); it != printHelper.value().end(); ++it) {
+        stream << (*it).first << " --> " << (*it).second << ", ";
+    }
+    stream << '}';
+    return stream;
+}
+
+template <typename T>
+inline std::ostream& operator<<(std::ostream& stream, const PrintHelper<std::vector<T>>& printHelper) {
+    const auto& v = printHelper.value();
+    if (!v.empty()) {
+        stream << '[';
+        std::copy(v.begin(), v.end(), std::ostream_iterator<T>(stream, ", "));
+        stream << "\b\b]";
+    }
+    return stream;
+}
+
 /// \brief Convert at least one argument to a string
 /// \tparam Arg Type of required argument
 /// \tparam Args Type of additional arguments (optional)
@@ -359,7 +380,7 @@ template <typename Arg, typename... Args>
 inline std::string asString(Arg&& arg, Args&&... Args_) { // NOLINT
     std::ostringstream oss;
     oss << std::forward<Arg>(arg);
-    (oss << ... << std::forward<Args>(Args_));
+    (oss << ... << printHelper(std::forward<Args>(Args_)));
     return oss.str();
 }
 
