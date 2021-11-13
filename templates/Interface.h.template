@@ -16,6 +16,7 @@
 #include <ros/node_handle.h>
 #include <rosinterface_handler/console_bridge_compatibility.hpp>
 #include <rosinterface_handler/utilities.hpp>
+#include <rosinterface_handler/topic_service.hpp>
 #ifdef MESSAGE_FILTERS_FOUND
 #include <message_filters/subscriber.h>
 $includes
@@ -60,7 +61,8 @@ struct ${ClassName}Interface {
     publicNamespace_{rosinterface_handler::getParentNamespace(private_node_handle) + "/"},
     privateNamespace_{private_node_handle.getNamespace() + "/"},
     nodeName_{rosinterface_handler::getNodeName(private_node_handle)},
-    privateNodeHandle_{private_node_handle}$initSubscribers {}
+    privateNodeHandle_{private_node_handle},
+    topicService_{privateNodeHandle_}$initSubscribers {}
 
   /// \brief Get values from parameter server
   ///
@@ -68,6 +70,8 @@ struct ${ClassName}Interface {
   void fromParamServer(){
     bool success = true;
 $fromParamServer
+
+    topicService_.waitAvailable(*this);
 
 $subscribeAdvertiseFromParamServer
 
@@ -174,6 +178,7 @@ private:
   const std::string privateNamespace_;
   const std::string nodeName_;
   ros::NodeHandle privateNodeHandle_;
+  rosinterface_handler::TopicService topicService_;
 
 public:
 $parameters
