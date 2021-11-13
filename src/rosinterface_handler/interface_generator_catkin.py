@@ -36,7 +36,11 @@ import subprocess
 
 def eprint(*args, **kwargs):
     print("************************************************", file=sys.stderr, **kwargs)
-    print("Error when setting up parameter '{}':".format(args[0]), file=sys.stderr, **kwargs)
+    print(
+        "Error when setting up parameter '{}':".format(args[0]),
+        file=sys.stderr,
+        **kwargs
+    )
     print(*args[1:], file=sys.stderr, **kwargs)
     print("************************************************", file=sys.stderr, **kwargs)
     sys.exit(1)
@@ -64,7 +68,9 @@ class InterfaceGenerator(object):
         self.group_variable = "".join(filter(str.isalnum, self.group))
 
         if len(sys.argv) != 5:
-            eprint("InterfaceGenerator: Unexpected arguments, did you call this directly? You shouldn't do this!")
+            eprint(
+                "InterfaceGenerator: Unexpected arguments, did you call this directly? You shouldn't do this!"
+            )
 
         self.dynconfpath = sys.argv[1]
         self.share_dir = sys.argv[2]
@@ -75,7 +81,7 @@ class InterfaceGenerator(object):
         self.nodename = None
         self.classname = None
 
-    def add_verbosity_param(self, name='verbosity', default='info', configurable=False):
+    def add_verbosity_param(self, name="verbosity", default="info", configurable=False):
         """
         Adds a parameter that will define the logging verbosity of the node. The verbosity can either be 'debug',
         'info', 'warning', 'error' or 'fatal'.
@@ -86,17 +92,29 @@ class InterfaceGenerator(object):
         :return:
         """
         if self.verbosity:
-            eprint("add_verbosity_param has already been called. You can only add one verbosity parameter per file!")
+            eprint(
+                "add_verbosity_param has already been called. You can only add one verbosity parameter per file!"
+            )
         if self.parent:
-            eprint("You can not call add_verbosity_param on a group! Call it on the main parameter generator instead!")
+            eprint(
+                "You can not call add_verbosity_param on a group! Call it on the main parameter generator instead!"
+            )
         self.verbosity = name
         if configurable:
-            self.add_enum(name, 'Sets the verbosity for this node',
-                          entry_strings=['debug', 'info', 'warning', 'error', 'fatal'],
-                          default=default,
-                          paramtype='std::string')
+            self.add_enum(
+                name,
+                "Sets the verbosity for this node",
+                entry_strings=["debug", "info", "warning", "error", "fatal"],
+                default=default,
+                paramtype="std::string",
+            )
         else:
-            self.add(name, description='Sets the verbosity for this node', paramtype='std::string', default=default)
+            self.add(
+                name,
+                description="Sets the verbosity for this node",
+                paramtype="std::string",
+                default=default,
+            )
 
     def add_diagnostic_updater(self, simplified_status=False):
         """
@@ -108,11 +126,18 @@ class InterfaceGenerator(object):
         :return:
         """
         if self.parent:
-            eprint("You can't call add_diagnostic_updater on a group! Call it on the main parameter generator instead!")
+            eprint(
+                "You can't call add_diagnostic_updater on a group! Call it on the main parameter generator instead!"
+            )
         self.diagnostics_enabled = True
         self.simplified_diagnostics = simplified_status
 
-    def add_tf(self, buffer_name="tf_buffer", listener_name="tf_listener", broadcaster_name=None):
+    def add_tf(
+        self,
+        buffer_name="tf_buffer",
+        listener_name="tf_listener",
+        broadcaster_name=None,
+    ):
         """
         Adds tf transformer/broadcaster as members to the interface object. Don't forget to depend on tf2_ros.
         :param buffer_name: Name of the tf2_ros::Buffer member in the interface object
@@ -122,10 +147,16 @@ class InterfaceGenerator(object):
         Will not be created if none.
         """
         if self.parent:
-            eprint("You can not call add_tf on a group! Call it on the main parameter generator instead!")
+            eprint(
+                "You can not call add_tf on a group! Call it on the main parameter generator instead!"
+            )
         if listener_name and not buffer_name:
             eprint("If you specify a tf listener, the tf buffer can not be empty!")
-        self.tf = {"buffer_name": buffer_name, "listener_name": listener_name, "broadcaster_name": broadcaster_name}
+        self.tf = {
+            "buffer_name": buffer_name,
+            "listener_name": listener_name,
+            "broadcaster_name": broadcaster_name,
+        }
 
     def add_group(self, name):
         """
@@ -134,12 +165,14 @@ class InterfaceGenerator(object):
         :return: a new group object that you can add parameters to
         """
         if not name:
-            eprint("You have added a group with an empty group name. This is not supported!")
+            eprint(
+                "You have added a group with an empty group name. This is not supported!"
+            )
         child = InterfaceGenerator(self, name)
         self.childs.append(child)
         return child
 
-    def add_enum(self, name, description, entry_strings, default=None, paramtype='int'):
+    def add_enum(self, name, description, entry_strings, default=None, paramtype="int"):
         """
         Add an enum to dynamic reconfigure
         :param name: Name of enum parameter
@@ -150,29 +183,67 @@ class InterfaceGenerator(object):
         an entry or to an int (enumerated from zero in the order of the list)
         :return:
         """
-        if paramtype != 'int' and paramtype != 'std::string':
-            eprint("Only 'int' or 'std::string' is supported as paramtype argument for add_enum!")
+        if paramtype != "int" and paramtype != "std::string":
+            eprint(
+                "Only 'int' or 'std::string' is supported as paramtype argument for add_enum!"
+            )
 
         entry_strings = [str(e) for e in entry_strings]  # Make sure we only get strings
         if default is None:
             pass
-        elif paramtype == 'int':
+        elif paramtype == "int":
             default = entry_strings.index(default)
         elif default not in entry_strings:
             eprint("add_enum: Default value not found in entry_strings!")
 
-        self.add(name=name, paramtype=paramtype, description=description, edit_method=name, default=default,
-                 configurable=True)
+        self.add(
+            name=name,
+            paramtype=paramtype,
+            description=description,
+            edit_method=name,
+            default=default,
+            configurable=True,
+        )
         for e in entry_strings:
-            enum_val = entry_strings.index(e) if paramtype == 'int' else e
-            self.add(name=name + "_" + e, paramtype=paramtype, description="Constant for enum {}".format(name),
-                     default=enum_val, constant=True)
-        self.enums.append({'name': name, 'description': description, 'values': entry_strings, 'paramtype': paramtype})
+            enum_val = entry_strings.index(e) if paramtype == "int" else e
+            self.add(
+                name=name + "_" + e,
+                paramtype=paramtype,
+                description="Constant for enum {}".format(name),
+                default=enum_val,
+                constant=True,
+            )
+        self.enums.append(
+            {
+                "name": name,
+                "description": description,
+                "values": entry_strings,
+                "paramtype": paramtype,
+            }
+        )
 
-    def add_subscriber(self, name, message_type, description, default_topic=None, default_queue_size=5, no_delay=False,
-                       topic_param=None, queue_size_param=None, header=None, module=None, configurable=False,
-                       scope='private', constant=False, diagnosed=False, min_frequency=0., min_frequency_param=None,
-                       max_delay=float('inf'), max_delay_param=None, watch=[]):
+    def add_subscriber(
+        self,
+        name,
+        message_type,
+        description,
+        default_topic=None,
+        default_queue_size=5,
+        no_delay=False,
+        topic_param=None,
+        queue_size_param=None,
+        header=None,
+        module=None,
+        configurable=False,
+        scope="private",
+        constant=False,
+        diagnosed=False,
+        min_frequency=0.0,
+        min_frequency_param=None,
+        max_delay=float("inf"),
+        max_delay_param=None,
+        watch=[],
+    ):
         """
         Adds a subscriber to your parameter struct and a parameter for its topic and queue size. Don't forget to add a
         dependency to message_filter and the package for the message used to your package.xml!
@@ -207,41 +278,65 @@ class InterfaceGenerator(object):
         """
         # add subscriber topic and queue size as param
         if not topic_param:
-            topic_param = name + '_topic'
+            topic_param = name + "_topic"
         if not queue_size_param:
-            queue_size_param = name + '_queue_size'
-        self.add(name=topic_param, paramtype='std::string', description='Topic for ' + description,
-                 default=default_topic, configurable=configurable, global_scope=False, constant=constant)
-        self.add(name=queue_size_param, paramtype='int', description='Queue size for ' + description, min=0,
-                 default=default_queue_size, configurable=configurable, global_scope=False, constant=constant)
+            queue_size_param = name + "_queue_size"
+        self.add(
+            name=topic_param,
+            paramtype="std::string",
+            description="Topic for " + description,
+            default=default_topic,
+            configurable=configurable,
+            global_scope=False,
+            constant=constant,
+        )
+        self.add(
+            name=queue_size_param,
+            paramtype="int",
+            description="Queue size for " + description,
+            min=0,
+            default=default_queue_size,
+            configurable=configurable,
+            global_scope=False,
+            constant=constant,
+        )
         for publisher in watch:
             if "name" not in publisher:
-                eprint("Invalid input passed as 'watch' to add_subscriber. Expected a list of publisher objects!")
+                eprint(
+                    "Invalid input passed as 'watch' to add_subscriber. Expected a list of publisher objects!"
+                )
 
         if diagnosed:
             if not self._get_root().diagnostics_enabled:
                 eprint("Please enable diagnostics before adding a diagnosed subscriber")
             if not min_frequency_param:
-                min_frequency_param = name + '_min_frequency'
+                min_frequency_param = name + "_min_frequency"
             if not max_delay_param:
-                max_delay_param = name + '_max_delay'
+                max_delay_param = name + "_max_delay"
             self.add(
                 name=min_frequency_param,
-                paramtype='double',
-                description='Minimal message frequency for ' +
-                description,
+                paramtype="double",
+                description="Minimal message frequency for " + description,
                 default=min_frequency,
                 configurable=configurable,
                 global_scope=False,
-                constant=constant)
-            self.add(name=max_delay_param, paramtype='double', description='Maximal delay for ' + description,
-                     default=max_delay, configurable=configurable, global_scope=False, constant=constant)
+                constant=constant,
+            )
+            self.add(
+                name=max_delay_param,
+                paramtype="double",
+                description="Maximal delay for " + description,
+                default=max_delay,
+                configurable=configurable,
+                global_scope=False,
+                constant=constant,
+            )
 
         # normalize the topic type (we want it to contain ::)
         normalized_message_type = message_type.replace("/", "::").replace(".", "::")
 
         if not module:
-            module = ".".join(normalized_message_type.split('::')[0:-1]) + '.msg'
+            module = ".".join(normalized_message_type.split("::")[0:-1]) + ".msg"
         if not header:
             header = normalized_message_type.replace("::", "/") + ".h"
 
@@ -249,42 +344,43 @@ class InterfaceGenerator(object):
 
         # add a subscriber object
         newparam = {
-            'name': name,
-            'type': normalized_message_type,
-            'header': header if isinstance(header, list) else [header],
-            'import': module if isinstance(module, list) else [module],
-            'topic_param': topic_param,
-            'queue_size_param': queue_size_param,
-            'no_delay': no_delay,
-            'configurable': configurable,
-            'description': description,
-            'scope': scope.lower(),
-            'diagnosed': diagnosed,
-            'watch': watch,
-            'min_frequency_param': min_frequency_param,
-            'max_delay_param': max_delay_param
+            "name": name,
+            "type": normalized_message_type,
+            "header": header if isinstance(header, list) else [header],
+            "import": module if isinstance(module, list) else [module],
+            "topic_param": topic_param,
+            "queue_size_param": queue_size_param,
+            "no_delay": no_delay,
+            "configurable": configurable,
+            "description": description,
+            "scope": scope.lower(),
+            "diagnosed": diagnosed,
+            "watch": watch,
+            "min_frequency_param": min_frequency_param,
+            "max_delay_param": max_delay_param,
         }
         self.subscribers.append(newparam)
 
     def add_publisher(
-            self,
-            name,
-            message_type,
-            description,
-            default_topic=None,
-            default_queue_size=5,
-            topic_param=None,
-            queue_size_param=None,
-            header=None,
-            module=None,
-            configurable=False,
-            scope="private",
-            constant=False,
-            diagnosed=False,
-            min_frequency=0.,
-            min_frequency_param=None,
-            max_delay=float('inf'),
-            max_delay_param=None):
+        self,
+        name,
+        message_type,
+        description,
+        default_topic=None,
+        default_queue_size=5,
+        topic_param=None,
+        queue_size_param=None,
+        header=None,
+        module=None,
+        configurable=False,
+        scope="private",
+        constant=False,
+        diagnosed=False,
+        min_frequency=0.0,
+        min_frequency_param=None,
+        max_delay=float("inf"),
+        max_delay_param=None,
+    ):
         """
         Adds a publisher to your parameter struct and a parameter for its topic and queue size. Don't forget to add a
         dependency to message_filter and the package for the message used to your package.xml!
@@ -315,61 +411,95 @@ class InterfaceGenerator(object):
         """
         # add publisher topic and queue size as param
         if not topic_param:
-            topic_param = name + '_topic'
+            topic_param = name + "_topic"
         if not queue_size_param:
-            queue_size_param = name + '_queue_size'
-        self.add(name=topic_param, paramtype='std::string', description='Topic for ' + description,
-                 default=default_topic, configurable=configurable, global_scope=False, constant=constant)
-        self.add(name=queue_size_param, paramtype='int', description='Queue size for ' + description, min=0,
-                 default=default_queue_size, configurable=configurable, global_scope=False, constant=constant)
+            queue_size_param = name + "_queue_size"
+        self.add(
+            name=topic_param,
+            paramtype="std::string",
+            description="Topic for " + description,
+            default=default_topic,
+            configurable=configurable,
+            global_scope=False,
+            constant=constant,
+        )
+        self.add(
+            name=queue_size_param,
+            paramtype="int",
+            description="Queue size for " + description,
+            min=0,
+            default=default_queue_size,
+            configurable=configurable,
+            global_scope=False,
+            constant=constant,
+        )
 
         if diagnosed:
             if not self._get_root().diagnostics_enabled:
                 eprint("Please enable diagnostics before adding a diagnosed publisher")
             if not min_frequency_param:
-                min_frequency_param = name + '_min_frequency'
+                min_frequency_param = name + "_min_frequency"
             if not max_delay_param:
-                max_delay_param = name + '_max_delay'
+                max_delay_param = name + "_max_delay"
             self.add(
                 name=min_frequency_param,
-                paramtype='double',
-                description='Minimal message frequency for ' +
-                description,
+                paramtype="double",
+                description="Minimal message frequency for " + description,
                 default=min_frequency,
                 configurable=configurable,
                 global_scope=False,
-                constant=constant)
-            self.add(name=max_delay_param, paramtype='double', description='Maximal delay for ' + description,
-                     default=max_delay, configurable=configurable, global_scope=False, constant=constant)
+                constant=constant,
+            )
+            self.add(
+                name=max_delay_param,
+                paramtype="double",
+                description="Maximal delay for " + description,
+                default=max_delay,
+                configurable=configurable,
+                global_scope=False,
+                constant=constant,
+            )
 
         # normalize the topic type (we want it to contain ::)
         normalized_message_type = message_type.replace("/", "::").replace(".", "::")
 
         if not module:
-            module = ".".join(normalized_message_type.split('::')[0:-1]) + '.msg'
+            module = ".".join(normalized_message_type.split("::")[0:-1]) + ".msg"
         if not header:
             header = normalized_message_type.replace("::", "/") + ".h"
 
         # add a publisher object
         newparam = {
-            'name': name,
-            'type': normalized_message_type,
-            'header': header if isinstance(header, list) else [header],
-            'import': module if isinstance(module, list) else [module],
-            'topic_param': topic_param,
-            'queue_size_param': queue_size_param,
-            'configurable': configurable,
-            'description': description,
-            'scope': scope.lower(),
-            'diagnosed': diagnosed,
-            'min_frequency_param': min_frequency_param,
-            'max_delay_param': max_delay_param
+            "name": name,
+            "type": normalized_message_type,
+            "header": header if isinstance(header, list) else [header],
+            "import": module if isinstance(module, list) else [module],
+            "topic_param": topic_param,
+            "queue_size_param": queue_size_param,
+            "configurable": configurable,
+            "description": description,
+            "scope": scope.lower(),
+            "diagnosed": diagnosed,
+            "min_frequency_param": min_frequency_param,
+            "max_delay_param": max_delay_param,
         }
         self.publishers.append(newparam)
         return newparam
 
-    def add(self, name, paramtype, description, level=0, edit_method='""', default=None, min=None, max=None,
-            configurable=False, global_scope=False, constant=False):
+    def add(
+        self,
+        name,
+        paramtype,
+        description,
+        level=0,
+        edit_method='""',
+        default=None,
+        min=None,
+        max=None,
+        configurable=False,
+        global_scope=False,
+        constant=False,
+    ):
         """
         Add parameters to your parameter struct. Call this method from your .params file!
 
@@ -398,19 +528,19 @@ class InterfaceGenerator(object):
         global_scope = self._make_bool(global_scope)
         constant = self._make_bool(constant)
         newparam = {
-            'name': name,
-            'type': paramtype,
-            'default': default,
-            'level': level,
-            'edit_method': edit_method,
-            'description': description,
-            'min': min,
-            'max': max,
-            'is_vector': False,
-            'is_map': False,
-            'configurable': configurable,
-            'constant': constant,
-            'global_scope': global_scope,
+            "name": name,
+            "type": paramtype,
+            "default": default,
+            "level": level,
+            "edit_method": edit_method,
+            "description": description,
+            "min": min,
+            "max": max,
+            "is_vector": False,
+            "is_map": False,
+            "configurable": configurable,
+            "constant": constant,
+            "global_scope": global_scope,
         }
         self._perform_checks(newparam)
         # make sure verbosity is the first param
@@ -428,80 +558,118 @@ class InterfaceGenerator(object):
         :return:
         """
 
-        in_type = param['type'].strip()
-        if param['max'] is not None or param['min'] is not None:
+        in_type = param["type"].strip()
+        if param["max"] is not None or param["min"] is not None:
             if in_type in ["std::string", "bool", "int64_t"]:
-                eprint(param['name'], "Max and min can not be specified for variable of type %s" % in_type)
+                eprint(
+                    param["name"],
+                    "Max and min can not be specified for variable of type %s"
+                    % in_type,
+                )
 
-        if in_type.startswith('std::vector'):
-            param['is_vector'] = True
-        if in_type.startswith('std::map'):
-            param['is_map'] = True
+        if in_type.startswith("std::vector"):
+            param["is_vector"] = True
+        if in_type.startswith("std::map"):
+            param["is_map"] = True
 
-        if (param['is_vector']):
-            if (param['max'] is not None or param['min'] is not None):
+        if param["is_vector"]:
+            if param["max"] is not None or param["min"] is not None:
                 ptype = in_type[12:-1].strip()
                 if ptype == "std::string":
-                    eprint(param['name'], "Max and min can not be specified for variable of type %s" % in_type)
+                    eprint(
+                        param["name"],
+                        "Max and min can not be specified for variable of type %s"
+                        % in_type,
+                    )
 
-        if (param['is_map']):
-            if (param['max'] is not None or param['min'] is not None):
-                ptype = in_type[9:-1].split(',')
+        if param["is_map"]:
+            if param["max"] is not None or param["min"] is not None:
+                ptype = in_type[9:-1].split(",")
                 if len(ptype) != 2:
-                    eprint(param['name'],
-                           "Wrong syntax used for setting up std::map<... , ...>: You provided '%s' with "
-                           "parameter %s" % in_type)
+                    eprint(
+                        param["name"],
+                        "Wrong syntax used for setting up std::map<... , ...>: You provided '%s' with "
+                        "parameter %s" % in_type,
+                    )
                 ptype = ptype[1].strip()
                 if ptype == "std::string":
-                    eprint(param['name'], "Max and min can not be specified for variable of type %s" % in_type)
+                    eprint(
+                        param["name"],
+                        "Max and min can not be specified for variable of type %s"
+                        % in_type,
+                    )
 
-        pattern = r'^[a-zA-Z][a-zA-Z0-9_]*$'
-        if not re.match(pattern, param['name']):
-            eprint(param['name'], "The name of field does not follow the ROS naming conventions, "
-                                  "see http://wiki.ros.org/ROS/Patterns/Conventions")
-        if param['configurable'] and (
-            param['global_scope'] or param['is_vector'] or param['is_map'] or (
-                in_type == "int64_t") or param['constant']):
-            eprint(param['name'],
-                   "Global parameters, vectors, maps, long and constant params can not be declared configurable! ")
-        if param['global_scope'] and param['default'] is not None:
-            eprint(param['name'], "Default values for global parameters should not be specified in node! ")
-        if param['constant'] and param['default'] is None:
-            eprint(param['name'], "Constant parameters need a default value!")
-        if param['name'] in [p['name'] for p in self.parameters]:
-            eprint(param['name'], "Parameter with the same name exists already")
-        if param['edit_method'] == '':
-            param['edit_method'] = '""'
-        elif param['edit_method'] != '""':
-            param['configurable'] = True
+        pattern = r"^[a-zA-Z][a-zA-Z0-9_]*$"
+        if not re.match(pattern, param["name"]):
+            eprint(
+                param["name"],
+                "The name of field does not follow the ROS naming conventions, "
+                "see http://wiki.ros.org/ROS/Patterns/Conventions",
+            )
+        if param["configurable"] and (
+            param["global_scope"]
+            or param["is_vector"]
+            or param["is_map"]
+            or (in_type == "int64_t")
+            or param["constant"]
+        ):
+            eprint(
+                param["name"],
+                "Global parameters, vectors, maps, long and constant params can not be declared configurable! ",
+            )
+        if param["global_scope"] and param["default"] is not None:
+            eprint(
+                param["name"],
+                "Default values for global parameters should not be specified in node! ",
+            )
+        if param["constant"] and param["default"] is None:
+            eprint(param["name"], "Constant parameters need a default value!")
+        if param["name"] in [p["name"] for p in self.parameters]:
+            eprint(param["name"], "Parameter with the same name exists already")
+        if param["edit_method"] == "":
+            param["edit_method"] = '""'
+        elif param["edit_method"] != '""':
+            param["configurable"] = True
 
         # Check type
-        if param['is_vector']:
+        if param["is_vector"]:
             ptype = in_type[12:-1].strip()
-            self._test_primitive_type(param['name'], ptype)
-            param['type'] = 'std::vector<{}>'.format(ptype)
-        elif param['is_map']:
-            ptype = in_type[9:-1].split(',')
+            self._test_primitive_type(param["name"], ptype)
+            param["type"] = "std::vector<{}>".format(ptype)
+        elif param["is_map"]:
+            ptype = in_type[9:-1].split(",")
             if len(ptype) != 2:
-                eprint(param['name'], "Wrong syntax used for setting up std::map<... , ...>: You provided '%s' with "
-                                      "parameter %s" % in_type)
+                eprint(
+                    param["name"],
+                    "Wrong syntax used for setting up std::map<... , ...>: You provided '%s' with "
+                    "parameter %s" % in_type,
+                )
             ptype[0] = ptype[0].strip()
             ptype[1] = ptype[1].strip()
             if ptype[0] != "std::string":
-                eprint(param['name'], "Can not setup map with %s as key type. Only std::map<std::string, "
-                                      "...> are allowed" % ptype[0])
-            self._test_primitive_type(param['name'], ptype[0])
-            self._test_primitive_type(param['name'], ptype[1])
-            param['type'] = 'std::map<{},{}>'.format(ptype[0], ptype[1])
+                eprint(
+                    param["name"],
+                    "Can not setup map with %s as key type. Only std::map<std::string, "
+                    "...> are allowed" % ptype[0],
+                )
+            self._test_primitive_type(param["name"], ptype[0])
+            self._test_primitive_type(param["name"], ptype[1])
+            param["type"] = "std::map<{},{}>".format(ptype[0], ptype[1])
         else:
             # Pytype and defaults can only be applied to primitives
-            self._test_primitive_type(param['name'], in_type)
-            param['pytype'] = self._pytype(in_type)
+            self._test_primitive_type(param["name"], in_type)
+            param["pytype"] = self._pytype(in_type)
 
     @staticmethod
     def _pytype(drtype):
         """Convert C++ type to python type"""
-        return {'std::string': "str", 'int': "int", 'double': "double", 'bool': "bool", 'int64_t': "int"}[drtype]
+        return {
+            "std::string": "str",
+            "int": "int",
+            "double": "double",
+            "bool": "bool",
+            "int64_t": "int",
+        }[drtype]
 
     @staticmethod
     def _test_primitive_type(name, drtype):
@@ -511,9 +679,12 @@ class InterfaceGenerator(object):
         :param drtype: Typestring
         :return:
         """
-        primitive_types = ['std::string', 'int', 'bool', 'float', 'double', 'int64_t']
+        primitive_types = ["std::string", "int", "bool", "float", "double", "int64_t"]
         if drtype not in primitive_types:
-            raise TypeError("'%s' has type %s, but allowed are: %s" % (name, drtype, primitive_types))
+            raise TypeError(
+                "'%s' has type %s, but allowed are: %s"
+                % (name, drtype, primitive_types)
+            )
 
     @staticmethod
     def _get_cvalue(param, field):
@@ -523,13 +694,13 @@ class InterfaceGenerator(object):
         :return: C++ compatible representation
         """
         value = param[field]
-        if param['type'] == 'double' and param[field] == float('inf'):
-            value = 'std::numeric_limits<double>::infinity()'
-        if param['type'] == 'double' and param[field] == float('-inf'):
-            value = '-std::numeric_limits<double>::infinity()'
-        if param['type'] == 'std::string':
+        if param["type"] == "double" and param[field] == float("inf"):
+            value = "std::numeric_limits<double>::infinity()"
+        if param["type"] == "double" and param[field] == float("-inf"):
+            value = "-std::numeric_limits<double>::infinity()"
+        if param["type"] == "std::string":
             value = '"{}"'.format(param[field])
-        elif param['type'] == 'bool':
+        elif param["type"] == "bool":
             value = str(param[field]).lower()
         return str(value)
 
@@ -541,13 +712,13 @@ class InterfaceGenerator(object):
         :return: C++ compatible representation
         """
         value = param[field]
-        if param['type'] == 'double' and param[field] == float('inf'):
-            value = '1e+308'  # dynamic reconfigure does not supprt if, but this should be sufficient.
-        if param['type'] == 'double' and param[field] == float('-inf'):
-            value = '-1e+308'
-        if param['type'] == 'std::string':
+        if param["type"] == "double" and param[field] == float("inf"):
+            value = "1e+308"  # dynamic reconfigure does not supprt if, but this should be sufficient.
+        if param["type"] == "double" and param[field] == float("-inf"):
+            value = "-1e+308"
+        if param["type"] == "std::string":
             value = '"{}"'.format(param[field])
-        elif param['type'] == 'bool':
+        elif param["type"] == "bool":
             value = str(param[field]).capitalize()
         return str(value)
 
@@ -559,16 +730,16 @@ class InterfaceGenerator(object):
         :return: C++ compatible representation
         """
         values = param[field]
-        assert (isinstance(values, list))
+        assert isinstance(values, list)
         form = ""
         for value in values:
-            if param['type'] == 'std::vector<std::string>':
+            if param["type"] == "std::vector<std::string>":
                 value = '"{}"'.format(value)
-            elif param['type'] == 'std::vector<bool>':
+            elif param["type"] == "std::vector<bool>":
                 value = str(value).lower()
             else:
                 value = str(value)
-            form += value + ','
+            form += value + ","
         # remove last ','
         return form[:-1]
 
@@ -580,16 +751,16 @@ class InterfaceGenerator(object):
         :return: C++ compatible representation
         """
         values = param[field]
-        assert (isinstance(values, dict))
+        assert isinstance(values, dict)
         form = ""
         for key, value in values.items():
-            if param['type'] == 'std::map<std::string,std::string>':
+            if param["type"] == "std::map<std::string,std::string>":
                 pair = '{{"{}","{}"}}'.format(key, value)
-            elif param['type'] == 'std::map<std::string,bool>':
+            elif param["type"] == "std::map<std::string,bool>":
                 pair = '{{"{}",{}}}'.format(key, str(value).lower())
             else:
                 pair = '{{"{}",{}}}'.format(key, str(value))
-            form += pair + ','
+            form += pair + ","
         # remove last ','
         return form[:-1]
 
@@ -606,10 +777,16 @@ class InterfaceGenerator(object):
         self.nodename = nodename
         self.classname = classname
 
-        print("Generating interface file for node {} (class {}) in package {}".format(nodename, classname, pkgname))
+        print(
+            "Generating interface file for node {} (class {}) in package {}".format(
+                nodename, classname, pkgname
+            )
+        )
 
         if self.parent:
-            eprint("You should not call generate on a group! Call it on the main parameter generator instead!")
+            eprint(
+                "You should not call generate on a group! Call it on the main parameter generator instead!"
+            )
 
         return self._generateImpl()
 
@@ -630,15 +807,21 @@ class InterfaceGenerator(object):
         :param self:
         :return:
         """
-        templatefile = os.path.join(self.dynconfpath, "templates", "ConfigType.h.template")
-        with open(templatefile, 'r') as f:
+        templatefile = os.path.join(
+            self.dynconfpath, "templates", "ConfigType.h.template"
+        )
+        with open(templatefile, "r") as f:
             template = f.read()
 
         param_entries = self._generate_param_entries()
 
         param_entries = "\n".join(param_entries)
-        template = Template(template).substitute(pkgname=self.pkgname, nodename=self.nodename,
-                                                 classname=self.classname, params=param_entries)
+        template = Template(template).substitute(
+            pkgname=self.pkgname,
+            nodename=self.nodename,
+            classname=self.classname,
+            params=param_entries,
+        )
 
         cfg_file = os.path.join(self.share_dir, "cfg", self.classname + ".cfg")
         try:
@@ -647,7 +830,7 @@ class InterfaceGenerator(object):
         except OSError:
             # Stupid error, sometimes the directory exists anyway
             pass
-        with open(cfg_file, 'w') as f:
+        with open(cfg_file, "w") as f:
             f.write(template)
         os.chmod(cfg_file, 509)  # entspricht 775 (octal)
         # calling sync mitigate issues in docker (see https://github.com/moby/moby/issues/9547)
@@ -661,11 +844,17 @@ class InterfaceGenerator(object):
         """
 
         # Read in template file
-        templatefile = os.path.join(self.dynconfpath, "templates", "Interface.h.template")
-        with open(templatefile, 'r') as f:
+        templatefile = os.path.join(
+            self.dynconfpath, "templates", "Interface.h.template"
+        )
+        with open(templatefile, "r") as f:
             template = f.read()
 
-        substitutions = {"pkgname": self.pkgname, "ClassName": self.classname, "nodename": self.nodename}
+        substitutions = {
+            "pkgname": self.pkgname,
+            "ClassName": self.classname,
+            "nodename": self.nodename,
+        }
         param_entries = []
         string_representation = []
         from_server = []
@@ -685,50 +874,67 @@ class InterfaceGenerator(object):
         subscribers = self._get_subscribers()
         publishers = self._get_publishers()
         if subscribers or publishers:
-            substitutions["includeMessageFiltersError"] = "#error message_filters was not found during compilation. " \
+            substitutions["includeMessageFiltersError"] = (
+                "#error message_filters was not found during compilation. "
                 "Please recompile with message_filters."
+            )
         else:
             substitutions["includeMessageFiltersError"] = ""
 
         if any(subscriber["watch"] for subscriber in subscribers):
-            includes.append('#include <rosinterface_handler/smart_subscriber.hpp>')
+            includes.append("#include <rosinterface_handler/smart_subscriber.hpp>")
 
         substitutions["includeDiagnosticUpdaterError"] = ""
         if self.diagnostics_enabled:
-            param_entries.append('  diagnostic_updater::Updater updater; /*!< Manages diagnostics of this node */')
-            subscribers_init.append(',\n    updater{ros::NodeHandle(), private_node_handle, nodeNameWithNamespace()}')
-            includes.append('#include <rosinterface_handler/diagnostic_subscriber.hpp>')
+            param_entries.append(
+                "  diagnostic_updater::Updater updater; /*!< Manages diagnostics of this node */"
+            )
+            subscribers_init.append(
+                ",\n    updater{ros::NodeHandle(), private_node_handle, nodeNameWithNamespace()}"
+            )
+            includes.append("#include <rosinterface_handler/diagnostic_subscriber.hpp>")
             from_server.append('    updater.setHardwareID("none");')
             if self.simplified_diagnostics:
                 param_entries.append(
-                    '  rosinterface_handler::SimpleNodeStatus nodeStatus; /*!< Reports the status of this node */')
-                subscribers_init.append(',\n    nodeStatus{"status", private_node_handle, updater}')
-                includes.append('#include <rosinterface_handler/simple_node_status.hpp>')
-            substitutions["includeDiagnosticUpdaterError"] = "#error diagnostic_updater is missing as dependency."
+                    "  rosinterface_handler::SimpleNodeStatus nodeStatus; /*!< Reports the status of this node */"
+                )
+                subscribers_init.append(
+                    ',\n    nodeStatus{"status", private_node_handle, updater}'
+                )
+                includes.append(
+                    "#include <rosinterface_handler/simple_node_status.hpp>"
+                )
+            substitutions[
+                "includeDiagnosticUpdaterError"
+            ] = "#error diagnostic_updater is missing as dependency."
 
         if self.tf:
             listener = self.tf["listener_name"]
             buffer = self.tf["buffer_name"]
             broadcaster = self.tf["broadcaster_name"]
             if buffer:
-                includes.append('#include <tf2_ros/buffer.h>')
-                param_entries.append('  tf2_ros::Buffer {};'.format(buffer))
+                includes.append("#include <tf2_ros/buffer.h>")
+                param_entries.append("  tf2_ros::Buffer {};".format(buffer))
             if listener:
-                includes.append('#include <tf2_ros/transform_listener.h>')
-                param_entries.append('  tf2_ros::TransformListener {};'.format(listener))
-                subscribers_init.append(',\n    {}{{{}}}'.format(listener, buffer))
+                includes.append("#include <tf2_ros/transform_listener.h>")
+                param_entries.append(
+                    "  tf2_ros::TransformListener {};".format(listener)
+                )
+                subscribers_init.append(",\n    {}{{{}}}".format(listener, buffer))
             if broadcaster:
-                includes.append('#include <tf2_ros/transform_broadcaster.h>')
-                param_entries.append('  tf2_ros::TransformBroadcaster {};'.format(broadcaster))
+                includes.append("#include <tf2_ros/transform_broadcaster.h>")
+                param_entries.append(
+                    "  tf2_ros::TransformBroadcaster {};".format(broadcaster)
+                )
 
         first = True
         for subscriber in subscribers:
-            name = subscriber['name']
-            type = subscriber['type']
-            headers = subscriber['header']
-            description = subscriber['description']
-            diagnosed = subscriber['diagnosed']
-            watch = subscriber['watch']
+            name = subscriber["name"]
+            type = subscriber["type"]
+            headers = subscriber["header"]
+            description = subscriber["description"]
+            diagnosed = subscriber["diagnosed"]
+            watch = subscriber["watch"]
 
             # add include entry
             for header in headers:
@@ -738,13 +944,13 @@ class InterfaceGenerator(object):
 
             # add subscriber entry
             if diagnosed and watch:
-                subscriber_t = 'DiagSubscriber$ptr<$type, rosinterface_handler::SmartSubscriber<$type>>'
+                subscriber_t = "DiagSubscriber$ptr<$type, rosinterface_handler::SmartSubscriber<$type>>"
                 init = "updater, " + ", ".join(watch)
             elif watch:
-                subscriber_t = 'rosinterface_handler::SmartSubscriber$ptr<$type>'
+                subscriber_t = "rosinterface_handler::SmartSubscriber$ptr<$type>"
                 init = ", ".join(watch)
             elif diagnosed:
-                subscriber_t = 'DiagSubscriber$ptr<$type>'
+                subscriber_t = "DiagSubscriber$ptr<$type>"
                 init = "updater"
             else:
                 subscriber_t = "Subscriber$ptr<$type>"
@@ -752,81 +958,113 @@ class InterfaceGenerator(object):
             subscriber_type = Template(subscriber_t).substitute(type=type, ptr="")
             subscriber_ptr = Template(subscriber_t).substitute(type=type, ptr="Ptr")
 
-            subscriber_entries.append(Template('  $subscriber ${name}; /*!< $description '
-                                               '*/').substitute(name=name, description=description,
-                                                                subscriber=subscriber_ptr))
+            subscriber_entries.append(
+                Template("  $subscriber ${name}; /*!< $description " "*/").substitute(
+                    name=name, description=description, subscriber=subscriber_ptr
+                )
+            )
 
             # add initialisation
-            subscribers_init.append(Template(',\n    $name{std::make_shared<$subscriber>(${init})}')
-                                    .substitute(name=name, subscriber=subscriber_type, init=init))
+            subscribers_init.append(
+                Template(
+                    ",\n    $name{std::make_shared<$subscriber>(${init})}"
+                ).substitute(name=name, subscriber=subscriber_type, init=init)
+            )
 
             # add printing
             space = "" if first else '", " +'
             first = False
-            print_subscribed.append(Template('      message += $space $name->getTopic();').substitute(name=name,
-                                                                                                      space=space))
+            print_subscribed.append(
+                Template("      message += $space $name->getTopic();").substitute(
+                    name=name, space=space
+                )
+            )
 
             # add subscribe for parameter server
-            topic_param = subscriber['topic_param']
-            queue_size_param = subscriber['queue_size_param']
-            min_freq_param = subscriber['min_frequency_param']
-            max_delay_param = subscriber['max_delay_param']
-            scope = subscriber['scope']
-            if scope == 'private':
+            topic_param = subscriber["topic_param"]
+            queue_size_param = subscriber["queue_size_param"]
+            min_freq_param = subscriber["min_frequency_param"]
+            max_delay_param = subscriber["max_delay_param"]
+            scope = subscriber["scope"]
+            if scope == "private":
                 name_space = "privateNamespace_"
-            elif scope == 'public':
+            elif scope == "public":
                 name_space = "publicNamespace_"
-            elif scope == 'global':
+            elif scope == "global":
                 name_space = "globalNamespace_"
             else:
-                eprint("Unknown scope specified for subscriber {}: {}".format(name, scope))
-            if subscriber['no_delay']:
+                eprint(
+                    "Unknown scope specified for subscriber {}: {}".format(name, scope)
+                )
+            if subscriber["no_delay"]:
                 no_delay = ", ros::TransportHints().tcpNoDelay()"
             else:
                 no_delay = ""
             if diagnosed:
-                sub_adv_from_server.append(Template('    $name->minFrequency($minFParam).maxTimeDelay($maxTParam);')
-                                           .substitute(name=name, minFParam=min_freq_param, maxTParam=max_delay_param))
+                sub_adv_from_server.append(
+                    Template(
+                        "    $name->minFrequency($minFParam).maxTimeDelay($maxTParam);"
+                    ).substitute(
+                        name=name, minFParam=min_freq_param, maxTParam=max_delay_param
+                    )
+                )
             sub_adv_from_server.append(
                 Template(
-                    '    $name->subscribe(privateNodeHandle_, '
-                    'topicService_.getTopic<$type>("$name", $namespace, $topic, false), uint32_t($queue)$noDelay);') .substitute(
+                    "    $name->subscribe(privateNodeHandle_, "
+                    'topicService_.getTopic<$type>("$name", $namespace, $topic, false), uint32_t($queue)$noDelay);'
+                ).substitute(
                     name=name,
                     type=type,
                     topic=topic_param,
                     queue=queue_size_param,
                     noDelay=no_delay,
-                    namespace=name_space))
-            if subscriber['configurable']:
+                    namespace=name_space,
+                )
+            )
+            if subscriber["configurable"]:
                 if diagnosed:
                     sub_adv_from_config.append(
                         Template(
-                            '    $name->minFrequency(config.$minFParam)'
-                            '.maxTimeDelay(config.$maxTParam);') .substitute(
+                            "    $name->minFrequency(config.$minFParam)"
+                            ".maxTimeDelay(config.$maxTParam);"
+                        ).substitute(
                             name=name,
                             minFParam=min_freq_param,
-                            maxTParam=max_delay_param))
-                sub_adv_from_config.append(Template('    if($topic != config.$topic || $queue != config.$queue) {\n'
-                                                    '      auto newTopic = topicService_.getTopic<$type>("$name", $namespace, config.$topic, false);\n'
-                                                    '      if (newTopic != config.$topic) {\n'
-                                                    '        logWarn("Dynamic reconfigure tried to change topic of $name to ", '
-                                                    'config.$topic, " but was overridden by topic server to: ", newTopic);\n'
-                                                    '      }\n'
-                                                    '      $name->subscribe(privateNodeHandle_, newTopic, uint32_t(config.$queue)$noDelay);\n'
-                                                    '    }').substitute(name=name, type=type, topic=topic_param,
-                                                                        queue=queue_size_param, noDelay=no_delay,
-                                                                        namespace=name_space))
+                            maxTParam=max_delay_param,
+                        )
+                    )
+                sub_adv_from_config.append(
+                    Template(
+                        "    if($topic != config.$topic || $queue != config.$queue) {\n"
+                        '      auto newTopic = topicService_.getTopic<$type>("$name", $namespace, config.$topic, false);\n'
+                        "      if (newTopic != config.$topic) {\n"
+                        '        logWarn("Dynamic reconfigure tried to change topic of $name to ", '
+                        'config.$topic, " but was overridden by topic server to: ", newTopic);\n'
+                        "      }\n"
+                        "      $name->subscribe(privateNodeHandle_, newTopic, uint32_t(config.$queue)$noDelay);\n"
+                        "    }"
+                    ).substitute(
+                        name=name,
+                        type=type,
+                        topic=topic_param,
+                        queue=queue_size_param,
+                        noDelay=no_delay,
+                        namespace=name_space,
+                    )
+                )
                 if watch:
-                    from_config.append(Template('    $name->updateTopics();').substitute(name=name))
+                    from_config.append(
+                        Template("    $name->updateTopics();").substitute(name=name)
+                    )
                     test_limits.append(from_config[-1])
 
         first = True
         for publisher in publishers:
-            name = publisher['name']
-            type = publisher['type']
-            headers = publisher['header']
-            description = publisher['description']
-            diagnosed = publisher['diagnosed']
+            name = publisher["name"]
+            type = publisher["type"]
+            headers = publisher["header"]
+            description = publisher["description"]
+            diagnosed = publisher["diagnosed"]
 
             # add include entry
             for header in headers:
@@ -842,59 +1080,93 @@ class InterfaceGenerator(object):
                 publish = "ros::Publisher"
                 init = ""
 
-            publisher_entries.append(Template('  $publisher ${name}$init; /*!< $description */').substitute(
-                publisher=publish, name=name, description=description, init=init))
+            publisher_entries.append(
+                Template("  $publisher ${name}$init; /*!< $description */").substitute(
+                    publisher=publish, name=name, description=description, init=init
+                )
+            )
 
             # add printing
             space = "" if first else '", " +'
             first = False
-            print_advertised.append(Template('      message += $space $name.getTopic();').substitute(name=name,
-                                                                                                     space=space))
+            print_advertised.append(
+                Template("      message += $space $name.getTopic();").substitute(
+                    name=name, space=space
+                )
+            )
 
             # add advertise for parameter server
-            topic_param = publisher['topic_param']
-            queue_size_param = publisher['queue_size_param']
-            min_freq_param = publisher['min_frequency_param']
-            max_delay_param = publisher['max_delay_param']
-            scope = publisher['scope'].lower()
-            if scope == 'private':
+            topic_param = publisher["topic_param"]
+            queue_size_param = publisher["queue_size_param"]
+            min_freq_param = publisher["min_frequency_param"]
+            max_delay_param = publisher["max_delay_param"]
+            scope = publisher["scope"].lower()
+            if scope == "private":
                 name_space = "privateNamespace_"
-            elif scope == 'public':
+            elif scope == "public":
                 name_space = "publicNamespace_"
-            elif scope == 'global':
+            elif scope == "global":
                 name_space = "globalNamespace_"
             else:
-                eprint("Unknown scope specified for publisher {}: {}".format(name, scope))
+                eprint(
+                    "Unknown scope specified for publisher {}: {}".format(name, scope)
+                )
             if diagnosed:
-                sub_adv_from_server.append(Template('    $name.minFrequency($minFParam).maxTimeDelay($maxTParam);')
-                                           .substitute(name=name, minFParam=min_freq_param, maxTParam=max_delay_param))
-            sub_adv_from_server.append(Template('    $name = privateNodeHandle_.advertise<$type>('
-                                                'topicService_.getTopic<$type>("$name", $namespace, $topic, true), $queue);')
-                                       .substitute(name=name, type=type, topic=topic_param, queue=queue_size_param,
-                                                   namespace=name_space))
-            if publisher['configurable']:
+                sub_adv_from_server.append(
+                    Template(
+                        "    $name.minFrequency($minFParam).maxTimeDelay($maxTParam);"
+                    ).substitute(
+                        name=name, minFParam=min_freq_param, maxTParam=max_delay_param
+                    )
+                )
+            sub_adv_from_server.append(
+                Template(
+                    "    $name = privateNodeHandle_.advertise<$type>("
+                    'topicService_.getTopic<$type>("$name", $namespace, $topic, true), $queue);'
+                ).substitute(
+                    name=name,
+                    type=type,
+                    topic=topic_param,
+                    queue=queue_size_param,
+                    namespace=name_space,
+                )
+            )
+            if publisher["configurable"]:
                 if diagnosed:
                     sub_adv_from_config.append(
                         Template(
-                            '    $name.minFrequency(config.$minFParam)'
-                            '.maxTimeDelay(config.$maxTParam);') .substitute(
+                            "    $name.minFrequency(config.$minFParam)"
+                            ".maxTimeDelay(config.$maxTParam);"
+                        ).substitute(
                             name=name,
                             minFParam=min_freq_param,
-                            maxTParam=max_delay_param))
-                sub_adv_from_config.append(Template('    if($topic != config.$topic || $queue != config.$queue) {\n'
-                                                    '      auto newTopic = topicService_.getTopic<$type>("$name", $namespace, config.$topic, true);\n'
-                                                    '      if (newTopic != config.$topic) {\n'
-                                                    '        logWarn("Dynamic reconfigure tried to change topic of $name to ", '
-                                                    'config.$topic, " but was overridden by topic server to: ", newTopic);\n'
-                                                    '      }\n'
-                                                    '      $name = privateNodeHandle_.advertise<$type>(newTopic, config.$queue);\n'
-                                                    '    }').substitute(name=name, type=type, topic=topic_param,
-                                                                        queue=queue_size_param,
-                                                                        namespace=name_space))
+                            maxTParam=max_delay_param,
+                        )
+                    )
+                sub_adv_from_config.append(
+                    Template(
+                        "    if($topic != config.$topic || $queue != config.$queue) {\n"
+                        '      auto newTopic = topicService_.getTopic<$type>("$name", $namespace, config.$topic, true);\n'
+                        "      if (newTopic != config.$topic) {\n"
+                        '        logWarn("Dynamic reconfigure tried to change topic of $name to ", '
+                        'config.$topic, " but was overridden by topic server to: ", newTopic);\n'
+                        "      }\n"
+                        "      $name = privateNodeHandle_.advertise<$type>(newTopic, config.$queue);\n"
+                        "    }"
+                    ).substitute(
+                        name=name,
+                        type=type,
+                        topic=topic_param,
+                        queue=queue_size_param,
+                        namespace=name_space,
+                    )
+                )
         substitutions["includes"] = "\n".join(includes)
         substitutions["subscribers"] = "\n".join(subscriber_entries)
         substitutions["publishers"] = "\n".join(publisher_entries)
-        substitutions["subscribeAdvertiseFromParamServer"] = "\n".join(sub_adv_from_server)
+        substitutions["subscribeAdvertiseFromParamServer"] = "\n".join(
+            sub_adv_from_server
+        )
         substitutions["subscribeAdvertiseFromConfig"] = "\n".join(sub_adv_from_config)
         substitutions["print_advertised"] = "\n".join(print_advertised)
         substitutions["print_subscribed"] = "\n".join(print_subscribed)
@@ -904,84 +1176,139 @@ class InterfaceGenerator(object):
 
         # Create dynamic parts of the header file for every parameter
         for param in params:
-            name = param['name']
+            name = param["name"]
 
             # Adjust key for parameter server
             if param["global_scope"]:
-                namespace = 'globalNamespace_'
+                namespace = "globalNamespace_"
             else:
-                namespace = 'privateNamespace_'
+                namespace = "privateNamespace_"
             full_name = '{} + "{}"'.format(namespace, param["name"])
 
             # Test for default value
             if param["default"] is None:
                 default = ""
-                non_default_params.append(Template('      << "\t" << $namespace << "$name" << " ($type) '
-                                                   '\\n"\n').substitute(
-                    namespace=namespace, name=name, type=param["type"]))
+                non_default_params.append(
+                    Template(
+                        '      << "\t" << $namespace << "$name" << " ($type) ' '\\n"\n'
+                    ).substitute(namespace=namespace, name=name, type=param["type"])
+                )
             else:
-                if param['is_vector']:
-                    default = ', {}'.format(str(param['type']) + "{" + self._get_cvaluelist(param, "default") + "}")
-                elif param['is_map']:
-                    default = ', {}'.format(str(param['type']) + "{" + self._get_cvaluedict(param, "default") + "}")
+                if param["is_vector"]:
+                    default = ", {}".format(
+                        str(param["type"])
+                        + "{"
+                        + self._get_cvaluelist(param, "default")
+                        + "}"
+                    )
+                elif param["is_map"]:
+                    default = ", {}".format(
+                        str(param["type"])
+                        + "{"
+                        + self._get_cvaluedict(param, "default")
+                        + "}"
+                    )
                 else:
-                    default = ', {}'.format(str(param['type']) + "{" + self._get_cvalue(param, "default") + "}")
+                    default = ", {}".format(
+                        str(param["type"])
+                        + "{"
+                        + self._get_cvalue(param, "default")
+                        + "}"
+                    )
 
             # Test for constant value
-            if param['constant']:
-                param_entries.append(Template('  static constexpr auto ${name} = $default; /*!< ${description} '
-                                              '*/').substitute(type=param['type'], name=name,
-                                                               description=param['description'],
-                                                               default=self._get_cvalue(param, "default")))
+            if param["constant"]:
+                param_entries.append(
+                    Template(
+                        "  static constexpr auto ${name} = $default; /*!< ${description} "
+                        "*/"
+                    ).substitute(
+                        type=param["type"],
+                        name=name,
+                        description=param["description"],
+                        default=self._get_cvalue(param, "default"),
+                    )
+                )
                 from_server.append(
-                    Template('    rosinterface_handler::testConstParam($paramname);').substitute(
-                        paramname=full_name))
+                    Template(
+                        "    rosinterface_handler::testConstParam($paramname);"
+                    ).substitute(paramname=full_name)
+                )
             else:
-                param_entries.append(Template('  ${type} ${name}; /*!< ${description} */').substitute(
-                    type=param['type'], name=name, description=param['description']))
-                from_server.append(Template('    success &= rosinterface_handler::getParam($paramname, $name$default);')
-                                   .substitute(paramname=full_name, name=name,
-                                               default=default, description=param['description']))
+                param_entries.append(
+                    Template("  ${type} ${name}; /*!< ${description} */").substitute(
+                        type=param["type"], name=name, description=param["description"]
+                    )
+                )
+                from_server.append(
+                    Template(
+                        "    success &= rosinterface_handler::getParam($paramname, $name$default);"
+                    ).substitute(
+                        paramname=full_name,
+                        name=name,
+                        default=default,
+                        description=param["description"],
+                    )
+                )
                 to_server.append(
-                    Template('    rosinterface_handler::setParam(${paramname},${name});').substitute(
-                        paramname=full_name, name=name))
+                    Template(
+                        "    rosinterface_handler::setParam(${paramname},${name});"
+                    ).substitute(paramname=full_name, name=name)
+                )
 
             # Test for configurable params
-            if param['configurable']:
-                from_config.append(Template('    $name = config.$name;').substitute(name=name))
+            if param["configurable"]:
+                from_config.append(
+                    Template("    $name = config.$name;").substitute(name=name)
+                )
 
             # Test limits
-            if param['is_vector']:
-                ttype = param['type'][12:-1].strip()
-            elif param['is_map']:
-                ttype = param['type'][9:-1].strip()
+            if param["is_vector"]:
+                ttype = param["type"][12:-1].strip()
+            elif param["is_map"]:
+                ttype = param["type"][9:-1].strip()
             else:
-                ttype = param['type']
-            if param['min'] is not None:
+                ttype = param["type"]
+            if param["min"] is not None:
                 test_limits.append(
-                    Template('    rosinterface_handler::testMin<$type>($paramname, $name, $min);').substitute(
-                        paramname=full_name, name=name, min=param['min'], type=ttype))
-            if param['max'] is not None:
+                    Template(
+                        "    rosinterface_handler::testMin<$type>($paramname, $name, $min);"
+                    ).substitute(
+                        paramname=full_name, name=name, min=param["min"], type=ttype
+                    )
+                )
+            if param["max"] is not None:
                 test_limits.append(
-                    Template('    rosinterface_handler::testMax<$type>($paramname, $name, $max);').substitute(
-                        paramname=full_name, name=name, max=param['max'], type=ttype))
+                    Template(
+                        "    rosinterface_handler::testMax<$type>($paramname, $name, $max);"
+                    ).substitute(
+                        paramname=full_name, name=name, max=param["max"], type=ttype
+                    )
+                )
 
             # Add debug output
-            string_representation.append(Template('      << "\t" << p.$namespace << "$name:" << rosinterface_handler::printHelper(p.$name) << '
-                                                  '"\\n"\n').substitute(namespace=namespace, name=name))
+            string_representation.append(
+                Template(
+                    '      << "\t" << p.$namespace << "$name:" << rosinterface_handler::printHelper(p.$name) << '
+                    '"\\n"\n'
+                ).substitute(namespace=namespace, name=name)
+            )
 
             # handle verbosity param
             if self.verbosity == name:
-                from_server.append(Template('    rosinterface_handler::setLoggerLevel(privateNodeHandle_, "$verbosity",'
-                                            ' nodeNameWithNamespace());').substitute(
-                    verbosity=self.verbosity))
-                if param['configurable']:
+                from_server.append(
+                    Template(
+                        '    rosinterface_handler::setLoggerLevel(privateNodeHandle_, "$verbosity",'
+                        " nodeNameWithNamespace());"
+                    ).substitute(verbosity=self.verbosity)
+                )
+                if param["configurable"]:
                     verb_check = Template(
-                        '    if(config.$verbosity != this->$verbosity) {\n'
+                        "    if(config.$verbosity != this->$verbosity) {\n"
                         '        rosinterface_handler::setParam(privateNamespace_ + "$verbosity", config.$verbosity);\n'
                         '        rosinterface_handler::setLoggerLevel(privateNodeHandle_, "$verbosity", nodeNameWithNamespace());\n'
-                        '    }').substitute(
-                        verbosity=self.verbosity)
+                        "    }"
+                    ).substitute(verbosity=self.verbosity)
                     from_config.insert(0, verb_check)
 
         substitutions["parameters"] = "\n".join(param_entries)
@@ -1000,7 +1327,7 @@ class InterfaceGenerator(object):
         except OSError:
             # Stupid error, sometimes the directory exists anyway
             pass
-        with open(header_file, 'w') as f:
+        with open(header_file, "w") as f:
             f.write(content)
 
     def _generatepy(self):
@@ -1022,39 +1349,47 @@ class InterfaceGenerator(object):
         # generate import statements
         imports = set()
         for subscriber in self._get_subscribers():
-            imports.update("import {}".format(sub) for sub in subscriber['import'])
+            imports.update("import {}".format(sub) for sub in subscriber["import"])
         for publisher in self._get_publishers():
-            imports.update("import {}".format(pub) for pub in publisher['import'])
+            imports.update("import {}".format(pub) for pub in publisher["import"])
         if self.simplified_diagnostics:
             imports.add("import rospy")
             imports.add("import diagnostic_msgs")
         imports = "\n".join(imports)
 
         # Read in template file
-        templatefile = os.path.join(self.dynconfpath, "templates", "Interface.py.template")
-        with open(templatefile, 'r') as f:
+        templatefile = os.path.join(
+            self.dynconfpath, "templates", "Interface.py.template"
+        )
+        with open(templatefile, "r") as f:
             template = f.read()
 
-        content = Template(template).substitute(pkgname=self.pkgname, ClassName=self.classname, imports=imports,
-                                                paramDescription=paramDescription,
-                                                subscriberDescription=subscriberDescription,
-                                                publisherDescription=publisherDescription,
-                                                verbosityParam=verbosityParam,
-                                                tfConfig=self.tf,
-                                                diagnosticsEnabled=self.diagnostics_enabled,
-                                                simplifiedDiagnostics=self.simplified_diagnostics)
+        content = Template(template).substitute(
+            pkgname=self.pkgname,
+            ClassName=self.classname,
+            imports=imports,
+            paramDescription=paramDescription,
+            subscriberDescription=subscriberDescription,
+            publisherDescription=publisherDescription,
+            verbosityParam=verbosityParam,
+            tfConfig=self.tf,
+            diagnosticsEnabled=self.diagnostics_enabled,
+            simplifiedDiagnostics=self.simplified_diagnostics,
+        )
 
-        py_file = os.path.join(self.py_gen_dir, "interface", self.classname + "Interface.py")
+        py_file = os.path.join(
+            self.py_gen_dir, "interface", self.classname + "Interface.py"
+        )
         try:
             if not os.path.exists(os.path.dirname(py_file)):
                 os.makedirs(os.path.dirname(py_file))
         except OSError:
             # Stupid error, sometimes the directory exists anyway
             pass
-        with open(py_file, 'w') as f:
+        with open(py_file, "w") as f:
             f.write(content)
         init_file = os.path.join(self.py_gen_dir, "interface", "__init__.py")
-        with open(init_file, 'w') as f:
+        with open(init_file, "w") as f:
             f.write("")
 
     def _generateyml(self):
@@ -1073,8 +1408,15 @@ class InterfaceGenerator(object):
                 content += "# Name:\t" + str(entry["name"]) + "\n"
                 content += "# Desc:\t" + str(entry["description"]) + "\n"
                 content += "# Type:\t" + str(entry["type"]) + "\n"
-                if entry['min'] or entry['max']:
-                    content += "# [min,max]:\t[" + str(entry["min"]) + "/" + str(entry["max"]) + "]" + "\n"
+                if entry["min"] or entry["max"]:
+                    content += (
+                        "# [min,max]:\t["
+                        + str(entry["min"])
+                        + "/"
+                        + str(entry["max"])
+                        + "]"
+                        + "\n"
+                    )
                 if entry["global_scope"]:
                     content += "# Lives in global namespace!\n"
                 if entry["default"] is not None:
@@ -1084,7 +1426,7 @@ class InterfaceGenerator(object):
 
         yaml_file = os.path.join(os.getcwd(), self.classname + "Interface.yaml")
 
-        with open(yaml_file, 'w') as f:
+        with open(yaml_file, "w") as f:
             f.write(content)
 
     def _get_parameters(self):
@@ -1138,38 +1480,58 @@ class InterfaceGenerator(object):
         dynamic_params = [p for p in self.parameters if p["configurable"]]
 
         if self.parent:
-            param_entries.append(Template("$group_variable = $parent.add_group('$group')").substitute(
-                group_variable=self.group_variable,
-                group=self.group,
-                parent=self.parent.group_variable))
+            param_entries.append(
+                Template("$group_variable = $parent.add_group('$group')").substitute(
+                    group_variable=self.group_variable,
+                    group=self.group,
+                    parent=self.parent.group_variable,
+                )
+            )
 
         for enum in self.enums:
-            param_entries.append(Template("$name = gen.enum([").substitute(
-                name=enum['name'],
-                parent=self.group))
-            paramtype = self._pytype(enum['paramtype'])
-            for value in enum['values']:
-                enum_val = enum['values'].index(value) if paramtype == 'int' else "'" + value + "'"
+            param_entries.append(
+                Template("$name = gen.enum([").substitute(
+                    name=enum["name"], parent=self.group
+                )
+            )
+            paramtype = self._pytype(enum["paramtype"])
+            for value in enum["values"]:
+                enum_val = (
+                    enum["values"].index(value)
+                    if paramtype == "int"
+                    else "'" + value + "'"
+                )
                 param_entries.append(
-                    Template("    gen.const(name='$name', type='$type', value=$value, descr='$descr'),")
-                    .substitute(name=value, type=paramtype, value=enum_val, descr=""))
-            param_entries.append(Template("    ], '$description')").substitute(description=enum["description"]))
+                    Template(
+                        "    gen.const(name='$name', type='$type', value=$value, descr='$descr'),"
+                    ).substitute(name=value, type=paramtype, value=enum_val, descr="")
+                )
+            param_entries.append(
+                Template("    ], '$description')").substitute(
+                    description=enum["description"]
+                )
+            )
 
         for param in dynamic_params:
-            content_line = Template("$group_variable.add(name = '$name', paramtype = '$paramtype', level = $level, "
-                                    "description = '$description', edit_method=$edit_method").substitute(
+            content_line = Template(
+                "$group_variable.add(name = '$name', paramtype = '$paramtype', level = $level, "
+                "description = '$description', edit_method=$edit_method"
+            ).substitute(
                 group_variable=self.group_variable,
                 name=param["name"],
-                paramtype=param['pytype'],
-                level=param['level'],
-                edit_method=param['edit_method'],
-                description=param['description'])
-            if param['default'] is not None:
-                content_line += Template(", default=$default").substitute(default=self._get_pyvalue(param, "default"))
-            if param['min'] is not None:
-                content_line += Template(", min=$min").substitute(min=param['min'])
-            if param['max'] is not None:
-                content_line += Template(", max=$max").substitute(max=param['max'])
+                paramtype=param["pytype"],
+                level=param["level"],
+                edit_method=param["edit_method"],
+                description=param["description"],
+            )
+            if param["default"] is not None:
+                content_line += Template(", default=$default").substitute(
+                    default=self._get_pyvalue(param, "default")
+                )
+            if param["min"] is not None:
+                content_line += Template(", min=$min").substitute(min=param["min"])
+            if param["max"] is not None:
+                content_line += Template(", max=$max").substitute(max=param["max"])
             content_line += ")"
             param_entries.append(content_line)
 
