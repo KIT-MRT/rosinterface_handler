@@ -1042,16 +1042,14 @@ class InterfaceGenerator(object):
                         'config.$topic, " but was overridden by topic server to: ", newTopic);\n'
                         "      }\n"
                         "      $name->subscribe(privateNodeHandle_, newTopic, uint32_t(config.$queue)$noDelay);\n"
-                        "    }"
-                    ).substitute(
+                        "    }").substitute(
                         name=name,
                         type=type,
                         topic=topic_param,
                         queue=queue_size_param,
                         noDelay=no_delay,
                         namespace=name_space,
-                    )
-                )
+                    ))
                 if watch:
                     from_config.append(
                         Template("    $name->updateTopics();").substitute(name=name)
@@ -1152,15 +1150,13 @@ class InterfaceGenerator(object):
                         'config.$topic, " but was overridden by topic server to: ", newTopic);\n'
                         "      }\n"
                         "      $name = privateNodeHandle_.advertise<$type>(newTopic, config.$queue);\n"
-                        "    }"
-                    ).substitute(
+                        "    }").substitute(
                         name=name,
                         type=type,
                         topic=topic_param,
                         queue=queue_size_param,
                         namespace=name_space,
-                    )
-                )
+                    ))
         substitutions["includes"] = "\n".join(includes)
         substitutions["subscribers"] = "\n".join(subscriber_entries)
         substitutions["publishers"] = "\n".join(publisher_entries)
@@ -1307,8 +1303,8 @@ class InterfaceGenerator(object):
                         "    if(config.$verbosity != this->$verbosity) {\n"
                         '        rosinterface_handler::setParam(privateNamespace_ + "$verbosity", config.$verbosity);\n'
                         '        rosinterface_handler::setLoggerLevel(privateNodeHandle_, "$verbosity", nodeNameWithNamespace());\n'
-                        "    }"
-                    ).substitute(verbosity=self.verbosity)
+                        "    }").substitute(
+                        verbosity=self.verbosity)
                     from_config.insert(0, verb_check)
 
         substitutions["parameters"] = "\n".join(param_entries)
